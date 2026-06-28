@@ -1,0 +1,20 @@
+// ════════════════════════════════════════════════════════════════════════
+//  운영  ─  Admin
+//  apps/admin 의 로그인 주체. 서비스 회원(User)과 별개 주체.
+//  ※ 관리자 권한/역할 시스템(authority·super) 은 아직 없음 — 단순 운영자 계정만.
+//    회원 가입 승인은 User.approvedAt 기록으로 처리(별도 심사 모델 없음).
+// ════════════════════════════════════════════════════════════════════════
+
+/// [DRAFT] 운영자 계정.
+model Admin {
+  id           String @id @default(cuid()) /// [DRAFT] 고유 식별자 (cuid)
+  email        String @unique /// [DRAFT] 로그인 이메일(unique)
+  passwordHash String /// [DRAFT] 비밀번호 해시
+  name         String /// [DRAFT] 운영자 이름
+
+  createdAt   DateTime  @default(now()) /// [DRAFT] 생성 시각
+  updatedAt   DateTime  @updatedAt /// [DRAFT] 최종 수정 시각
+  suspendedAt DateTime? /// [DRAFT] 정지 시각
+
+  @@index([email]) /// [DRAFT] 로그인 조회
+}

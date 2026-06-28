@@ -1,0 +1,63 @@
+// ════════════════════════════════════════════════════════════════════════
+//  홈: 사업 공고  ─  [MVP 보류 · 전체 주석처리]
+//
+//  MVP 단계에선 사업공고를 외부 API(K-Startup 등)에서 "요청 시 직접 파싱"해 노출하고,
+//  내부 DB 에 저장하지 않는다(복잡도 축소). 따라서 아래 저장 모델은 비활성으로 둔다.
+//  수집·큐레이션(검색/북마크/중복제거)이 필요해지면 주석을 해제해 복구한다.
+//  ※ 활성화 시 User 에 supportProgramBookmarks 역관계도 함께 복구할 것.
+// ════════════════════════════════════════════════════════════════════════
+
+// /// [DRAFT] 외부에서 수집·저장한 사업/지원 공고(홈 노출). 원천(source)+externalId 로 멱등 관리.
+// model SupportProgram {
+//   id                 String               @id @default(cuid()) /// 내부 고유 식별자 (cuid)
+//   source             SupportProgramSource /// 공고 원천(K-Startup·지자체 등)
+//   externalId         String? /// 원천 측 고유 식별자(스크랩 멱등 키)
+//   title              String /// 공고명
+//   summary            String? /// 요약
+//   organizer          String? /// 주관 기관
+//   targetAudience     String? /// 지원 대상
+//   supportField       String? /// 지원 분야
+//   region             String? /// 지역
+//   budgetText         String? /// 예산/지원 규모(원문 텍스트)
+//   applicationStartAt DateTime? /// 접수 시작
+//   applicationEndAt   DateTime? /// 접수 마감
+//   detailUrl          String /// 원문 상세 링크
+//   tags               String[] /// 분류 태그(필터)
+//   status             SupportProgramStatus /// 모집 상태
+//   scrapedAt          DateTime /// 수집 시각
+//
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+//
+//   bookmarks SupportProgramBookmark[]
+//
+//   @@unique([source, externalId])
+//   @@index([status, applicationEndAt])
+// }
+//
+// enum SupportProgramSource {
+//   KSTARTUP
+//   LOCAL_GOV
+//   PUBLIC_INSTITUTION
+//   MANUAL
+// }
+//
+// enum SupportProgramStatus {
+//   OPEN
+//   CLOSED
+// }
+//
+// /// 사업 공고 저장/구독(회원당 공고 1회).
+// model SupportProgramBookmark {
+//   id        String   @id @default(cuid())
+//   createdAt DateTime @default(now())
+//
+//   supportProgramId String
+//   supportProgram   SupportProgram @relation(fields: [supportProgramId], references: [id], onDelete: Cascade)
+//
+//   userId String
+//   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+//
+//   @@unique([supportProgramId, userId])
+//   @@index([userId])
+// }

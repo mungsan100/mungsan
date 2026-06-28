@@ -1,0 +1,51 @@
+// ════════════════════════════════════════════════════════════════════════
+//  기업  ─  Company
+//  회원(User)이 대표/임원으로서 소속·대표하는 기업. 가입 시 사업자등록증·회사
+//  소개서·기업정보를 등록하고 관리자 검증(verificationStatus)을 거친다. 신뢰지수의
+//  실질 주체. (현 MVP 는 1인=1기업 가정이나 확장 대비 User 1:N Company.)
+// ════════════════════════════════════════════════════════════════════════
+
+/// [DRAFT] 기업 정보. 사업자등록증으로 검증된 B2B 협업의 신원 단위.
+model Company {
+  id                     String    @id @default(cuid()) /// [DRAFT] 고유 식별자 (cuid)
+  name                   String /// [DRAFT] 회사명
+  businessRegistrationNo String    @unique /// [DRAFT] 사업자등록번호(검증 키)
+  industry               String /// [DRAFT] 업종
+  description            String? /// [DRAFT] 회사 소개(텍스트)
+  trackRecord            String? /// [DRAFT] 주요 수행 이력(프로즈)
+  collaborationFields    String[] /// [DRAFT] 협업 가능 분야(태그 배열)
+  techTags               String[] /// [DRAFT] 기술 태그(매칭용, 사업계획서) — 비전 단계
+  website                String? /// [DRAFT] 홈페이지
+  revenue                BigInt? /// [DRAFT] 매출액(원). 민감정보 — 노출/암호화 정책 미정
+  foundedAt              DateTime? /// [DRAFT] 설립일
+
+  registrationCertUrl String? /// [DRAFT] 사업자등록증 파일 URL(필수 업로드지만 가입 단계 분리 대비 nullable)
+  brochureUrl         String? /// [DRAFT] 회사 소개서 파일 URL
+
+  trustScore         Int? /// [DRAFT] 신뢰지수(0~100). 대표인증+협업이행+평판+재협업으로 산정(배치 갱신)
+  verificationStatus CompanyVerificationStatus /// [DRAFT] 사업자 검증 상태
+
+  createdAt DateTime  @default(now()) /// [DRAFT] 등록 시각
+  updatedAt DateTime  @updatedAt /// [DRAFT] 최종 수정 시각
+  deletedAt DateTime? /// [DRAFT] 소프트 삭제 시각
+
+  ownerId String /// [DRAFT] 대표 사용자 FK
+  owner   User   @relation(fields: [ownerId], references: [id], onDelete: Cascade) /// [DRAFT] 대표 사용자 관계
+
+  loungePosts           LoungePost[] /// [DRAFT] 기업 명의 라운지 글
+  collaborationPosts    CollaborationPost[] /// [DRAFT] 등록한 협업 공고
+  sentProposals         CollaborationProposal[] /// [DRAFT] 보낸 협업 제안
+  projectParticipations ProjectParticipant[] /// [DRAFT] 참여 프로젝트(컨소시엄)
+  assetReports          AssetReport[] /// [DRAFT] 자산레포트
+  trustScoreLogs        TrustScoreLog[] /// [DRAFT] 신뢰지수 변동 이력
+
+  @@index([ownerId]) /// [DRAFT] 대표별 기업 조회
+  @@index([verificationStatus]) /// [DRAFT] 검증 상태별 조회(심사 큐)
+}
+
+/// [DRAFT] 사업자 검증 상태(관리자 심사).
+enum CompanyVerificationStatus {
+  PENDING /// [DRAFT] 검증 대기
+  VERIFIED /// [DRAFT] 검증 완료
+  REJECTED /// [DRAFT] 거절
+}

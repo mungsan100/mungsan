@@ -1,0 +1,153 @@
+// ════════════════════════════════════════════════════════════════════════
+//  공유 대시보드 / My 셰르파  ─  Project · ProjectParticipant · Phase · Task · TaskAttachment
+//  협업 제안 수락 후 다중 기업이 함께 수행하는 프로젝트(컨소시엄의 MVP 형태).
+//  Project → Phase(마일스톤) → Task(할 일) 계층. 초기 MVP 는 "내 업무 TO DO" 중심.
+//  ※ 사업계획서의 'Consortium'은 ProjectParticipant(주관/협력)로 1차 표현.
+// ════════════════════════════════════════════════════════════════════════
+
+/// [DRAFT] 협업 프로젝트(워크스페이스). 공고/수락 제안에서 파생. 진행률·기간·예산 관리.
+model Project {
+  id                 String        @id @default(cuid()) /// [DRAFT] 고유 식별자 (cuid)
+  title              String /// [DRAFT] 프로젝트 제목
+  description        String? /// [DRAFT] 설명
+  status             ProjectStatus /// [DRAFT] 프로젝트 상태
+  progressPercentage Int /// [DRAFT] 진행률 0~100 캐시(생성 시 0 명시, Task 기반 갱신)
+  budget             BigInt? /// [DRAFT] 할당 예산(원)
+  startDate          DateTime? /// [DRAFT] 시작일
+  endDate            DateTime? /// [DRAFT] 종료일
+
+  createdAt DateTime @default(now()) /// [DRAFT] 생성 시각
+  updatedAt DateTime @updatedAt /// [DRAFT] 최종 수정 시각
+
+  sourcePostId String?            @unique /// [DRAFT] 파생 협업 공고 FK(1:1)
+  sourcePost   CollaborationPost? @relation(fields: [sourcePostId], references: [id], onDelete: SetNull) /// [DRAFT] 파생 공고 관계
+
+  acceptedProposalId String?                @unique /// [DRAFT] 수락된 제안 FK(1:1)
+  acceptedProposal   CollaborationProposal? @relation(fields: [acceptedProposalId], references: [id], onDelete: SetNull) /// [DRAFT] 수락 제안 관계
+
+  participants ProjectParticipant[] /// [DRAFT] 참여 기업/사용자
+  phases       Phase[] /// [DRAFT] 마일스톤(단계)
+  tasks        Task[] /// [DRAFT] 할 일 목록
+  assetReports AssetReport[] /// [DRAFT] 프로젝트 단위 자산레포트
+
+  @@index([status]) /// [DRAFT] 상태별 프로젝트 조회
+}
+
+/// [DRAFT] 프로젝트 상태.
+enum ProjectStatus {
+  PLANNING /// [DRAFT] 기획
+  ACTIVE /// [DRAFT] 진행중
+  COMPLETED /// [DRAFT] 완료
+  PAUSED /// [DRAFT] 보류
+}
+
+/// [DRAFT] 프로젝트 참여 주체(기업, 선택적으로 담당 사용자). 주관/협력 역할 구분.
+model ProjectParticipant {
+  id       String          @id @default(cuid()) /// [DRAFT] 고유 식별자 (cuid)
+  role     ParticipantRole /// [DRAFT] 역할(주관/협력)
+  joinedAt DateTime /// [DRAFT] 참여 시각(생성 시 명시)
+
+  createdAt DateTime @default(now()) /// [DRAFT] 생성 시각
+
+  projectId String /// [DRAFT] 프로젝트 FK
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade) /// [DRAFT] 프로젝트 관계
+
+  companyId String /// [DRAFT] 참여 기업 FK
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade) /// [DRAFT] 참여 기업 관계
+
+  userId String? /// [DRAFT] 담당 사용자 FK(선택)
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull) /// [DRAFT] 담당 사용자 관계
+
+  @@unique([projectId, companyId]) /// [DRAFT] 기업당 프로젝트 1행
+  @@index([companyId]) /// [DRAFT] 기업별 참여 프로젝트
+  @@index([userId]) /// [DRAFT] 사용자별 참여 프로젝트
+}
+
+/// [DRAFT] 프로젝트 참여 역할.
+enum ParticipantRole {
+  LEAD /// [DRAFT] 주관사
+  PARTNER /// [DRAFT] 협력사
+}
+
+/// [DRAFT] 마일스톤(단계). 프로젝트를 큰 단위로 묶는다. sortKey 로 수동 정렬(fractional).
+model Phase {
+  id      String    @id @default(cuid()) /// [DRAFT] 고유 식별자 (cuid)
+  title   String /// [DRAFT] 마일스톤 제목
+  sortKey String /// [DRAFT] 정렬 키(0.x, sortKeyBetween 유틸로 생성 — 생성 시 명시)
+  dueDate DateTime? /// [DRAFT] 목표 마감일
+
+  createdAt DateTime @default(now()) /// [DRAFT] 생성 시각
+  updatedAt DateTime @updatedAt /// [DRAFT] 최종 수정 시각
+
+  projectId String /// [DRAFT] 프로젝트 FK
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade) /// [DRAFT] 프로젝트 관계
+
+  tasks Task[] /// [DRAFT] 단계 내 할 일
+
+  @@index([projectId]) /// [DRAFT] 프로젝트별 마일스톤 조회
+}
+
+/// [DRAFT] 할 일(업무). 담당자·마감일·중요도·상태. 프로젝트(필수)·마일스톤(선택)에 귀속.
+model Task {
+  id          String     @id @default(cuid()) /// [DRAFT] 고유 식별자 (cuid)
+  title       String /// [DRAFT] 업무명
+  description String? /// [DRAFT] 업무 설명
+  status      TaskStatus /// [DRAFT] 상태(예정·진행중·완료·보류)
+  priority    Priority? /// [DRAFT] 중요도
+  dueDate     DateTime? /// [DRAFT] 마감일
+  completedAt DateTime? /// [DRAFT] 완료 처리 시각
+  sortKey     String /// [DRAFT] 정렬 키(생성 시 명시)
+
+  createdAt DateTime @default(now()) /// [DRAFT] 생성 시각
+  updatedAt DateTime @updatedAt /// [DRAFT] 최종 수정 시각
+
+  projectId String /// [DRAFT] 프로젝트 FK
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade) /// [DRAFT] 프로젝트 관계
+
+  phaseId String? /// [DRAFT] 마일스톤 FK(선택)
+  phase   Phase?  @relation(fields: [phaseId], references: [id], onDelete: SetNull) /// [DRAFT] 마일스톤 관계
+
+  assigneeId String? /// [DRAFT] 담당자 User FK(선택)
+  assignee   User?   @relation(fields: [assigneeId], references: [id], onDelete: SetNull) /// [DRAFT] 담당자 관계
+
+  attachments TaskAttachment[] /// [DRAFT] 증빙/첨부
+
+  @@index([projectId, status]) /// [DRAFT] 프로젝트별 상태 필터 목록
+  @@index([assigneeId]) /// [DRAFT] 담당자별 할 일
+  @@index([phaseId]) /// [DRAFT] 마일스톤별 할 일
+}
+
+/// [DRAFT] 할 일 상태.
+enum TaskStatus {
+  PLANNED /// [DRAFT] 예정
+  IN_PROGRESS /// [DRAFT] 진행중
+  COMPLETED /// [DRAFT] 완료
+  ON_HOLD /// [DRAFT] 보류
+}
+
+/// [DRAFT] 중요도.
+enum Priority {
+  LOW /// [DRAFT] 낮음
+  MEDIUM /// [DRAFT] 중간
+  HIGH /// [DRAFT] 높음
+}
+
+/// [DRAFT] 할 일 증빙/첨부 파일.
+model TaskAttachment {
+  id       String  @id @default(cuid()) /// [DRAFT] 고유 식별자 (cuid)
+  fileName String /// [DRAFT] 파일명
+  fileUrl  String /// [DRAFT] 저장 URL
+  fileType String? /// [DRAFT] MIME 타입
+  fileSize Int? /// [DRAFT] 파일 크기(bytes)
+
+  createdAt DateTime @default(now()) /// [DRAFT] 업로드 시각
+
+  taskId String /// [DRAFT] 할 일 FK
+  task   Task   @relation(fields: [taskId], references: [id], onDelete: Cascade) /// [DRAFT] 할 일 관계
+
+  uploadedById String /// [DRAFT] 업로드 User FK
+  uploadedBy   User   @relation(fields: [uploadedById], references: [id], onDelete: Cascade) /// [DRAFT] 업로드 사용자 관계
+
+  @@index([taskId]) /// [DRAFT] 할 일별 첨부 조회
+  @@index([uploadedById]) /// [DRAFT] 업로더별 조회
+}

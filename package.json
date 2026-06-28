@@ -1,0 +1,22 @@
+{
+  "name": "mungsan",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:service": "npm run dev -w=apps/service",
+    "dev:admin": "npm run dev -w=apps/admin",
+    "//dev": "NODE_OPTIONS: Node 25부터 Web Storage 글로벌이 기본 켜져 서버 localStorage 참조 시 '--localstorage-file' 경고가 뜬다. --no-experimental-webstorage로 끄면 예전(undefined) 동작 + 경고 제거. concurrently 자식 워커까지 env 상속됨.",
+    "dev": "NODE_OPTIONS=--no-experimental-webstorage concurrently -n service,admin -c blue,magenta --kill-others-on-fail \"npm:dev:service\" \"npm:dev:admin\"",
+    "build": "npm run prisma:generate && npm run build -w=apps/service && npm run build -w=apps/admin",
+    "prisma:generate": "npm run generate -w @mungsan/db",
+    "postinstall": "npm run prisma:generate"
+  },
+  "devDependencies": {
+    "@mungsan/prettier": "*",
+    "concurrently": "^9.2.1"
+  }
+}

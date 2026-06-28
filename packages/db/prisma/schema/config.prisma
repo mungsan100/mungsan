@@ -1,0 +1,77 @@
+// ════════════════════════════════════════════════════════════════════════
+//  뭉산(MUNGSAN) — 단일 진실원천 스키마 (PostgreSQL)
+// ════════════════════════════════════════════════════════════════════════
+//  뭉산 = 검증된 초기 스타트업 대표·임원 중심의 B2B 협업 파트너 플랫폼.
+//  사업자등록증으로 신원을 검증받은 기업(대표/임원)이 ① 라운지에서 익명으로
+//  사업 고민을 나누고 ② 협업 마켓플레이스에서 협업 공고를 올리고 제안을 주고받아
+//  ③ 공유 대시보드(My 셰르파)에서 프로젝트의 마일스톤·할 일을 함께 관리한다.
+//
+//    ┌─ apps/service  (사용자 모바일 웹)   로그인 주체 = User(기업 대표/임원)
+//    └─ apps/admin    (운영 백오피스)       로그인 주체 = Admin (회원 승인 심사 등)
+//
+//  두 앱은 코드는 분리돼 있지만 DB는 하나다. @mungsan/db 패키지로 공유한다.
+//
+//  ⚠ 본 스키마는 IA(reference/뭉산_IA.drawio)·ERD(reference/뭉산_ERD.drawio)·
+//    요구사항명세·MVP 개발범위 보고서를 1차 종합한 DRAFT다. 거의 모든 필드에
+//    `/// [DRAFT]` 를 달아 "확정 전"임을 표기한다 — 검토 후 하나씩 떼어낸다.
+//
+// ────────────────────────────────────────────────────────────────────────
+//  공통 규약 (CONVENTIONS) — trefit 모노레포 규약 계승
+// ────────────────────────────────────────────────────────────────────────
+//  · id 는 @id @default(cuid()). createdAt @default(now()), updatedAt @updatedAt.
+//  · @default 는 오직 id·createdAt·updatedAt 에만. 상태 enum·플래그·카운트·가격 등
+//    의미 필드는 default 를 두지 않는다 — 폼/커맨드가 항상 명시값을 보내도록 강제
+//    (누락이 조용한 fallback 이 아니라 시끄러운 에러로 드러나게). 집계 카운트
+//    (likeCount 등)도 default 없이, 생성 커맨드가 0 을 명시한다.
+//  · enum 값은 UPPER_SNAKE_CASE. DB 에도 그대로 저장(@map 우회 없음).
+//  · 모든 시각은 UTC 저장, 표시할 때만 KST(date-fns). 컬럼 타입은 DateTime.
+//  · 소프트 삭제는 deletedAt DateTime? (불리언 숨김 플래그 대신 시각 presence).
+//  · 단순 문자열 목록(tags·requiredSkills 등)은 PostgreSQL 배열 String[].
+//  · 구조가 있는 목록(phase·task 등)은 별도 테이블로 정규화.
+//  · like·bookmark 등 "관계"는 메타(createdAt)를 위해 명시적 조인 테이블로 둔다.
+//  · 집계값(likeCount·proposalCount 등)은 비정규화 캐시 — 쓰기 경로(command)가 갱신.
+//  · @relation(onDelete:) 는 엣지마다 명시. @@map 미사용(모델명 → 테이블명 자동).
+//  · 예측 가능한 실패는 throw 대신 결과 객체 반환(앱 레이어 규약).
+//
+// ────────────────────────────────────────────────────────────────────────
+//  파일 목차 (도메인별). 파일 순서는 의미 없음 — Prisma 가 prisma/schema/ 전체를 병합.
+// ────────────────────────────────────────────────────────────────────────
+//  config        SiteSettings                       (+ generator·datasource·규약·목차)
+//  user          User · UserConsent · UserSocialAccount · VerificationToken · PhoneVerification
+//  company       Company                            (기업 정보·사업자 검증)
+//  admin         Admin                              (운영자 — 권한시스템 없음; 가입승인=User.approvedAt)
+//  taxonomy      IndustryTag · SkillTag · RegionTag (태그 카탈로그, 용도별 분리)
+//  lounge        LoungePost · LoungeComment · LoungePostLike · LoungeCommentLike · LoungeBookmark
+//  collaboration CollaborationPost · CollaborationProposal · CollaborationBookmark
+//  project       Project · ProjectParticipant · Phase · Task · TaskAttachment
+//  announcement  [MVP 보류·전체 주석] 홈 사업공고는 외부 API(K-Startup) 직접 파싱으로 대체
+//  trust         TrustScoreLog · AssetReport        (관리: 신뢰지수·자산레포트)  [DRAFT 전반]
+//  notification  Notification
+//  governance    Report · AuditLog                  (신고·감사로그)  [DRAFT 전반]
+//
+//  ※ enum 은 그걸 주로 쓰는 model 바로 아래/위에 colocate 한다.
+// ════════════════════════════════════════════════════════════════════════
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// [DRAFT] 사이트 전역 설정(사업자 정보·고객센터 등). 단일 행(id="singleton").
+model SiteSettings {
+  id             String @id @default("singleton") /// [DRAFT] 단일 행 고정 식별자
+  companyName    String /// [DRAFT] 운영사 회사명
+  representative String /// [DRAFT] 대표자명
+  businessNo     String /// [DRAFT] 사업자등록번호
+  address        String /// [DRAFT] 사업장 주소
+  email          String /// [DRAFT] 대표 이메일(푸터 사업자정보)
+  supportEmail   String /// [DRAFT] 고객센터 이메일
+  supportPhone   String /// [DRAFT] 고객센터 전화번호
+
+  createdAt DateTime @default(now()) /// [DRAFT] 생성 시각
+  updatedAt DateTime @updatedAt /// [DRAFT] 최종 수정 시각
+}

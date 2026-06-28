@@ -1,0 +1,31 @@
+// ════════════════════════════════════════════════════════════════════════
+//  알림  ─  Notification
+//  가입 승인·제안 수신/응답·프로젝트 변경·라운지 반응·사업공고 등 사용자 알림.
+// ════════════════════════════════════════════════════════════════════════
+
+/// [DRAFT] 사용자 알림. 읽음 처리는 readAt presence 로 판정.
+model Notification {
+  id      String           @id @default(cuid()) /// [DRAFT] 고유 식별자 (cuid)
+  type    NotificationType /// [DRAFT] 알림 종류
+  title   String /// [DRAFT] 제목
+  body    String? /// [DRAFT] 본문
+  linkUrl String? /// [DRAFT] 클릭 시 이동 경로(앱 내 라우트)
+  readAt  DateTime? /// [DRAFT] 읽은 시각(미독=null)
+
+  createdAt DateTime @default(now()) /// [DRAFT] 발송 시각
+
+  userId String /// [DRAFT] 수신 사용자 FK
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade) /// [DRAFT] 수신 사용자 관계
+
+  @@index([userId, readAt]) /// [DRAFT] 사용자별 미독/전체 조회
+}
+
+/// [DRAFT] 알림 종류.
+enum NotificationType {
+  MEMBERSHIP /// [DRAFT] 가입 승인/거절
+  PROPOSAL /// [DRAFT] 협업 제안 수신/응답
+  PROJECT /// [DRAFT] 프로젝트/할 일 변경
+  LOUNGE /// [DRAFT] 라운지 반응(댓글·좋아요)
+  SUPPORT_PROGRAM /// [DRAFT] 신규/마감임박 사업 공고
+  SYSTEM /// [DRAFT] 시스템 공지
+}

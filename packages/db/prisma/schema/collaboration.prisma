@@ -1,0 +1,110 @@
+// ════════════════════════════════════════════════════════════════════════
+//  협업 마켓플레이스  ─  CollaborationPost · CollaborationProposal · CollaborationBookmark
+//  기업이 협업 공고(필요 파트너·역량·예산·기간·지역·마감)를 올리면, 다른 기업이
+//  회사 소개서와 함께 제안을 보낸다. 제안 수락 시 Project(공유 대시보드)로 이어진다.
+//  ※ ERD/IA 의 "협업 공고"가 정본 명칭(요구사항 PDF 의 "협업 펀드/금"은 OCR 오독).
+// ════════════════════════════════════════════════════════════════════════
+
+/// [DRAFT] 협업 공고. 협업/프로젝트 수요를 공개 모집. 검색·필터(업종·역량·지역·예산·마감)·저장 대상.
+model CollaborationPost {
+  id                   String    @id @default(cuid()) /// [DRAFT] 고유 식별자 (cuid)
+  title                String /// [DRAFT] 협업/사업 제목
+  description          String /// [DRAFT] 협업 설명
+  requiredPartnerTypes String[] /// [DRAFT] 필요 파트너사 유형(예: B2B 영업사·SI 구축사)
+  requiredSkills       String[] /// [DRAFT] 필요 역량/역할
+  industryTags         String[] /// [DRAFT] 업종 태그(필터)
+  minBudget            BigInt? /// [DRAFT] 최소 예산(원)
+  maxBudget            BigInt? /// [DRAFT] 최대 예산(원)
+  estimatedDuration    String? /// [DRAFT] 예상 기간(예: "3개월")
+  region               String? /// [DRAFT] 지역
+  collaborationMethod  String? /// [DRAFT] 협업 방식
+  deadline             DateTime? /// [DRAFT] 마감일
+  attachmentUrls       String[] /// [DRAFT] 첨부 파일 URL
+  isPublic             Boolean /// [DRAFT] 공개 여부
+
+  status        CollaborationPostStatus /// [DRAFT] 공고 상태
+  viewCount     Int /// [DRAFT] 조회수(생성 시 0 명시)
+  proposalCount Int /// [DRAFT] 제안수 캐시(생성 시 0)
+  bookmarkCount Int /// [DRAFT] 저장수 캐시(생성 시 0)
+
+  createdAt DateTime  @default(now()) /// [DRAFT] 등록 시각
+  updatedAt DateTime  @updatedAt /// [DRAFT] 최종 수정 시각
+  deletedAt DateTime? /// [DRAFT] 소프트 삭제 시각
+
+  companyId String /// [DRAFT] 등록 기업 FK
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade) /// [DRAFT] 등록 기업 관계
+
+  authorId String /// [DRAFT] 작성자 User FK
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade) /// [DRAFT] 작성자 관계
+
+  proposals CollaborationProposal[] /// [DRAFT] 받은 제안들
+  bookmarks CollaborationBookmark[] /// [DRAFT] 저장한 사용자들
+  project   Project? /// [DRAFT] 공고에서 파생된 프로젝트(제안 수락 시, 1:1)
+
+  @@index([status, createdAt]) /// [DRAFT] 상태별 최신순 목록
+  @@index([companyId]) /// [DRAFT] 기업별 공고 조회
+  @@index([deadline]) /// [DRAFT] 마감 임박 정렬
+}
+
+/// [DRAFT] 협업 공고 상태.
+enum CollaborationPostStatus {
+  RECRUITING /// [DRAFT] 모집중
+  IN_PROGRESS /// [DRAFT] 진행중(제안 수락됨)
+  COMPLETED /// [DRAFT] 완료
+  CANCELLED /// [DRAFT] 취소
+}
+
+/// [DRAFT] 협업 제안. 공고를 본 기업이 회사소개서·제안 메시지·역할/기여로 제안. 임시저장(DRAFT) 지원.
+model CollaborationProposal {
+  id                  String         @id @default(cuid()) /// [DRAFT] 고유 식별자 (cuid)
+  message             String /// [DRAFT] 제안 메시지(자기소개·관심 이유 등)
+  contributionRole    String? /// [DRAFT] 예상 기여 역할
+  collaborationMethod String? /// [DRAFT] 협업 가능 방식
+  meetingAvailability String? /// [DRAFT] 미팅 가능 일정(자유 텍스트)
+  attachmentUrls      String[] /// [DRAFT] 첨부(회사소개서 등) URL
+  status              ProposalStatus /// [DRAFT] 제안 상태
+  respondedAt         DateTime? /// [DRAFT] 공고 측 응답 시각
+
+  createdAt DateTime @default(now()) /// [DRAFT] 제안 시각
+  updatedAt DateTime @updatedAt /// [DRAFT] 최종 수정 시각
+
+  postId String /// [DRAFT] 협업 공고 FK
+  post   CollaborationPost @relation(fields: [postId], references: [id], onDelete: Cascade) /// [DRAFT] 협업 공고 관계
+
+  proposingCompanyId String /// [DRAFT] 제안 기업 FK
+  proposingCompany   Company @relation(fields: [proposingCompanyId], references: [id], onDelete: Cascade) /// [DRAFT] 제안 기업 관계
+
+  proposerId String /// [DRAFT] 제안자 User FK
+  proposer   User   @relation(fields: [proposerId], references: [id], onDelete: Cascade) /// [DRAFT] 제안자 관계
+
+  acceptedProject Project? /// [DRAFT] 이 제안 수락으로 생성된 프로젝트(1:1)
+
+  @@index([postId, status]) /// [DRAFT] 공고별 제안 목록(상태 필터)
+  @@index([proposingCompanyId]) /// [DRAFT] 기업별 보낸 제안
+}
+
+/// [DRAFT] 협업 제안 상태 라이프사이클.
+enum ProposalStatus {
+  DRAFT /// [DRAFT] 임시 저장
+  PROPOSED /// [DRAFT] 제안 완료
+  UNDER_REVIEW /// [DRAFT] 검토중
+  MEETING_REQUESTED /// [DRAFT] 미팅 요청
+  ACCEPTED /// [DRAFT] 수락
+  REJECTED /// [DRAFT] 반려
+  IN_COLLABORATION /// [DRAFT] 협업 진행중
+}
+
+/// [DRAFT] 협업 공고 저장/북마크(회원당 공고 1회).
+model CollaborationBookmark {
+  id        String   @id @default(cuid()) /// [DRAFT] 고유 식별자 (cuid)
+  createdAt DateTime @default(now()) /// [DRAFT] 저장 시각
+
+  postId String /// [DRAFT] 협업 공고 FK
+  post   CollaborationPost @relation(fields: [postId], references: [id], onDelete: Cascade) /// [DRAFT] 협업 공고 관계
+
+  userId String /// [DRAFT] 사용자 FK
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade) /// [DRAFT] 사용자 관계
+
+  @@unique([postId, userId]) /// [DRAFT] 중복 저장 방지
+  @@index([userId]) /// [DRAFT] 사용자별 저장 목록
+}

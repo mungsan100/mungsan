@@ -1,0 +1,130 @@
+// ════════════════════════════════════════════════════════════════════════
+//  사용자(기업 대표/임원)  ─  User · UserConsent · UserSocialAccount
+//                            · VerificationToken · PhoneVerification
+//  apps/service 의 로그인 주체. 회원가입 → (이메일 인증) → 기업정보 등록 →
+//  관리자 승인(approvedAt 기록) 이후 라운지·협업이 열린다.
+//
+//  상태는 별도 enum 없이 "시각 presence"로 표현한다(trefit 규약 계승):
+//    · approvedAt  == null → 가입신청중 / != null → 승인(이용가능)
+//    · suspendedAt != null → 정지   · withdrawnAt != null → 탈퇴   · deletedAt → 소프트삭제
+// ════════════════════════════════════════════════════════════════════════
+
+/// [DRAFT] 서비스 회원. 한 명의 기업 대표/임원. 자체(email+passwordHash) 또는 소셜 로그인.
+model User {
+  id           String  @id @default(cuid()) /// [DRAFT] 고유 식별자 (cuid)
+  email        String  @unique /// [DRAFT] 이메일(로그인 ID, unique)
+  passwordHash String? /// [DRAFT] 비밀번호 해시 (소셜 가입 시 null)
+  name         String /// [DRAFT] 이름(실명)
+  phone        String /// [DRAFT] 연락처(정규화된 번호)
+  title        String /// [DRAFT] 직책/직무 (예: 대표, CTO)
+  avatarUrl    String? /// [DRAFT] 프로필 이미지 URL
+
+  emailVerifiedAt DateTime? /// [DRAFT] 이메일 인증 완료 시각(미인증=null)
+  phoneVerifiedAt DateTime? /// [DRAFT] 휴대폰 본인인증 완료 시각(미인증=null)
+  approvedAt      DateTime? /// [DRAFT] 관리자 가입 승인 시각(미승인=가입신청중)
+
+  createdAt   DateTime  @default(now()) /// [DRAFT] 가입 신청 시각
+  updatedAt   DateTime  @updatedAt /// [DRAFT] 최종 수정 시각
+  deletedAt   DateTime? /// [DRAFT] 소프트 삭제 시각
+  suspendedAt DateTime? /// [DRAFT] 이용정지 시각
+  withdrawnAt DateTime? /// [DRAFT] 탈퇴 시각
+
+  companies              Company[] /// [DRAFT] 보유 기업(현 MVP 는 1인=1기업 가정, 확장 대비 1:N)
+  loungePosts            LoungePost[] /// [DRAFT] 작성한 라운지 글
+  loungeComments         LoungeComment[] /// [DRAFT] 작성한 댓글
+  loungePostLikes        LoungePostLike[] /// [DRAFT] 누른 글 좋아요
+  loungeCommentLikes     LoungeCommentLike[] /// [DRAFT] 누른 댓글 좋아요
+  loungeBookmarks        LoungeBookmark[] /// [DRAFT] 라운지 글 북마크
+  collaborationPosts     CollaborationPost[] /// [DRAFT] 등록한 협업 공고(작성자)
+  collaborationProposals CollaborationProposal[] /// [DRAFT] 보낸 협업 제안(제안자)
+  collaborationBookmarks CollaborationBookmark[] /// [DRAFT] 협업 공고 저장
+  projectParticipations  ProjectParticipant[] /// [DRAFT] 참여 중인 프로젝트
+  assignedTasks          Task[] /// [DRAFT] 담당(배정된) 할 일
+  taskAttachments        TaskAttachment[] /// [DRAFT] 업로드한 증빙/첨부
+  notifications          Notification[] /// [DRAFT] 받은 알림
+  consents               UserConsent[] /// [DRAFT] 약관 동의 상태
+  socialAccounts         UserSocialAccount[] /// [DRAFT] 소셜 로그인 연동
+  verificationTokens     VerificationToken[] /// [DRAFT] 이메일/비번 토큰
+
+  @@index([approvedAt]) /// [DRAFT] 승인 대기(approvedAt null) 목록 조회
+}
+
+/// [DRAFT] 약관 동의의 "현재 상태"(항목별 1행). 가입 시 필수 약관 동의 근거 보관.
+model UserConsent {
+  id        String      @id @default(cuid()) /// [DRAFT] 고유 식별자 (cuid)
+  type      ConsentType /// [DRAFT] 동의 항목 종류
+  version   String /// [DRAFT] 동의한 약관 버전
+  createdAt DateTime    @default(now()) /// [DRAFT] 동의(행 생성) 시각
+  revokedAt DateTime? /// [DRAFT] 철회 시각(필수 항목은 보통 null)
+
+  userId String /// [DRAFT] 사용자 FK
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade) /// [DRAFT] 사용자 관계
+
+  @@unique([userId, type]) /// [DRAFT] 항목별 1행(현재 상태)
+  @@index([userId]) /// [DRAFT] 사용자별 동의 조회
+}
+
+/// [DRAFT] 회원가입 동의 항목.
+enum ConsentType {
+  TERMS /// [DRAFT] 이용약관(필수)
+  PRIVACY /// [DRAFT] 개인정보 수집·이용(필수)
+  MARKETING /// [DRAFT] 마케팅 정보 수신(선택)
+}
+
+/// [DRAFT] 소셜 로그인 연동 계정. 재로그인 식별키 = (provider, providerAccountId).
+model UserSocialAccount {
+  id                String         @id @default(cuid()) /// [DRAFT] 고유 식별자 (cuid)
+  provider          SocialProvider /// [DRAFT] 소셜 provider
+  providerAccountId String /// [DRAFT] provider 발급 고유 식별자(sub)
+  email             String? /// [DRAFT] provider 가 내려준 이메일
+
+  createdAt DateTime @default(now()) /// [DRAFT] 연동 시각
+  updatedAt DateTime @updatedAt /// [DRAFT] 최종 수정 시각
+
+  userId String /// [DRAFT] 사용자 FK
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade) /// [DRAFT] 사용자 관계
+
+  @@unique([provider, providerAccountId]) /// [DRAFT] 로그인 조회 키 + 중복 연결 방지
+  @@index([userId]) /// [DRAFT] 사용자별 연동 계정 조회
+}
+
+/// [DRAFT] 소셜 로그인 provider(현 UI 버튼 확정 전).
+enum SocialProvider {
+  KAKAO /// [DRAFT] 카카오
+  NAVER /// [DRAFT] 네이버
+  GOOGLE /// [DRAFT] 구글
+}
+
+/// [DRAFT] 단일사용·만료 토큰(비밀번호 재설정·이메일 인증 공용). DB 엔 sha256 해시만 저장.
+model VerificationToken {
+  id         String              @id @default(cuid()) /// [DRAFT] 고유 식별자 (cuid)
+  purpose    VerificationPurpose /// [DRAFT] 토큰 용도
+  tokenHash  String              @unique /// [DRAFT] sha256(원문 토큰)
+  expiresAt  DateTime /// [DRAFT] 만료 시각
+  consumedAt DateTime? /// [DRAFT] 소비(사용) 시각
+  createdAt  DateTime            @default(now()) /// [DRAFT] 발급 시각
+
+  userId String /// [DRAFT] 사용자 FK
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade) /// [DRAFT] 사용자 관계
+
+  @@index([userId]) /// [DRAFT] 사용자별 토큰 조회
+}
+
+/// [DRAFT] 토큰 용도.
+enum VerificationPurpose {
+  PASSWORD_RESET /// [DRAFT] 비밀번호 재설정
+  EMAIL_VERIFY /// [DRAFT] 이메일 인증
+}
+
+/// [DRAFT] 휴대폰 OTP 본인인증 1회용 코드. 가입 전에도 발급되므로 User FK 없이 phone 으로 식별.
+model PhoneVerification {
+  id         String    @id @default(cuid()) /// [DRAFT] 고유 식별자 (cuid)
+  phone      String /// [DRAFT] 정규화된 번호(숫자만)
+  codeHash   String /// [DRAFT] sha256(6자리 코드)
+  expiresAt  DateTime /// [DRAFT] 만료 시각
+  attempts   Int /// [DRAFT] 오입력 횟수(생성 시 0 명시)
+  consumedAt DateTime? /// [DRAFT] 검증 성공 시각(1회용)
+  createdAt  DateTime  @default(now()) /// [DRAFT] 발급 시각
+
+  @@index([phone, createdAt]) /// [DRAFT] 최신 발급 조회 + 쿨다운/일일캡 카운트
+}

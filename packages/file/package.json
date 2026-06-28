@@ -1,0 +1,13 @@
+{
+  "name": "@mungsan/file",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./client": { "types": "./src/client.ts", "default": "./src/client.ts" },
+    "./server": { "types": "./src/server.ts", "default": "./src/server.ts" }
+  },
+  "dependencies": {
+    "@vercel/blob": "^2.4.0"
+  }
+}

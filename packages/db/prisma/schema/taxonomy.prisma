@@ -1,0 +1,30 @@
+// ════════════════════════════════════════════════════════════════════════
+//  분류  ─  IndustryTag · SkillTag · RegionTag
+//  "태그 기반 필터"(IA: 라운지·협업 검색)의 정규 카탈로그를 용도별로 분리한다.
+//  실제 엔티티 태깅은 각 모델의 String[] 필드(industryTags·requiredSkills 등)로 두고,
+//  여기 카탈로그는 자동완성·정규 명칭의 원천 역할(엔티티와 FK 로 묶지 않음).
+// ════════════════════════════════════════════════════════════════════════
+
+/// [DRAFT] 업종 태그 카탈로그.
+model IndustryTag {
+  id        String   @id @default(cuid()) /// [DRAFT] 고유 식별자 (cuid)
+  name      String   @unique /// [DRAFT] 업종명(정규)
+  createdAt DateTime @default(now()) /// [DRAFT] 생성 시각
+  updatedAt DateTime @updatedAt /// [DRAFT] 최종 수정 시각
+}
+
+/// [DRAFT] 역량/기술 태그 카탈로그.
+model SkillTag {
+  id        String   @id @default(cuid()) /// [DRAFT] 고유 식별자 (cuid)
+  name      String   @unique /// [DRAFT] 역량명(정규)
+  createdAt DateTime @default(now()) /// [DRAFT] 생성 시각
+  updatedAt DateTime @updatedAt /// [DRAFT] 최종 수정 시각
+}
+
+/// [DRAFT] 지역 태그 카탈로그.
+model RegionTag {
+  id        String   @id @default(cuid()) /// [DRAFT] 고유 식별자 (cuid)
+  name      String   @unique /// [DRAFT] 지역명(정규)
+  createdAt DateTime @default(now()) /// [DRAFT] 생성 시각
+  updatedAt DateTime @updatedAt /// [DRAFT] 최종 수정 시각
+}
