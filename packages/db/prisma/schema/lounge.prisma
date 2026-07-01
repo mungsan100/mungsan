@@ -1,124 +1,150 @@
 // ════════════════════════════════════════════════════════════════════════
-//  라운지(임원 전용 익명 커뮤니티)  ─  LoungePost · LoungeComment
+//  라운지(임원 전용 익명 커뮤니티)  ─  LoungeProfile · LoungePost · LoungeComment
 //                                    · LoungePostLike · LoungeCommentLike · LoungeBookmark
 //  VERIFIED 회원만 글/댓글 작성. 화면은 익명(displayName)이되 백엔드는 작성자 식별.
 //  반응 = 좋아요(글/댓글) + 댓글 + 북마크(IA). 카운트는 비정규화 캐시(커맨드가 갱신).
 // ════════════════════════════════════════════════════════════════════════
 
-/// [DRAFT] 라운지 게시글. 카테고리별 익명/기업명 작성. 카드에 댓글수·좋아요수·작성시간 노출.
+/// 라운지 활동용 사용자 프로필(1:1)
+model LoungeProfile {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 프로필 정보
+  nickname String
+
+  // 사용자
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
+}
+
+/// 라운지 게시글
 model LoungePost {
-  id           String         @id @default(cuid()) /// [DRAFT] 고유 식별자 (cuid)
-  title        String /// [DRAFT] 제목
-  content      String /// [DRAFT] 본문
-  category     LoungeCategory /// [DRAFT] 카테고리(전체는 UI 필터, 저장값 아님)
-  isAnonymous  Boolean /// [DRAFT] 익명 여부(true 면 작성자 신원 숨김)
-  displayName  String? /// [DRAFT] 화면 표시명(익명 핸들 또는 기업명 스냅샷)
-  industryTags String[] /// [DRAFT] 업종/주제 태그(필터용)
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  viewCount     Int /// [DRAFT] 조회수(생성 시 0 명시)
-  likeCount     Int /// [DRAFT] 좋아요수 캐시(생성 시 0)
-  commentCount  Int /// [DRAFT] 댓글수 캐시(생성 시 0)
-  bookmarkCount Int /// [DRAFT] 북마크수 캐시(생성 시 0)
+  // 기본 정보
+  title    String
+  content  String
+  category LoungeCategory
 
-  createdAt DateTime  @default(now()) /// [DRAFT] 작성 시각
-  updatedAt DateTime  @updatedAt /// [DRAFT] 최종 수정 시각
-  deletedAt DateTime? /// [DRAFT] 소프트 삭제 시각
+  // 상태
+  deletedAt DateTime?
 
-  authorId String /// [DRAFT] 작성자 User FK
-  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade) /// [DRAFT] 작성자 관계
+  // 비정규화
+  viewCount     Int @default(0) // 조회수
+  likeCount     Int @default(0) // 좋아요수 캐시
+  commentCount  Int @default(0) // 댓글수 캐시
+  bookmarkCount Int @default(0) // 북마크수 캐시
 
-  companyId String? /// [DRAFT] 작성 기업 FK(기업명 공개 작성 시)
-  company   Company? @relation(fields: [companyId], references: [id], onDelete: SetNull) /// [DRAFT] 작성 기업 관계
+  // 작성자
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id])
 
-  comments  LoungeComment[] /// [DRAFT] 댓글
-  likes     LoungePostLike[] /// [DRAFT] 좋아요
-  bookmarks LoungeBookmark[] /// [DRAFT] 북마크
+  comments  LoungeComment[]
+  likes     LoungePostLike[]
+  bookmarks LoungeBookmark[]
 
-  @@index([category, createdAt]) /// [DRAFT] 카테고리별 최신순 목록
-  @@index([authorId]) /// [DRAFT] 작성자별 조회
+  @@index([category, createdAt])
+  @@index([authorId])
 }
 
-/// [DRAFT] 라운지 카테고리(MVP 보고서 기준). "전체"는 저장값 아닌 UI 필터.
+/// 라운지 글 카테고리
 enum LoungeCategory {
-  COLLABORATION /// [DRAFT] 협업 제안
-  BUSINESS_CONCERN /// [DRAFT] 사업 고민
-  INVESTMENT_FUNDING /// [DRAFT] 투자/자금
-  DEVELOPMENT_TECH /// [DRAFT] 개발/기술
-  MARKETING_SALES /// [DRAFT] 마케팅/영업
-  GOVERNMENT_SUPPORT /// [DRAFT] 정부지원사업
-  ETC /// [DRAFT] 기타
+  COLLABORATION // 협업 제안
+  BUSINESS_CONCERN // 사업 고민
+  INVESTMENT_FUNDING // 투자/자금
+  DEVELOPMENT_TECH // 개발/기술
+  MARKETING_SALES // 마케팅/영업
+  GOVERNMENT_SUPPORT // 정부지원사업
+  ETC // 기타
 }
 
-/// [DRAFT] 라운지 댓글. parentId 로 대댓글(1단계 스레드) 표현.
+/// 라운지 댓글
 model LoungeComment {
-  id          String  @id @default(cuid()) /// [DRAFT] 고유 식별자 (cuid)
-  content     String /// [DRAFT] 댓글 내용
-  isAnonymous Boolean /// [DRAFT] 익명 여부
-  displayName String? /// [DRAFT] 화면 표시명
-  likeCount   Int /// [DRAFT] 좋아요수 캐시(생성 시 0)
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  createdAt DateTime  @default(now()) /// [DRAFT] 작성 시각
-  updatedAt DateTime  @updatedAt /// [DRAFT] 최종 수정 시각
-  deletedAt DateTime? /// [DRAFT] 소프트 삭제 시각
+  // 내용
+  content String
 
-  postId String /// [DRAFT] 게시글 FK
-  post   LoungePost @relation(fields: [postId], references: [id], onDelete: Cascade) /// [DRAFT] 게시글 관계
+  // 상태
+  deletedAt DateTime?
 
-  authorId String /// [DRAFT] 작성자 User FK
-  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade) /// [DRAFT] 작성자 관계
+  // 비정규화
+  likeCount Int @default(0) // 좋아요수 캐시
 
-  parentId String? /// [DRAFT] 부모 댓글 FK(대댓글)
-  parent   LoungeComment?  @relation("LoungeCommentReplies", fields: [parentId], references: [id], onDelete: Cascade) /// [DRAFT] 부모 댓글 관계
-  replies  LoungeComment[] @relation("LoungeCommentReplies") /// [DRAFT] 대댓글 목록
+  // 게시글
+  postId String
+  post   LoungePost @relation(fields: [postId], references: [id])
 
-  likes LoungeCommentLike[] /// [DRAFT] 댓글 좋아요
+  // 작성자
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id])
 
-  @@index([postId, createdAt]) /// [DRAFT] 게시글별 댓글 목록
-  @@index([authorId]) /// [DRAFT] 작성자별 조회
-  @@index([parentId]) /// [DRAFT] 대댓글 조회
+  // 부모 댓글
+  parentId String?
+  parent   LoungeComment? @relation("LoungeCommentReplies", fields: [parentId], references: [id])
+
+  likes   LoungeCommentLike[]
+  replies LoungeComment[]     @relation("LoungeCommentReplies") // 대댓글
+
+  @@index([postId, createdAt])
+  @@index([authorId])
+  @@index([parentId])
 }
 
-/// [DRAFT] 글 좋아요(회원당 글 1회). 관계 메타(createdAt) 보존 위해 명시 조인 테이블.
+/// 글 좋아요
 model LoungePostLike {
-  id        String   @id @default(cuid()) /// [DRAFT] 고유 식별자 (cuid)
-  createdAt DateTime @default(now()) /// [DRAFT] 좋아요 시각
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  postId String /// [DRAFT] 게시글 FK
-  post   LoungePost @relation(fields: [postId], references: [id], onDelete: Cascade) /// [DRAFT] 게시글 관계
+  // 게시글
+  postId String
+  post   LoungePost @relation(fields: [postId], references: [id])
 
-  userId String /// [DRAFT] 사용자 FK
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade) /// [DRAFT] 사용자 관계
+  // 좋아요를 누른 사용자
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
 
-  @@unique([postId, userId]) /// [DRAFT] 중복 좋아요 방지
-  @@index([userId]) /// [DRAFT] 사용자별 좋아요 조회
+  @@unique([postId, userId]) // 중복 좋아요 방지
+  @@index([userId])
 }
 
-/// [DRAFT] 댓글 좋아요(회원당 댓글 1회).
+// 댓글 좋아요
 model LoungeCommentLike {
-  id        String   @id @default(cuid()) /// [DRAFT] 고유 식별자 (cuid)
-  createdAt DateTime @default(now()) /// [DRAFT] 좋아요 시각
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
 
-  commentId String /// [DRAFT] 댓글 FK
-  comment   LoungeComment @relation(fields: [commentId], references: [id], onDelete: Cascade) /// [DRAFT] 댓글 관계
+  // 댓글
+  commentId String
+  comment   LoungeComment @relation(fields: [commentId], references: [id])
 
-  userId String /// [DRAFT] 사용자 FK
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade) /// [DRAFT] 사용자 관계
+  // 좋아요를 누른 사용자
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
 
-  @@unique([commentId, userId]) /// [DRAFT] 중복 좋아요 방지
-  @@index([userId]) /// [DRAFT] 사용자별 좋아요 조회
+  @@unique([commentId, userId]) // 중복 좋아요 방지
+  @@index([userId])
 }
 
-/// [DRAFT] 라운지 글 북마크/저장(회원당 글 1회).
+// 라운지 글 북마크/저장
 model LoungeBookmark {
-  id        String   @id @default(cuid()) /// [DRAFT] 고유 식별자 (cuid)
-  createdAt DateTime @default(now()) /// [DRAFT] 저장 시각
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
 
-  postId String /// [DRAFT] 게시글 FK
-  post   LoungePost @relation(fields: [postId], references: [id], onDelete: Cascade) /// [DRAFT] 게시글 관계
+  // 게시글
+  postId String
+  post   LoungePost @relation(fields: [postId], references: [id])
 
-  userId String /// [DRAFT] 사용자 FK
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade) /// [DRAFT] 사용자 관계
+  // 북마크를 누른 사용자
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
 
-  @@unique([postId, userId]) /// [DRAFT] 중복 저장 방지
-  @@index([userId]) /// [DRAFT] 사용자별 저장 목록
+  @@unique([postId, userId]) // 중복 저장 방지
+  @@index([userId])
 }

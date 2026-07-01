@@ -8,6 +8,6 @@
     "./server": { "types": "./src/server.ts", "default": "./src/server.ts" }
   },
   "dependencies": {
-    "@vercel/blob": "^2.4.0"
+    "@vercel/blob": "^2.5.0"
   }
 }

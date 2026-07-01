@@ -1,51 +1,35 @@
 // ════════════════════════════════════════════════════════════════════════
 //  기업  ─  Company
-//  회원(User)이 대표/임원으로서 소속·대표하는 기업. 가입 시 사업자등록증·회사
-//  소개서·기업정보를 등록하고 관리자 검증(verificationStatus)을 거친다. 신뢰지수의
-//  실질 주체. (현 MVP 는 1인=1기업 가정이나 확장 대비 User 1:N Company.)
+//  Company 는 관리자 마스터 데이터가 아니라 user 가 직접 입력해 소유하는 회사 프로필.
+//  현재는 user 1명이 회사 1개를 소유하는 1:1(ownerId @unique). 회사명·사업자등록번호와
+//  프로필(업종·소개·이력·태그·매출·설립일)·소유자 직책·검증상태를 한 행에 모은다
+//  (증빙서류는 Attachment(ownerType=COMPANY)로 분리).
+//  사업자등록번호는 중복 허용(같은 회사를 여러 user 가 각자 입력) — @unique 없이 인덱스만
+//  둬, 훗날 동일 BRN 을 묶어 통합(멀티유저·회사 단일화)할 씨앗만 남긴다.
 // ════════════════════════════════════════════════════════════════════════
 
-/// [DRAFT] 기업 정보. 사업자등록증으로 검증된 B2B 협업의 신원 단위.
+/// user 가 소유하는 회사 프로필 (현재 user 1:1)
 model Company {
-  id                     String    @id @default(cuid()) /// [DRAFT] 고유 식별자 (cuid)
-  name                   String /// [DRAFT] 회사명
-  businessRegistrationNo String    @unique /// [DRAFT] 사업자등록번호(검증 키)
-  industry               String /// [DRAFT] 업종
-  description            String? /// [DRAFT] 회사 소개(텍스트)
-  trackRecord            String? /// [DRAFT] 주요 수행 이력(프로즈)
-  collaborationFields    String[] /// [DRAFT] 협업 가능 분야(태그 배열)
-  techTags               String[] /// [DRAFT] 기술 태그(매칭용, 사업계획서) — 비전 단계
-  website                String? /// [DRAFT] 홈페이지
-  revenue                BigInt? /// [DRAFT] 매출액(원). 민감정보 — 노출/암호화 정책 미정
-  foundedAt              DateTime? /// [DRAFT] 설립일
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  registrationCertUrl String? /// [DRAFT] 사업자등록증 파일 URL(필수 업로드지만 가입 단계 분리 대비 nullable)
-  brochureUrl         String? /// [DRAFT] 회사 소개서 파일 URL
+  // 회사 기본 프로필
+  name                   String // 회사명
+  businessRegistrationNo String // 사업자등록번호
+  // 회사 업종
+  industryId             String
+  industry               Industry @relation(fields: [industryId], references: [id])
+  description            String? // 회사 소개
+  trackRecord            String? // 주요 수행 이력 (프로즈)
+  website                String? // 홈페이지
+  revenueInCheonwon      Int? // 연매출(단위: 천 원)
+  capabilityIds          String[] // 보유 역량(태그, NCS 상위 분류)
 
-  trustScore         Int? /// [DRAFT] 신뢰지수(0~100). 대표인증+협업이행+평판+재협업으로 산정(배치 갱신)
-  verificationStatus CompanyVerificationStatus /// [DRAFT] 사업자 검증 상태
+  // 상태
+  deletedAt DateTime?
 
-  createdAt DateTime  @default(now()) /// [DRAFT] 등록 시각
-  updatedAt DateTime  @updatedAt /// [DRAFT] 최종 수정 시각
-  deletedAt DateTime? /// [DRAFT] 소프트 삭제 시각
-
-  ownerId String /// [DRAFT] 대표 사용자 FK
-  owner   User   @relation(fields: [ownerId], references: [id], onDelete: Cascade) /// [DRAFT] 대표 사용자 관계
-
-  loungePosts           LoungePost[] /// [DRAFT] 기업 명의 라운지 글
-  collaborationPosts    CollaborationPost[] /// [DRAFT] 등록한 협업 공고
-  sentProposals         CollaborationProposal[] /// [DRAFT] 보낸 협업 제안
-  projectParticipations ProjectParticipant[] /// [DRAFT] 참여 프로젝트(컨소시엄)
-  assetReports          AssetReport[] /// [DRAFT] 자산레포트
-  trustScoreLogs        TrustScoreLog[] /// [DRAFT] 신뢰지수 변동 이력
-
-  @@index([ownerId]) /// [DRAFT] 대표별 기업 조회
-  @@index([verificationStatus]) /// [DRAFT] 검증 상태별 조회(심사 큐)
-}
-
-/// [DRAFT] 사업자 검증 상태(관리자 심사).
-enum CompanyVerificationStatus {
-  PENDING /// [DRAFT] 검증 대기
-  VERIFIED /// [DRAFT] 검증 완료
-  REJECTED /// [DRAFT] 거절
+  // 회사 등록자
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
 }

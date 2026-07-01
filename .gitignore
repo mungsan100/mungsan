@@ -44,10 +44,13 @@ CLAUDE*.md
 # etc
 justfile
 *.just
-/.gstack/
-/.superpowers/
+just/
+.gstack/
+.superpowers/
 /docs/
 /reference/
-/apps/dev/
+/apps/ops/
 /tmp/
 /qa/
+/resources/
+/backup/

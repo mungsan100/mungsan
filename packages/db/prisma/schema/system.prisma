@@ -16,7 +16,7 @@
 //    `/// [DRAFT]` 를 달아 "확정 전"임을 표기한다 — 검토 후 하나씩 떼어낸다.
 //
 // ────────────────────────────────────────────────────────────────────────
-//  공통 규약 (CONVENTIONS) — trefit 모노레포 규약 계승
+//  공통 규약 (CONVENTIONS)
 // ────────────────────────────────────────────────────────────────────────
 //  · id 는 @id @default(cuid()). createdAt @default(now()), updatedAt @updatedAt.
 //  · @default 는 오직 id·createdAt·updatedAt 에만. 상태 enum·플래그·카운트·가격 등
@@ -30,25 +30,8 @@
 //  · 구조가 있는 목록(phase·task 등)은 별도 테이블로 정규화.
 //  · like·bookmark 등 "관계"는 메타(createdAt)를 위해 명시적 조인 테이블로 둔다.
 //  · 집계값(likeCount·proposalCount 등)은 비정규화 캐시 — 쓰기 경로(command)가 갱신.
-//  · @relation(onDelete:) 는 엣지마다 명시. @@map 미사용(모델명 → 테이블명 자동).
+//  · @relation(onDelete:) 미사용(명시적 삭제 처리), @@map 미사용(모델명 → 테이블명 자동).
 //  · 예측 가능한 실패는 throw 대신 결과 객체 반환(앱 레이어 규약).
-//
-// ────────────────────────────────────────────────────────────────────────
-//  파일 목차 (도메인별). 파일 순서는 의미 없음 — Prisma 가 prisma/schema/ 전체를 병합.
-// ────────────────────────────────────────────────────────────────────────
-//  config        SiteSettings                       (+ generator·datasource·규약·목차)
-//  user          User · UserConsent · UserSocialAccount · VerificationToken · PhoneVerification
-//  company       Company                            (기업 정보·사업자 검증)
-//  admin         Admin                              (운영자 — 권한시스템 없음; 가입승인=User.approvedAt)
-//  taxonomy      IndustryTag · SkillTag · RegionTag (태그 카탈로그, 용도별 분리)
-//  lounge        LoungePost · LoungeComment · LoungePostLike · LoungeCommentLike · LoungeBookmark
-//  collaboration CollaborationPost · CollaborationProposal · CollaborationBookmark
-//  project       Project · ProjectParticipant · Phase · Task · TaskAttachment
-//  announcement  [MVP 보류·전체 주석] 홈 사업공고는 외부 API(K-Startup) 직접 파싱으로 대체
-//  trust         TrustScoreLog · AssetReport        (관리: 신뢰지수·자산레포트)  [DRAFT 전반]
-//  notification  Notification
-//  governance    Report · AuditLog                  (신고·감사로그)  [DRAFT 전반]
-//
 //  ※ enum 은 그걸 주로 쓰는 model 바로 아래/위에 colocate 한다.
 // ════════════════════════════════════════════════════════════════════════
 
@@ -61,17 +44,17 @@ datasource db {
   provider = "postgresql"
 }
 
-/// [DRAFT] 사이트 전역 설정(사업자 정보·고객센터 등). 단일 행(id="singleton").
+// 사이트 전역 설정(사업자 정보·고객센터 등).
 model SiteSettings {
-  id             String @id @default("singleton") /// [DRAFT] 단일 행 고정 식별자
-  companyName    String /// [DRAFT] 운영사 회사명
-  representative String /// [DRAFT] 대표자명
-  businessNo     String /// [DRAFT] 사업자등록번호
-  address        String /// [DRAFT] 사업장 주소
-  email          String /// [DRAFT] 대표 이메일(푸터 사업자정보)
-  supportEmail   String /// [DRAFT] 고객센터 이메일
-  supportPhone   String /// [DRAFT] 고객센터 전화번호
+  id             String @id @default("singleton")
+  companyName    String // 운영사 회사명
+  representative String // 대표자명
+  businessNo     String // 사업자등록번호
+  address        String // 사업장 주소
+  email          String // 대표 이메일(푸터 사업자정보)
+  supportEmail   String // 고객센터 이메일
+  supportPhone   String // 고객센터 전화번호
 
-  createdAt DateTime @default(now()) /// [DRAFT] 생성 시각
-  updatedAt DateTime @updatedAt /// [DRAFT] 최종 수정 시각
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

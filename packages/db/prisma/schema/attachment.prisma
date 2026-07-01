@@ -1,0 +1,53 @@
+// ════════════════════════════════════════════════════════════════════════
+//  파일 첨부  ─  Attachment
+//  모든 업로드 파일의 단일 저장소(폴리모픽). 무엇에 붙었는지는 ownerType+ownerId,
+//  접근 등급은 access, 도메인 하위구분은 kind 로 표현한다. FK 없음 — 참조 무결성은
+//  command 레벨에서 검증(taxonomy 무FK 컨벤션과 동일). 소유 엔티티 삭제 시 파일 정리도
+//  command 가 책임진다(@relation(onDelete:) 미사용).
+//  저장은 Vercel Blob(@mungsan/file). PRIVATE 는 blob access='private' + 서명 URL,
+//  MEMBER·PUBLIC 은 access='public'(MEMBER 는 링크 노출을 앱이 게이트).
+// ════════════════════════════════════════════════════════════════════════
+
+/// 업로드 파일 한 건. 사용처는 ownerType+ownerId 로 가리킨다(폴리모픽, 무FK).
+model Attachment {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 부착 대상 (폴리모픽, 무FK)
+  ownerType AttachmentOwner
+  ownerId   String
+  kind      AttachmentKind // 도메인 하위구분(구 CompanyDocumentType 흡수)
+
+  // 접근 등급 — command 가 명시(기본값 없음)
+  access FileAccess
+
+  // blob 메타
+  pathname String // Vercel Blob 내 키. 읽기 시 등급별로 URL 파생/서명
+  fileName String // 원본 파일명(표시용)
+  mimeType String?
+  size     Int?
+
+  @@index([ownerType, ownerId])
+}
+
+/// 첨부의 부착 대상 종류.
+enum AttachmentOwner {
+  COMPANY // Company.id
+  COLLABORATION_POST // CollaborationPost.id
+}
+
+/// 첨부의 도메인 하위구분(구 CompanyDocumentType 흡수).
+enum AttachmentKind {
+  BUSINESS_CERT // 사업자등록증 → 통상 PRIVATE
+  EXECUTIVE_PROOF // 임원 증빙 → 통상 PRIVATE
+  BROCHURE // 회사 소개서 → 통상 MEMBER
+  POST_ATTACHMENT // 협업 공고 첨부 → 통상 MEMBER
+}
+
+/// 접근 등급. command 가 명시값을 보낸다(기본값 없음).
+enum FileAccess {
+  PRIVATE // 본인+운영자, blob private, 서명 URL
+  MEMBER // 로그인 검증 회원, blob public + 앱 게이트
+  PUBLIC // 누구나, blob public 직접
+}
