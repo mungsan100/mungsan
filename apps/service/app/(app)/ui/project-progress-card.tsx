@@ -2,49 +2,31 @@ import { Card } from '@/components/ui/card';
 import { ProgressBar } from '@/components/ui/progress-bar';
 import { cn } from '@/lib/utils';
 
-import type { ProjectProgress, ProjectStatus } from './mock';
+export type ProjectProgress = {
+  title: string;
+  subtitle: string;
+  statusLabel: string;
+  tone: 'success' | 'danger';
+  percent: number;
+};
 
-// 진행 현황 카드 — 제목/단계 + 상태 점·라벨 + 진행 설명/% + 진행바(상태 톤).
 interface ProjectProgressCardProps {
   project: ProjectProgress;
 }
 
-type StatusStyle = {
-  dot: string;
-  text: string;
-  tone: 'success' | 'warning' | 'danger';
-};
-
-const STATUS: Record<ProjectStatus, StatusStyle> = {
-  delayed: { dot: 'bg-amber-500', text: 'text-amber-500', tone: 'warning' },
-  normal: { dot: 'bg-emerald-500', text: 'text-emerald-600', tone: 'success' },
-  urgent: { dot: 'bg-red-500', text: 'text-red-500', tone: 'danger' },
-};
-
+// 진행 중 협업 카드 — 제목/퍼센트 한 행, 부제(설명 · 파생 상태), 진행바(상태 톤).
 export const ProjectProgressCard = ({ project }: ProjectProgressCardProps) => {
-  const style = STATUS[project.status];
+  const toneText = project.tone === 'danger' ? 'text-danger' : 'text-brand';
   return (
     <Card className="p-4">
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <h3 className="text-ink-900 text-[16px] font-bold">{project.title}</h3>
-          <p className="text-ink-400 mt-0.5 text-[13px]">{project.stage}</p>
-        </div>
-        <span
-          className={cn(
-            'flex shrink-0 items-center gap-1.5 text-[13px] font-semibold',
-            style.text,
-          )}
-        >
-          <span className={cn('h-2 w-2 rounded-full', style.dot)} />
-          {project.statusLabel}
-        </span>
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="text-ink-900 truncate text-[15px] font-bold">{project.title}</h3>
+        <span className="text-ink-900 shrink-0 text-[15px] font-bold">{project.percent}%</span>
       </div>
-      <div className="mt-3 mb-2 flex items-center justify-between">
-        <span className="text-ink-500 text-[13px]">{project.description}</span>
-        <span className="text-ink-900 text-[14px] font-bold">{project.percent}%</span>
-      </div>
-      <ProgressBar value={project.percent} tone={style.tone} />
+      <p className="text-ink-400 mt-1 mb-2.5 text-[13px]">
+        {project.subtitle} · <span className={cn('font-semibold', toneText)}>{project.statusLabel}</span>
+      </p>
+      <ProgressBar value={project.percent} tone={project.tone === 'danger' ? 'danger' : 'brand'} />
     </Card>
   );
 };

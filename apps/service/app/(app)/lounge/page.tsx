@@ -1,42 +1,61 @@
-import { LuCrown, LuUsersRound } from 'react-icons/lu';
+import { Suspense } from 'react';
 
-import { ScreenHeader } from '@/components/layout/screen-header';
-
-import { loungePosts } from './mock';
-import { CategoryFilter } from './ui/category-filter';
-import { PostCard } from './ui/post-card';
+import { CategoryTabs } from './ui/category-tabs';
+import { LoungeFeed } from './ui/lounge-feed';
+import { LoungeHeader } from './ui/lounge-header';
 import { TrendCard } from './ui/trend-card';
+import { WriteFab } from './ui/write-fab';
 
-// 라운지 — C-LEVEL 전용 커뮤니티 피드(필터 칩 · 실시간 트렌드 · 게시글 리스트).
-export default function LoungePage() {
+// 라운지 — 밝은 헤더 + 산업축 필터 칩 + 실시간 트렌드 + 최신 글 피드 + 글쓰기 FAB.
+// cacheComponents: searchParams를 page 루트에서 await하지 않는다. promise를 Suspense 아래
+// LoungeFeed로 내려 거기서 await하고, 필터 칩은 client에서 useSearchParams로 읽는다.
+export default function LoungePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ industry?: string }>;
+}) {
   return (
     <>
-      <ScreenHeader
-        label="C-LEVEL ONLY"
-        labelIcon={<LuCrown className="h-3.5 w-3.5 text-amber-300" />}
-        title="라운지"
-        right={
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-white/25 bg-white/10 px-3 py-1.5 text-[13px] font-semibold text-white">
-            <LuUsersRound className="h-4 w-4" />
-            2,847명 활동 중
-          </span>
-        }
-      />
-      <div className="space-y-5 py-5">
+      <LoungeHeader />
+      <div className="space-y-5 pb-24">
         <section className="px-5">
-          <CategoryFilter />
+          <Suspense fallback={<FilterSkeleton />}>
+            <CategoryTabs />
+          </Suspense>
         </section>
 
         <section className="px-5">
-          <TrendCard />
+          <Suspense fallback={<TrendSkeleton />}>
+            <TrendCard />
+          </Suspense>
         </section>
 
         <section className="space-y-3 px-5">
-          {loungePosts.map((post) => (
-            <PostCard key={post.id} post={post} />
-          ))}
+          <p className="text-ink-500 text-sm font-semibold">최신 글</p>
+          <Suspense fallback={<FeedSkeleton />}>
+            <LoungeFeed searchParams={searchParams} />
+          </Suspense>
         </section>
       </div>
+      <WriteFab />
     </>
   );
 }
+
+const FilterSkeleton = () => (
+  <div className="flex gap-2">
+    {[0, 1, 2, 3].map((i) => (
+      <div key={i} className="bg-ink-100 h-9 w-16 animate-pulse rounded-full" />
+    ))}
+  </div>
+);
+
+const TrendSkeleton = () => <div className="bg-ink-100 h-40 animate-pulse rounded-2xl" />;
+
+const FeedSkeleton = () => (
+  <div className="space-y-3">
+    {[0, 1, 2].map((i) => (
+      <div key={i} className="bg-ink-100 h-44 animate-pulse rounded-2xl" />
+    ))}
+  </div>
+);

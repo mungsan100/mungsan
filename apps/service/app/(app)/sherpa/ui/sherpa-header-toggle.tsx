@@ -1,40 +1,36 @@
 'use client';
 
-import { useState } from 'react';
-import { LuGlobe, LuLock } from 'react-icons/lu';
-
 import { cn } from '@/lib/utils';
 
-// 내부용 ↔ 외부공유 세그먼트 토글 — 이 화면의 유일한 인터랙티브 leaf.
-type ShareMode = 'internal' | 'external';
+// 마일스톤 목록 필터 세그먼트 컨트롤 — 전체 / 진행중. 부모(MilestoneTimeline)가 상태를 소유하는 controlled 컴포넌트.
+export type MilestoneFilter = 'all' | 'active';
 
-export const SherpaHeaderToggle = () => {
-  const [mode, setMode] = useState<ShareMode>('internal');
+const OPTIONS: { value: MilestoneFilter; label: string }[] = [
+  { value: 'all', label: '전체' },
+  { value: 'active', label: '진행중' },
+];
 
+interface SherpaHeaderToggleProps {
+  value: MilestoneFilter;
+  onChange: (value: MilestoneFilter) => void;
+}
+
+export const SherpaHeaderToggle = ({ value, onChange }: SherpaHeaderToggleProps) => {
   return (
-    <div className="flex items-center gap-1 rounded-full bg-white/10 p-1">
-      <button
-        type="button"
-        onClick={() => setMode('internal')}
-        className={cn(
-          'flex items-center gap-1 rounded-full px-3 py-1.5 text-[12px] font-semibold transition-colors',
-          mode === 'internal' ? 'text-brand-sub02 bg-white' : 'text-white/70',
-        )}
-      >
-        <LuLock className="h-3.5 w-3.5" />
-        내부용
-      </button>
-      <button
-        type="button"
-        onClick={() => setMode('external')}
-        className={cn(
-          'flex items-center gap-1 rounded-full px-3 py-1.5 text-[12px] font-semibold transition-colors',
-          mode === 'external' ? 'text-brand-sub02 bg-white' : 'text-white/70',
-        )}
-      >
-        <LuGlobe className="h-3.5 w-3.5" />
-        외부공유
-      </button>
+    <div className="bg-ink-100 flex items-center gap-1 rounded-full p-1">
+      {OPTIONS.map((opt) => (
+        <button
+          key={opt.value}
+          type="button"
+          onClick={() => onChange(opt.value)}
+          className={cn(
+            'flex-1 rounded-full px-3 py-1.5 text-[13px] font-semibold transition-colors',
+            value === opt.value ? 'text-ink-900 bg-white shadow-sm' : 'text-ink-500',
+          )}
+        >
+          {opt.label}
+        </button>
+      ))}
     </div>
   );
 };

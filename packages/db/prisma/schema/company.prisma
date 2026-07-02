@@ -25,6 +25,10 @@ model Company {
   website                String? // 홈페이지
   revenueInCheonwon      Int? // 연매출(단위: 천 원)
   capabilityIds          String[] // 보유 역량(태그, NCS 상위 분류)
+  // 파트너 카드 표시용 프로필(선택 공개). 미공개면 null — 카드에서 해당 지표를 숨긴다.
+  region      String? // 소재 지역
+  headcount   Int? // 임직원 수
+  foundedDate DateTime? // 설립일(업력 파생)
 
   // 상태
   deletedAt DateTime?

@@ -1,8 +1,10 @@
 import type { NextConfig } from 'next';
 
-// UI 레벨 목 단계 — DB/인프라 패키지 transpile·external 없음(스키마 미연결).
+// @mungsan/db(워크스페이스 TS 패키지)는 transpile, Prisma·pg 네이티브 런타임은 서버 external.
 const nextConfig: NextConfig = {
   cacheComponents: true,
+  transpilePackages: ['@mungsan/db'],
+  serverExternalPackages: ['@prisma/client', '@prisma/adapter-pg', 'pg'],
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'images.unsplash.com' },

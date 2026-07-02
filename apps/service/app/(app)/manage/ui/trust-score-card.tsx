@@ -1,60 +1,40 @@
-import { LuStar, LuTrendingUp } from 'react-icons/lu';
+import { getTrustScoreQuery } from '@/lib/trust/trust-score.query';
+import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/ui/card';
+import { ProgressBar } from '@/components/ui/progress-bar';
+import { getCurrentUser } from '@/lib/auth/get-current-user';
 
-import { cn } from '@/lib/utils';
-
-import type { TrustScore } from '../mock';
 import { TrustGauge } from './trust-gauge';
 
-// Trust Score 카드 — 헤더 그린 위에 얹는 더 어두운 그린 카드.
-// 좌측 반원 게이지 + 우측 5개 지표 바 + 하단 등급/추이 알약.
-interface TrustScoreCardProps {
-  data: TrustScore;
-}
+// 신뢰 지수 카드 — 실제 신호로 파생한 지수(getTrustScoreQuery). 반원 게이지 + 등급 배지 + 5개 지표.
+export async function TrustScoreCard() {
+  const user = await getCurrentUser();
+  const trust = await getTrustScoreQuery(user.id);
 
-export const TrustScoreCard = ({ data }: TrustScoreCardProps) => {
   return (
-    <div className="mt-5 rounded-2xl border border-white/10 bg-emerald-950/40 p-4">
-      <div className="flex items-center gap-2">
-        <span className="h-2.5 w-2.5 rounded-full bg-amber-400" />
-        <span className="text-[15px] font-bold text-white">Trust Score (신뢰 지수)</span>
-      </div>
-
-      <div className="mt-3 flex items-center gap-4">
-        <TrustGauge score={data.score} max={data.max} />
-        <div className="min-w-0 flex-1 space-y-2.5">
-          {data.metrics.map((metric) => (
-            <div key={metric.label}>
-              <div className="flex items-center justify-between text-[13px]">
-                <span className="text-white/70">{metric.label}</span>
-                <span className="font-bold text-white">
-                  {metric.value}
-                  <span className="font-medium text-white/45">/{metric.max}</span>
-                </span>
-              </div>
-              <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-white/15">
-                <div
-                  className={cn(
-                    'h-full rounded-full',
-                    metric.tone === 'danger' ? 'bg-red-400' : 'bg-emerald-400',
-                  )}
-                  style={{ width: `${(metric.value / metric.max) * 100}%` }}
-                />
-              </div>
-            </div>
-          ))}
+    <Card className="p-5">
+      <div className="flex items-center gap-4">
+        <TrustGauge score={trust.score} max={trust.max} />
+        <div className="min-w-0 flex-1 space-y-1.5">
+          <h2 className="text-ink-900 text-base font-bold">신뢰 지수</h2>
+          <Badge size="md">{trust.grade}</Badge>
         </div>
       </div>
 
-      <div className="mt-4 flex items-center justify-between rounded-full bg-white/10 px-4 py-2">
-        <span className="flex items-center gap-1.5 text-[12.5px] font-medium text-white/90">
-          <LuStar className="h-3.5 w-3.5 text-amber-300" />
-          {data.rankLabel}
-        </span>
-        <span className="flex items-center gap-1 text-[12.5px] font-semibold text-emerald-300">
-          <LuTrendingUp className="h-3.5 w-3.5" />
-          {data.deltaLabel}
-        </span>
+      <div className="mt-5 space-y-3">
+        {trust.metrics.map((metric) => (
+          <div key={metric.key}>
+            <div className="flex items-center justify-between text-[13px]">
+              <span className="text-ink-600">{metric.label}</span>
+              <span className="text-ink-900 font-bold">
+                {metric.value}
+                <span className="text-ink-400 font-medium">/{metric.max}</span>
+              </span>
+            </div>
+            <ProgressBar className="mt-1.5" value={(metric.value / metric.max) * 100} />
+          </div>
+        ))}
       </div>
-    </div>
+    </Card>
   );
-};
+}

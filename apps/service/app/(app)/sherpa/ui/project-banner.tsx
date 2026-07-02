@@ -1,34 +1,81 @@
-import { LuLock, LuUsers } from 'react-icons/lu';
+import { LuCalendar, LuLayers, LuWallet } from 'react-icons/lu';
 
-import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/ui/card';
+import { ProgressBar } from '@/components/ui/progress-bar';
+import { formatKst } from '@/lib/datetime/format-kst';
 
-import type { ProjectBanner as ProjectBannerData } from '../mock';
+import { getSherpaProjectQuery } from '../queries/sherpa-project.query';
 
-// 헤더 그린 위에 얹히는 더 어두운 그린 카드 — 협업 프로젝트 식별 배너.
-interface ProjectBannerProps {
-  banner: ProjectBannerData;
-}
+// primary 프로젝트 요약 카드 — 제목/진행률/기간/예산. 프로젝트가 없으면 빈 상태 카드.
+export const ProjectBanner = async () => {
+  const project = await getSherpaProjectQuery();
 
-export const ProjectBanner = ({ banner }: ProjectBannerProps) => {
+  if (!project) {
+    return (
+      <Card className="flex flex-col items-center gap-2 p-8 text-center">
+        <span className="bg-ink-100 text-ink-400 flex h-12 w-12 items-center justify-center rounded-2xl">
+          <LuLayers className="h-6 w-6" />
+        </span>
+        <p className="text-ink-500 text-sm">아직 진행 중인 프로젝트가 없습니다.</p>
+      </Card>
+    );
+  }
+
+  const period = formatPeriod(project.startDate, project.endDate);
+  const budget = project.budgetInCheonwon != null ? formatBudget(project.budgetInCheonwon) : null;
+
   return (
-    <div className="mt-4 flex items-center gap-3 rounded-2xl bg-black/15 px-4 py-3">
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/15 text-white">
-        <LuUsers className="h-5 w-5" />
-      </span>
-      <div className="min-w-0 flex-1">
-        <p className="text-[15px] font-bold text-white">{banner.title}</p>
-        <p className="mt-0.5 flex items-center gap-1 text-[12px] text-white/70">
-          <LuLock className="h-3 w-3 shrink-0" />
-          {banner.subtitle}
-        </p>
+    <Card className="p-5">
+      <div className="flex items-start gap-3">
+        <span className="bg-brand-soft text-brand flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl">
+          <LuLayers className="h-6 w-6" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <h2 className="text-ink-900 text-lg leading-snug font-bold">{project.title}</h2>
+          {project.description && (
+            <p className="text-ink-500 mt-0.5 line-clamp-1 text-sm">{project.description}</p>
+          )}
+        </div>
       </div>
-      <Badge
-        variant="outline"
-        size="md"
-        className="border-emerald-300/50 bg-emerald-400/10 text-emerald-100"
-      >
-        {banner.status}
-      </Badge>
-    </div>
+
+      <div className="mt-4">
+        <div className="flex items-center justify-between">
+          <span className="text-ink-500 text-[13px] font-medium">진행률</span>
+          <span className="text-ink-900 text-sm font-bold">{project.progressPercentage}%</span>
+        </div>
+        <ProgressBar value={project.progressPercentage} tone="success" className="mt-2" />
+      </div>
+
+      <div className="border-ink-100 mt-4 flex items-center gap-5 border-t pt-4 text-[13px]">
+        <span className="flex items-center gap-1.5">
+          <LuCalendar className="text-ink-400 h-4 w-4 shrink-0" />
+          <span className="text-ink-700 font-medium">{period}</span>
+        </span>
+        {budget && (
+          <span className="flex items-center gap-1.5">
+            <LuWallet className="text-ink-400 h-4 w-4 shrink-0" />
+            <span className="text-ink-700 font-medium">{budget}</span>
+          </span>
+        )}
+      </div>
+    </Card>
   );
 };
+
+function formatPeriod(start: Date | null, end: Date | null): string {
+  if (start && end) return `${formatKst(start, 'M/d')} ~ ${formatKst(end, 'M/d')}`;
+  if (end) return `~ ${formatKst(end, 'M/d')}`;
+  if (start) return `${formatKst(start, 'M/d')} ~`;
+  return '기간 미정';
+}
+
+// budgetInCheonwon(천 원 단위) → 억/만원 표기. 만원 = 천원 / 10.
+function formatBudget(cheonwon: number): string {
+  const manwon = Math.round(cheonwon / 10);
+  if (manwon >= 10000) {
+    const eok = Math.floor(manwon / 10000);
+    const rest = manwon % 10000;
+    return rest > 0 ? `${eok}억 ${rest.toLocaleString()}만원` : `${eok}억원`;
+  }
+  return `${manwon.toLocaleString()}만원`;
+}

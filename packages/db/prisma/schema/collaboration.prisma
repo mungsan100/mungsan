@@ -52,6 +52,7 @@ model CollaborationProposal {
 
   // 상태
   respondedAt DateTime? // 공고 측 응답
+  viewedAt    DateTime? // 공고 작성자가 제안을 열람한 시각(읽음 추적 — unread/viewed/replied 파생)
 
   // 공고
   postId String

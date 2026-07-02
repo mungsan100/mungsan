@@ -43,6 +43,8 @@ model User {
   collaborationPosts     CollaborationPost[]
   collaborationProposals CollaborationProposal[]
   collaborationBookmarks CollaborationBookmark[]
+  projects               Project[]
+  assetReports           AssetReport[]
   notifications          Notification[]
   consents               UserConsent[]
   verificationTokens     VerificationToken[]

@@ -1,0 +1,24 @@
+// ════════════════════════════════════════════════════════════════════════
+//  지원사업 공고  ─  SupportProgram
+//  정부·기관의 지원사업(사업공고) 카탈로그. 홈의 "AI 맞춤 사업 공고"가 사용자의
+//  회사 업종과 매칭해 적합도를 파생한다. 매칭 축(industryTagIds)은 taxonomy 컨벤션과
+//  동일하게 Industry.id 배열(무FK) — 참조 무결성은 command/seed 레벨.
+// ════════════════════════════════════════════════════════════════════════
+
+/// 지원사업(사업공고) 카탈로그. 업종 매칭으로 사용자별 적합도를 파생.
+model SupportProgram {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  title        String // 공고 제목
+  summary      String // 한 줄 요약
+  organization String // 주관 기관
+
+  industryTagIds          String[] // 매칭 업종 id — Industry.id(무FK)
+  supportAmountInCheonwon Int? // 지원 규모(천 원 단위)
+  applicationEndDate      DateTime? // 접수 마감일(D-day 파생)
+
+  // 상태
+  isActive Boolean // 노출 여부(폼/seed 가 명시)
+}

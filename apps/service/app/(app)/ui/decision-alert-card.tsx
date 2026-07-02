@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+import Link from 'next/link';
 import {
   LuChevronRight,
   LuCircleCheck,
@@ -8,12 +10,17 @@ import {
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
-import type { DecisionAlert, DecisionIcon, DecisionTone } from './mock';
+export type DecisionIcon = 'file' | 'trend' | 'check';
+export type DecisionTone = 'warning' | 'success';
 
-// 의사결정 알림 리스트 카드 — 좌측 아이콘 박스 + 제목/부제 + chevron. 긴급은 좌측 빨강 강조선.
-interface DecisionAlertCardProps {
-  alert: DecisionAlert;
-}
+export type DecisionAlert = {
+  icon: DecisionIcon;
+  tone: DecisionTone;
+  title: string;
+  subtitle: string;
+  href?: string;
+  unread?: boolean; // 아직 읽지 않은 알림이면 제목 옆에 표식
+};
 
 const ICONS: Record<DecisionIcon, React.ComponentType<{ className?: string }>> = {
   file: LuFileText,
@@ -22,16 +29,19 @@ const ICONS: Record<DecisionIcon, React.ComponentType<{ className?: string }>> =
 };
 
 const TONE: Record<DecisionTone, string> = {
-  danger: 'bg-red-50 text-red-500',
   warning: 'bg-amber-50 text-amber-500',
   success: 'bg-emerald-50 text-emerald-600',
 };
 
+interface DecisionAlertCardProps {
+  alert: DecisionAlert;
+}
+
+// 의사결정 알림 카드 — 타입 아이콘(톤) + 제목/부제. linkUrl 있으면 카드 전체가 Link(우측 chevron).
 export const DecisionAlertCard = ({ alert }: DecisionAlertCardProps) => {
   const Icon = ICONS[alert.icon];
-  return (
-    <Card className="relative flex items-center gap-3 overflow-hidden p-4">
-      {alert.urgent && <span className="absolute top-0 bottom-0 left-0 w-1 bg-red-500" />}
+  const inner: ReactNode = (
+    <>
       <span
         className={cn(
           'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl',
@@ -41,10 +51,30 @@ export const DecisionAlertCard = ({ alert }: DecisionAlertCardProps) => {
         <Icon className="h-5 w-5" />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="text-ink-900 text-[14px] font-semibold">{alert.title}</p>
+        <p className="text-ink-900 flex items-center gap-1.5 text-[14px] font-semibold">
+          <span className="truncate">{alert.title}</span>
+          {alert.unread && (
+            <span
+              className="bg-brand h-1.5 w-1.5 shrink-0 rounded-full"
+              aria-label="읽지 않음"
+            />
+          )}
+        </p>
         <p className="text-ink-400 mt-0.5 text-[12px]">{alert.subtitle}</p>
       </div>
-      <LuChevronRight className="text-ink-300 h-5 w-5 shrink-0" />
+      {alert.href && <LuChevronRight className="text-ink-300 h-5 w-5 shrink-0" />}
+    </>
+  );
+
+  return (
+    <Card className="p-0">
+      {alert.href ? (
+        <Link href={alert.href} className="flex items-center gap-3 p-4">
+          {inner}
+        </Link>
+      ) : (
+        <div className="flex items-center gap-3 p-4">{inner}</div>
+      )}
     </Card>
   );
 };

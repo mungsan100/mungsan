@@ -1,33 +1,57 @@
-import { LuSparkles } from 'react-icons/lu';
-
-import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 
-import type { FundingNotice } from './mock';
+import { MatchRing } from './match-ring';
 
-// AI 맞춤 사업 공고 카드 — 좌측 그린 강조선 + 기관명/D-day + 제목 + 금액/매칭률.
+// AI 맞춤 사업 공고 카드 표시 모델.
+export type FundingNoticeTag = {
+  label: string;
+  variant: 'fit' | 'review' | 'dday';
+};
+
+export type FundingNotice = {
+  organization: string;
+  title: string;
+  description: string;
+  matchRate: number; // 0~100, 원형 게이지 표시값
+  tags: FundingNoticeTag[];
+};
+
+// 태그 종류 → 스타일. 적합(연녹 채움)·검토(녹색 외곽선)·D-day(진녹 채움).
+const TAG: Record<FundingNoticeTag['variant'], string> = {
+  fit: 'bg-brand-soft text-brand-sub02',
+  review: 'border border-brand-sub01/30 text-brand-sub01',
+  dday: 'bg-brand-sub02 text-white',
+};
+
 interface FundingNoticeCardProps {
   notice: FundingNotice;
 }
 
-export const FundingNoticeCard = ({ notice }: FundingNoticeCardProps) => {
-  return (
-    <Card className="relative overflow-hidden p-4 pl-5">
-      <span className="bg-brand absolute top-4 bottom-4 left-0 w-1 rounded-r-full" />
-      <div className="flex items-start justify-between gap-2">
-        <span className="text-brand text-[12px] font-semibold">{notice.agency}</span>
-        <Badge variant="danger" size="sm" className="bg-red-500 text-white">
-          {notice.dday}
-        </Badge>
+export const FundingNoticeCard = ({ notice }: FundingNoticeCardProps) => (
+  <Card className="p-4">
+    <div className="flex items-start gap-3">
+      <div className="min-w-0 flex-1">
+        <p className="text-ink-400 text-[11px] font-semibold">{notice.organization}</p>
+        <h3 className="text-ink-900 mt-0.5 text-[15px] leading-snug font-bold">{notice.title}</h3>
+        <p className="text-ink-400 mt-1 line-clamp-2 text-[13px] leading-relaxed">
+          {notice.description}
+        </p>
+        <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+          {notice.tags.map((tag) => (
+            <span
+              key={tag.label}
+              className={cn('rounded-full px-2 py-0.5 text-[11px] font-semibold', TAG[tag.variant])}
+            >
+              {tag.label}
+            </span>
+          ))}
+        </div>
       </div>
-      <h3 className="text-ink-900 mt-1.5 text-[16px] font-bold">{notice.title}</h3>
-      <div className="mt-3 flex items-center justify-between">
-        <span className="text-brand text-[14px] font-bold">{notice.amount}</span>
-        <Badge variant="success" size="sm" className="text-[13px]">
-          <LuSparkles className="h-3.5 w-3.5" />
-          매칭률 {notice.matchRate}
-        </Badge>
+      <div className="flex shrink-0 flex-col items-center gap-1">
+        <MatchRing value={notice.matchRate} />
+        <span className="text-ink-400 text-[11px]">매칭률</span>
       </div>
-    </Card>
-  );
-};
+    </div>
+  </Card>
+);
