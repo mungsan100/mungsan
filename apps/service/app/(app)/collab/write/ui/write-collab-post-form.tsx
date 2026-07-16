@@ -53,6 +53,10 @@ const schema = z
     requiredSkillIds: z.array(z.string()),
     industryTagIds: z.array(z.string()),
     isPublic: z.boolean(),
+    attachments: z
+      .array(z.instanceof(File))
+      .max(3, '첨부는 최대 3개까지 가능합니다.')
+      .refine((files) => files.every((f) => f.size <= 5 * 1024 * 1024), '첨부파일은 개당 5MB 이하여야 합니다.'),
   })
   .superRefine((val, ctx) => {
     if (
@@ -82,9 +86,10 @@ const EMPTY: FormInput = {
   requiredSkillIds: [],
   industryTagIds: [],
   isPublic: true,
+  attachments: [],
 };
 
-const FIELD_KEYS = ['title', 'description', 'maxBudgetInCheonwon'] as const;
+const FIELD_KEYS = ['title', 'description', 'maxBudgetInCheonwon', 'attachments'] as const;
 
 interface WriteCollabPostFormProps {
   industries: IndustryOption[];
@@ -207,6 +212,28 @@ export const WriteCollabPostForm = ({ industries, skills }: WriteCollabPostFormP
             <ChipMultiSelect options={industries} value={field.value} onChange={field.onChange} />
           )}
         />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="attachments">첨부파일 (선택, 최대 3개 · 개당 5MB)</Label>
+        <Controller
+          control={control}
+          name="attachments"
+          render={({ field: { onChange, name, onBlur, ref } }) => (
+            <input
+              id="attachments"
+              name={name}
+              ref={ref}
+              type="file"
+              multiple
+              accept="application/pdf,image/*"
+              onBlur={onBlur}
+              onChange={(e) => onChange(Array.from(e.target.files ?? []))}
+              className="text-ink-600 w-full text-sm"
+            />
+          )}
+        />
+        {errors.attachments && <p className="text-danger text-xs">{errors.attachments.message}</p>}
       </div>
 
       <div className="space-y-2">

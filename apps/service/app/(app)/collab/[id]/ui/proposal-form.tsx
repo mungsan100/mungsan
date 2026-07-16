@@ -80,6 +80,9 @@ export const ProposalForm = ({ postId }: ProposalFormProps) => {
           <p className="text-danger text-[12px]">{errors.contributionRole.message}</p>
         )}
       </div>
+      <p className="text-ink-400 text-[12px]">
+        내 회사 정보와 회사 소개서(등록된 경우)가 제안과 함께 상대 기업에 전달됩니다.
+      </p>
       <Button type="submit" variant="primary" size="lg" className="w-full" disabled={isSubmitting}>
         {isSubmitting && <LuLoaderCircle className="h-4 w-4 animate-spin" />}
         제안 보내기

@@ -33,10 +33,10 @@ export async function createProposalAction(cmd: CreateProposalCommand): Promise<
   if (post.authorId === user.id)
     return { ok: false, code: 'OWN_POST', message: '내가 올린 공고에는 제안할 수 없습니다.' };
 
-  // 4. 영속화(제안 생성 + 제안수 캐시 증가) + 무효화
+  // 4. 영속화(제안 생성 + 제안수 캐시 증가) + 무효화. status는 명시(컨벤션 — default 없음).
   await prisma.$transaction([
     prisma.collaborationProposal.create({
-      data: { postId: post.id, proposerId: user.id, message, contributionRole },
+      data: { postId: post.id, proposerId: user.id, message, contributionRole, status: 'SUBMITTED' },
     }),
     prisma.collaborationPost.update({
       where: { id: post.id },
