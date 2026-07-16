@@ -10,6 +10,7 @@ import { formatRelativeKorean } from '@/lib/datetime/relative-time';
 
 import type { LoungeCommentView } from '../queries/lounge-comments.query';
 import { CommentForm } from './comment-form';
+import { CommentLikeButton } from './comment-like-button';
 
 // 임원 직책 → 표시 라벨. 표시 매핑이라 소비처(ui) 로컬.
 const ROLE_LABELS: Record<DB.ExecutiveRole, string> = {
@@ -36,7 +37,7 @@ export const CommentItem = ({ postId, comment }: CommentItemProps) => {
 
   return (
     <div>
-      <CommentBody comment={comment} />
+      <CommentBody postId={postId} comment={comment} />
 
       <button
         type="button"
@@ -61,7 +62,7 @@ export const CommentItem = ({ postId, comment }: CommentItemProps) => {
         <ul className="border-ink-100 mt-3 ml-12 space-y-3 border-l pl-3">
           {comment.replies.map((reply) => (
             <li key={reply.id}>
-              <CommentBody comment={reply} />
+              <CommentBody postId={postId} comment={reply} />
             </li>
           ))}
         </ul>
@@ -70,7 +71,7 @@ export const CommentItem = ({ postId, comment }: CommentItemProps) => {
   );
 };
 
-const CommentBody = ({ comment }: { comment: LoungeCommentView }) => (
+const CommentBody = ({ postId, comment }: { postId: string; comment: LoungeCommentView }) => (
   <div className="flex items-start gap-3">
     <Avatar
       fallback={[...comment.nickname][0] ?? ''}
@@ -90,6 +91,12 @@ const CommentBody = ({ comment }: { comment: LoungeCommentView }) => (
       <p className="text-ink-700 mt-1 text-sm leading-relaxed whitespace-pre-wrap">
         {comment.content}
       </p>
+      <CommentLikeButton
+        postId={postId}
+        commentId={comment.id}
+        liked={comment.liked}
+        likeCount={comment.likeCount}
+      />
     </div>
   </div>
 );

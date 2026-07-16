@@ -1,7 +1,7 @@
 import type { DB } from '@mungsan/db';
 
-// 게시글의 주제 분류(LoungeCategory) → 표시 라벨. 카드/상세의 카테고리 태그가 쓰는 표시 어휘라
-// 소비처(ui) 로컬에 둔다. 카테고리 탭(필터)은 별개로 산업축을 쓴다.
+// 게시글의 주제 분류(LoungeCategory) → 표시 라벨. 카드/상세의 카테고리 태그와
+// LoungeCategoryFilter가 함께 쓰는 표시 어휘라 소비처(ui) 로컬에 둔다.
 export const LOUNGE_CATEGORY_LABELS: Record<DB.LoungeCategory, string> = {
   COLLABORATION: '협업 제안',
   BUSINESS_CONCERN: '사업 고민',

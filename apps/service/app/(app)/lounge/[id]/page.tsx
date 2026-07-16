@@ -42,7 +42,7 @@ async function PostDetailSection({ params }: { params: Promise<{ id: string }> }
   const post = await getLoungePostDetailQuery({ postId: id, userId: user.id });
   if (!post) notFound();
 
-  const comments = await getLoungeCommentsQuery({ postId: id });
+  const comments = await getLoungeCommentsQuery({ postId: id, userId: user.id });
 
   return (
     <div className="space-y-6 py-5">

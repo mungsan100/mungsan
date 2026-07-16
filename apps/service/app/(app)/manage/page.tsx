@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import { LuShieldCheck } from 'react-icons/lu';
 
 import { AssetReportSection } from './ui/asset-report-section';
+import { LoungeProfileSection } from './ui/lounge-profile-section';
 import { ProposalSection } from './ui/proposal-section';
 import { TrustScoreCard } from './ui/trust-score-card';
 
@@ -20,6 +21,12 @@ export default function ManagePage() {
         <section className="px-5">
           <Suspense fallback={<CardSkeleton />}>
             <TrustScoreCard />
+          </Suspense>
+        </section>
+
+        <section className="px-5">
+          <Suspense fallback={<CardSkeleton />}>
+            <LoungeProfileSection />
           </Suspense>
         </section>
 

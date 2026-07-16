@@ -24,16 +24,28 @@ export type LoungeFeedPost = {
   hot: boolean;
 };
 
-// 카테고리 탭은 산업축 — 작성자 회사(Company.industry)의 업종명으로 필터한다.
-export type LoungeFeedQuery = { industry?: string };
+// 업종 탭은 작성자 회사(Company.industry)의 업종명으로, 카테고리 탭은 게시글 자체의
+// LoungeCategory로 필터한다 — 서로 다른 축이라 함께 걸 수 있다. q는 제목·내용 대상 검색.
+export type LoungeFeedQuery = { industry?: string; category?: DB.LoungeCategory; q?: string };
 
 export async function getLoungeFeedQuery({
   industry,
+  category,
+  q,
 }: LoungeFeedQuery = {}): Promise<LoungeFeedPost[]> {
   const posts = await prisma.loungePost.findMany({
     where: {
       deletedAt: null,
       ...(industry ? { author: { company: { industry: { name: industry } } } } : {}),
+      ...(category ? { category } : {}),
+      ...(q
+        ? {
+            OR: [
+              { title: { contains: q, mode: 'insensitive' } },
+              { content: { contains: q, mode: 'insensitive' } },
+            ],
+          }
+        : {}),
     },
     orderBy: { createdAt: 'desc' },
     take: 30,
@@ -48,7 +60,6 @@ export async function getLoungeFeedQuery({
       bookmarkCount: true,
       author: {
         select: {
-          name: true,
           executiveRole: true,
           jobTitle: true,
           approvedAt: true,
@@ -61,7 +72,7 @@ export async function getLoungeFeedQuery({
 
   return posts.map((p) => ({
     id: p.id,
-    nickname: p.author.loungeProfile?.nickname ?? p.author.name,
+    nickname: p.author.loungeProfile?.nickname ?? '익명',
     executiveRole: p.author.executiveRole,
     jobTitle: p.author.jobTitle,
     industryName: p.author.company?.industry.name ?? null,

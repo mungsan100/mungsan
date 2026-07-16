@@ -40,7 +40,6 @@ export async function getLoungePostDetailQuery({
       bookmarkCount: true,
       author: {
         select: {
-          name: true,
           executiveRole: true,
           jobTitle: true,
           approvedAt: true,
@@ -57,7 +56,7 @@ export async function getLoungePostDetailQuery({
 
   return {
     id: post.id,
-    nickname: post.author.loungeProfile?.nickname ?? post.author.name,
+    nickname: post.author.loungeProfile?.nickname ?? '익명',
     executiveRole: post.author.executiveRole,
     jobTitle: post.author.jobTitle,
     industryName: post.author.company?.industry.name ?? null,

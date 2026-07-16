@@ -2,28 +2,30 @@
 
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useTransition } from 'react';
+import type { DB } from '@mungsan/db';
 
 import { cn } from '@/lib/utils';
 
-// 업종(산업축) 필터 탭 — 가로스크롤, 활성 칩은 그린 채움. 활성 값은 URL(?industry=)에서 읽고,
-// 선택 시 URL을 갱신해 서버 피드가 다시 조회되게 한다. 게시글 카테고리 필터는
-// LoungeCategoryFilter가 별도 축(?category=)으로 담당한다.
-interface CategoryFilterProps {
-  industries: string[];
-}
+import { LOUNGE_CATEGORY_LABELS } from './lounge-category';
 
-export const CategoryFilter = ({ industries }: CategoryFilterProps) => {
+const CATEGORY_VALUES = Object.keys(LOUNGE_CATEGORY_LABELS) as DB.LoungeCategory[];
+
+// 게시글 카테고리(LoungeCategory) 필터 — 업종 필터(CategoryFilter)와 별개 축이라 함께 걸 수 있다.
+export const LoungeCategoryFilter = () => {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
 
-  const raw = searchParams.get('industry');
-  const active = raw && industries.includes(raw) ? raw : null;
+  const raw = searchParams.get('category');
+  const active = (CATEGORY_VALUES as string[]).includes(raw ?? '')
+    ? (raw as DB.LoungeCategory)
+    : null;
 
-  function select(industry: string | null) {
-    const sp = new URLSearchParams();
-    if (industry) sp.set('industry', industry);
+  function select(category: DB.LoungeCategory | null) {
+    const sp = new URLSearchParams(searchParams);
+    if (category) sp.set('category', category);
+    else sp.delete('category');
     startTransition(() => router.push(sp.size ? `${pathname}?${sp}` : pathname));
   }
 
@@ -32,12 +34,12 @@ export const CategoryFilter = ({ industries }: CategoryFilterProps) => {
       className={cn('no-scrollbar -mx-5 flex gap-2 overflow-x-auto px-5', isPending && 'opacity-60')}
     >
       <Chip label="전체" isActive={active === null} onClick={() => select(null)} />
-      {industries.map((industry) => (
+      {CATEGORY_VALUES.map((category) => (
         <Chip
-          key={industry}
-          label={industry}
-          isActive={active === industry}
-          onClick={() => select(industry)}
+          key={category}
+          label={LOUNGE_CATEGORY_LABELS[category]}
+          isActive={active === category}
+          onClick={() => select(category)}
         />
       ))}
     </div>

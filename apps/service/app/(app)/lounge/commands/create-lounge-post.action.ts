@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { prisma, DB } from '@mungsan/db';
 
 import { getCurrentUser } from '@/lib/auth/get-current-user';
+import { ensureLoungeProfile } from '@/lib/lounge/ensure-lounge-profile';
 
 export type ActionResult<D = undefined> =
   | { ok: true; data: D; message: string }
@@ -27,12 +28,8 @@ export async function createLoungePostAction(
   if (!(Object.values(DB.LoungeCategory) as string[]).includes(cmd.category))
     return { ok: false, field: 'category', message: '카테고리를 선택해 주세요.' };
 
-  // 라운지 활동 프로필이 없으면 이름을 닉네임으로 삼아 생성한다(피드/상세의 표시 주체).
-  await prisma.loungeProfile.upsert({
-    where: { userId: user.id },
-    create: { userId: user.id, nickname: user.name },
-    update: {},
-  });
+  // 라운지 활동 프로필이 없으면 생성한다(피드/상세의 표시 주체 — 닉네임은 실명과 무관).
+  await ensureLoungeProfile(user.id);
 
   const post = await prisma.loungePost.create({
     data: { title, content, category: cmd.category, authorId: user.id },

@@ -1,15 +1,27 @@
+import type { DB } from '@mungsan/db';
+
 import { getLoungeFeedQuery } from '../queries/lounge-feed.query';
 import { PostCard } from './post-card';
 
+export type LoungeFeedSearchParams = {
+  industry?: string;
+  category?: DB.LoungeCategory;
+  q?: string;
+};
+
 // 라운지 최신 글 리스트 — searchParams(promise)를 여기서 await(cacheComponents 정적 셸 보호)해
-// 산업 필터를 파싱하고 필터한 게시글을 렌더한다.
+// 업종·카테고리 필터와 검색어를 파싱하고 필터한 게시글을 렌더한다.
 export async function LoungeFeed({
   searchParams,
 }: {
-  searchParams: Promise<{ industry?: string }>;
+  searchParams: Promise<LoungeFeedSearchParams>;
 }) {
-  const { industry } = await searchParams;
-  const posts = await getLoungeFeedQuery({ industry: industry?.trim() || undefined });
+  const { industry, category, q } = await searchParams;
+  const posts = await getLoungeFeedQuery({
+    industry: industry?.trim() || undefined,
+    category,
+    q: q?.trim() || undefined,
+  });
 
   if (posts.length === 0)
     return (

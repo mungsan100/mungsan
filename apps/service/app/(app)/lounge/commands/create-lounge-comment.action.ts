@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { prisma } from '@mungsan/db';
 
 import { getCurrentUser } from '@/lib/auth/get-current-user';
+import { ensureLoungeProfile } from '@/lib/lounge/ensure-lounge-profile';
 
 export type ActionResult<D = undefined> =
   | { ok: true; data: D; message: string }
@@ -36,6 +37,9 @@ export async function createLoungeCommentAction(
     });
     if (!parent) return { ok: false, code: 'NOT_FOUND', message: '원 댓글을 찾을 수 없습니다.' };
   }
+
+  // 댓글 작성도 라운지 표시 주체가 필요하다 — 없으면 여기서도 생성한다(글쓰기와 동일).
+  await ensureLoungeProfile(user.id);
 
   await prisma.$transaction([
     prisma.loungeComment.create({
