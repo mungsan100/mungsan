@@ -1,0 +1,30 @@
+// ════════════════════════════════════════════════════════════════════════
+//  알림  ─  Notification
+//  가입 승인·제안 수신/응답·프로젝트 변경·라운지 반응·사업공고 등 사용자 알림.
+// ════════════════════════════════════════════════════════════════════════
+
+// 사용자 알림. 읽음 처리는 readAt presence 로 판정.
+model Notification {
+  id      String           @id @default(cuid())
+  type    NotificationType
+  title   String
+  body    String?
+  linkUrl String? // 클릭 시 이동 경로(앱 내 라우트)
+
+  createdAt DateTime  @default(now())
+  readAt    DateTime?
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@index([userId, readAt])
+}
+
+// 알림 종류.
+enum NotificationType {
+  MEMBERSHIP // 가입 승인/거절
+  COLLABORATION // 협업 관련
+  PROJECT // 프로젝트
+  LOUNGE // 라운지 반응(댓글·좋아요)
+  SYSTEM // 시스템 공지
+}

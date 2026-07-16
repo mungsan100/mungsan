@@ -1,0 +1,7 @@
+@import 'tailwindcss';
+
+body {
+    font-family:
+        -apple-system, BlinkMacSystemFont, 'Pretendard', 'Noto Sans KR', sans-serif;
+    -webkit-font-smoothing: antialiased;
+}

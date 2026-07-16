@@ -1,0 +1,150 @@
+// ════════════════════════════════════════════════════════════════════════
+//  라운지(임원 전용 익명 커뮤니티)  ─  LoungeProfile · LoungePost · LoungeComment
+//                                    · LoungePostLike · LoungeCommentLike · LoungeBookmark
+//  VERIFIED 회원만 글/댓글 작성. 화면은 익명(displayName)이되 백엔드는 작성자 식별.
+//  반응 = 좋아요(글/댓글) + 댓글 + 북마크(IA). 카운트는 비정규화 캐시(커맨드가 갱신).
+// ════════════════════════════════════════════════════════════════════════
+
+/// 라운지 활동용 사용자 프로필(1:1)
+model LoungeProfile {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 프로필 정보
+  nickname String
+
+  // 사용자
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
+}
+
+/// 라운지 게시글
+model LoungePost {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 기본 정보
+  title    String
+  content  String
+  category LoungeCategory
+
+  // 상태
+  deletedAt DateTime?
+
+  // 비정규화
+  viewCount     Int @default(0) // 조회수
+  likeCount     Int @default(0) // 좋아요수 캐시
+  commentCount  Int @default(0) // 댓글수 캐시
+  bookmarkCount Int @default(0) // 북마크수 캐시
+
+  // 작성자
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id])
+
+  comments  LoungeComment[]
+  likes     LoungePostLike[]
+  bookmarks LoungeBookmark[]
+
+  @@index([category, createdAt])
+  @@index([authorId])
+}
+
+/// 라운지 글 카테고리
+enum LoungeCategory {
+  COLLABORATION // 협업 제안
+  BUSINESS_CONCERN // 사업 고민
+  INVESTMENT_FUNDING // 투자/자금
+  DEVELOPMENT_TECH // 개발/기술
+  MARKETING_SALES // 마케팅/영업
+  GOVERNMENT_SUPPORT // 정부지원사업
+  ETC // 기타
+}
+
+/// 라운지 댓글
+model LoungeComment {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 내용
+  content String
+
+  // 상태
+  deletedAt DateTime?
+
+  // 비정규화
+  likeCount Int @default(0) // 좋아요수 캐시
+
+  // 게시글
+  postId String
+  post   LoungePost @relation(fields: [postId], references: [id])
+
+  // 작성자
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id])
+
+  // 부모 댓글
+  parentId String?
+  parent   LoungeComment? @relation("LoungeCommentReplies", fields: [parentId], references: [id])
+
+  likes   LoungeCommentLike[]
+  replies LoungeComment[]     @relation("LoungeCommentReplies") // 대댓글
+
+  @@index([postId, createdAt])
+  @@index([authorId])
+  @@index([parentId])
+}
+
+/// 글 좋아요
+model LoungePostLike {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 게시글
+  postId String
+  post   LoungePost @relation(fields: [postId], references: [id])
+
+  // 좋아요를 누른 사용자
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@unique([postId, userId]) // 중복 좋아요 방지
+  @@index([userId])
+}
+
+// 댓글 좋아요
+model LoungeCommentLike {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  // 댓글
+  commentId String
+  comment   LoungeComment @relation(fields: [commentId], references: [id])
+
+  // 좋아요를 누른 사용자
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@unique([commentId, userId]) // 중복 좋아요 방지
+  @@index([userId])
+}
+
+// 라운지 글 북마크/저장
+model LoungeBookmark {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  // 게시글
+  postId String
+  post   LoungePost @relation(fields: [postId], references: [id])
+
+  // 북마크를 누른 사용자
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@unique([postId, userId]) // 중복 저장 방지
+  @@index([userId])
+}

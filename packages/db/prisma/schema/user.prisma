@@ -1,0 +1,129 @@
+// ════════════════════════════════════════════════════════════════════════
+//  사용자(기업 대표/임원)  ─  User · UserConsent · UserSocialAccount
+//                            · VerificationToken
+//  apps/service 의 로그인 주체. 회원가입 → (이메일 인증) → 기업정보 등록 →
+//  관리자 승인(approvedAt 기록) 이후 라운지·협업이 열린다.
+//
+//  상태는 별도 enum 없이 "시각 presence"로 표현한다.
+//    · approvedAt  == null → 가입신청중 / != null → 승인(이용가능)
+//    · suspendedAt != null → 정지   · withdrawnAt != null → 탈퇴   · deletedAt → 소프트삭제
+// ════════════════════════════════════════════════════════════════════════
+
+/// 서비스 회원. 한 명의 기업 대표/임원.
+model User {
+  id              String    @id @default(cuid())
+  email           String    @unique
+  passwordHash    String?
+  name            String
+  phone           String
+  emailVerifiedAt DateTime?
+  phoneVerifiedAt DateTime?
+
+  // 소유자의 직책 (1:1 전제 — 멀티유저 전환 시 멤버십으로 이관)
+  executiveRole ExecutiveRole // 소유자의 C-level 직책. OTHER 면 jobTitle 에 원본.
+  jobTitle      String? // executiveRole == OTHER 일 때만 채우는 비표준 직책 원본
+
+  // status
+  deletedAt   DateTime?
+  suspendedAt DateTime?
+  withdrawnAt DateTime?
+  approvedAt  DateTime? // 가입 승인 (관리자)
+
+  // timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  company                Company?
+  loungeProfile          LoungeProfile?
+  loungePosts            LoungePost[]
+  loungeComments         LoungeComment[]
+  loungePostLikes        LoungePostLike[]
+  loungeCommentLikes     LoungeCommentLike[]
+  loungeBookmarks        LoungeBookmark[]
+  collaborationPosts     CollaborationPost[]
+  collaborationProposals CollaborationProposal[]
+  collaborationBookmarks CollaborationBookmark[]
+  projects               Project[]
+  assetReports           AssetReport[]
+  notifications          Notification[]
+  consents               UserConsent[]
+  verificationTokens     VerificationToken[]
+  sessions               Session[]
+
+  @@index([approvedAt])
+}
+
+/// 임원 직책
+enum ExecutiveRole {
+  CEO // 최고경영자
+  COO // 최고운영책임자
+  CTO // 최고기술책임자
+  CFO // 최고재무책임자
+  CMO // 최고마케팅책임자
+  CISO // 최고정보보안책임자
+  CPO // 최고제품책임자
+  FOUNDER // 창업자
+  CHAIRMAN // 의장/회장
+  OTHER // 분류 불가 -> jobTitle 에 원본 직책
+}
+
+// 약관 동의의 "현재 상태"(항목별 1행). 가입 시 필수 약관 동의 근거 보관.
+model UserConsent {
+  id        String      @id @default(cuid())
+  type      ConsentType
+  version   String // 동의한 약관 버전
+  revokedAt DateTime? // 철회 시각
+
+  // 사용자
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, type])
+  @@index([userId])
+}
+
+// 회원가입 동의 항목.
+enum ConsentType {
+  TERMS // 이용약관(필수)
+  PRIVACY // 개인정보 수집·이용(필수)
+  MARKETING // 마케팅 정보 수신(선택)
+}
+
+/// 로그인 세션. 원문 토큰은 저장하지 않고 해시만 보관한다(VerificationToken과 동일한 사상) —
+/// 쿠키엔 원문 토큰, DB엔 sha256(원문)만 남아 DB 유출로 세션이 탈취되지 않는다.
+model Session {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  expiresAt DateTime
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+/// 인증 토큰
+model VerificationToken {
+  id        String @id @default(cuid())
+  purpose   String // PASSWORD_RESET | EMAIL_VERIFY | PHONE_VERIFY
+  tokenHash String // sha256(원문 토큰 또는 6자리 코드). OTP는 해시가 충돌하므로 @unique 불가 — 토큰형은 phone=null 행을 tokenHash 로 직접 조회
+
+  identifier String? // userId 없는 발급의 조회 식별자 — PHONE_VERIFY는 정규화된 휴대폰번호. 토큰형은 null
+  attempts   Int     @default(0)
+
+  expiresAt  DateTime
+  consumedAt DateTime?
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}

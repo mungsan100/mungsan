@@ -1,0 +1,28 @@
+// ════════════════════════════════════════════════════════════════════════
+//  분류  ─  IndustryTag · SkillTag  (통제 어휘 카탈로그)
+//  뭉산의 태그 축은 2개: 업종(정체성·KSIC) · 역량(능력·NCS)
+//  통제 어휘 — 엔티티는 이 카탈로그 행의 id 를 저장한다. Company.industryId 는 실 FK(N:1),
+//  나머지(capabilityIds, CollaborationPost.industryTagIds/requiredSkillIds)는 id 배열이라
+//  DB FK 불가 → 참조 무결성은 command 레벨에서 검증. id 저장이라 카탈로그 rename 에도 안전.
+//  카탈로그는 KSIC/NCS 상위 분류를 큐레이션해 seed, admin 이 관리.
+// ════════════════════════════════════════════════════════════════════════
+
+/// 업종 카탈로그 (KSIC 상위 분류 큐레이션)
+model Industry {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  name String @unique // 업종명(정규)
+
+  companies Company[] // Company.industryId (N:1 참조)
+}
+
+/// 역량 카탈로그 (NCS 상위 분류 큐레이션)
+model Skill {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  name String @unique // 역량명(정규)
+}
