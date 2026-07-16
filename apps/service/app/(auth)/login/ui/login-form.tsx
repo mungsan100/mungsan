@@ -11,8 +11,7 @@ import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-
-import { loginAction } from '../commands/login.action';
+import { loginAction } from '@/app/(auth)/login/commands/login.action';
 
 const schema = z.object({
   email: z.string().trim().email('올바른 이메일 형식이 아닙니다.'),

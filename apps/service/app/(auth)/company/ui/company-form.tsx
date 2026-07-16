@@ -11,9 +11,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
-
-import { registerCompanyAction } from '../commands/register-company.action';
-import type { IndustryOption } from '../queries/industries.query';
+import { registerCompanyAction } from '@/app/(auth)/company/commands/register-company.action';
+import type { IndustryOption } from '@/app/(auth)/company/queries/industries.query';
 
 const fileSchema = z
   .instanceof(File, { error: '파일을 첨부해 주세요.' })

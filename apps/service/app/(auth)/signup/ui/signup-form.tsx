@@ -14,8 +14,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
-
-import { signupAction } from '../commands/signup.action';
+import { signupAction } from '@/app/(auth)/signup/commands/signup.action';
 
 const EXECUTIVE_ROLE_VALUES = [
   'CEO',

@@ -6,8 +6,7 @@ import type { DB } from '@mungsan/db';
 
 import { hashPassword } from '@/lib/auth/password';
 import { createSession } from '@/lib/auth/session';
-
-import { SignupInput } from '../domain/signup-input';
+import { SignupInput } from '@/app/(auth)/signup/domain/signup-input';
 
 export type ActionResult<D = undefined> =
   | { ok: true; data: D; message: string }

@@ -1,6 +1,5 @@
 import { Button } from '@/components/ui/button';
-
-import { logoutAction } from './commands/logout.action';
+import { logoutAction } from '@/app/(auth)/pending/commands/logout.action';
 
 export default function PendingPage() {
   return (

@@ -3,7 +3,7 @@ import 'server-only';
 import { cache } from 'react';
 import type { DB } from '@mungsan/db';
 
-import { getSession } from '@/lib/auth/session';
+import { getSession } from './session';
 
 export type CurrentUser = {
   id: string;

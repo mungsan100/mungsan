@@ -6,8 +6,7 @@ import { prisma } from '@mungsan/db';
 import { putFile } from '@mungsan/file/server';
 
 import { getCurrentUser } from '@/lib/auth/get-current-user';
-
-import { CompanyRegistrationInput } from '../domain/company-registration-input';
+import { CompanyRegistrationInput } from '@/app/(auth)/company/domain/company-registration-input';
 
 export type ActionResult<D = undefined> =
   | { ok: true; data: D; message: string }

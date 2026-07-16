@@ -7,6 +7,8 @@ import { cache } from 'react';
 import { prisma } from '@mungsan/db';
 import type { DB } from '@mungsan/db';
 
+import { IS_PRODUCTION } from '@/config/server';
+
 const COOKIE_NAME = 'mungsan_session';
 const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30일
 
@@ -24,7 +26,7 @@ export async function createSession(userId: string): Promise<void> {
   const cookieStore = await cookies();
   cookieStore.set(COOKIE_NAME, token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: IS_PRODUCTION,
     sameSite: 'lax',
     path: '/',
     expires: expiresAt,
