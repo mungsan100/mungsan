@@ -20,6 +20,7 @@ import { getCurrentUser } from '@/lib/auth/get-current-user';
 import { formatKst } from '@/lib/datetime/format-kst';
 
 import { getCollabDetailQuery } from '../../queries/collab-detail.query';
+import { AttachmentList } from './attachment-list';
 import { DetailBookmarkButton } from './detail-bookmark-button';
 import { ProposalForm } from './proposal-form';
 import { ViewCounter } from './view-counter';
@@ -95,6 +96,8 @@ export const CollabDetailContent = async ({ params }: { params: Promise<{ id: st
             </div>
           </div>
         )}
+
+        {detail.attachments.length > 0 && <AttachmentList attachments={detail.attachments} />}
 
         <div className="border-ink-100 text-ink-400 mt-4 flex items-center gap-4 border-t pt-3.5 text-[13px]">
           <span className="flex items-center gap-1">

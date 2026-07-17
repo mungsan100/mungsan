@@ -33,6 +33,7 @@ export type CollabDetail = {
   companyFoundedDate: Date | null; // 회사 설립일 → ui가 업력 파생
   capabilityTags: string[]; // 회사 capabilityIds → Skill명
   verified: boolean;
+  attachments: { id: string; fileName: string; size: number | null }[]; // 공고 첨부(열람은 서명 URL 액션 경유)
 };
 
 export async function getCollabDetailQuery({
@@ -88,8 +89,8 @@ export async function getCollabDetailQuery({
 
   const company = post.author.company;
   const skillIds = [...new Set([...post.requiredSkillIds, ...(company?.capabilityIds ?? [])])];
-  // Skill·Industry 이름 해석은 서로 독립(둘 다 post에서만 파생) — 병렬로 출발시켜 직렬 워터폴을 없앤다.
-  const [skills, industries] = await Promise.all([
+  // Skill·Industry 이름 해석과 첨부 조회는 서로 독립 — 병렬로 출발시켜 직렬 워터폴을 없앤다.
+  const [skills, industries, attachments] = await Promise.all([
     skillIds.length
       ? prisma.skill.findMany({ where: { id: { in: skillIds } }, select: { id: true, name: true } })
       : Promise.resolve<{ id: string; name: string }[]>([]),
@@ -99,6 +100,11 @@ export async function getCollabDetailQuery({
           select: { id: true, name: true },
         })
       : Promise.resolve<{ id: string; name: string }[]>([]),
+    prisma.attachment.findMany({
+      where: { ownerType: 'COLLABORATION_POST', ownerId: post.id, kind: 'POST_ATTACHMENT' },
+      orderBy: { createdAt: 'asc' },
+      select: { id: true, fileName: true, size: true },
+    }),
   ]);
   const skillName = new Map(skills.map((s) => [s.id, s.name]));
   const industryName = new Map(industries.map((i) => [i.id, i.name]));
@@ -134,5 +140,6 @@ export async function getCollabDetailQuery({
     companyFoundedDate: company?.foundedDate ?? null,
     capabilityTags: resolve(company?.capabilityIds ?? [], skillName),
     verified: post.author.approvedAt != null,
+    attachments,
   };
 }

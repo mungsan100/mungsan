@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { callAction } from '@/lib/forms/call-action';
 
 import { createProposalAction } from '../../commands/create-proposal.action';
 
@@ -43,11 +44,16 @@ export const ProposalForm = ({ postId }: ProposalFormProps) => {
   });
 
   async function onSubmit(values: ProposalOutput) {
-    const res = await createProposalAction({
-      postId,
-      message: values.message,
-      contributionRole: values.contributionRole || undefined,
-    });
+    const res = await callAction(
+      () =>
+        createProposalAction({
+          postId,
+          message: values.message,
+          contributionRole: values.contributionRole || undefined,
+        }),
+      '제안 전송에 실패했습니다. 잠시 후 다시 시도해 주세요.',
+    );
+    if (res === null) return;
     if (!res.ok) {
       if (res.field === 'message') setError('message', { message: res.message });
       else toast.error(res.message);
@@ -80,6 +86,9 @@ export const ProposalForm = ({ postId }: ProposalFormProps) => {
           <p className="text-danger text-[12px]">{errors.contributionRole.message}</p>
         )}
       </div>
+      <p className="text-ink-400 text-[12px]">
+        내 회사 정보와 회사 소개서(등록된 경우)가 제안과 함께 상대 기업에 전달됩니다.
+      </p>
       <Button type="submit" variant="primary" size="lg" className="w-full" disabled={isSubmitting}>
         {isSubmitting && <LuLoaderCircle className="h-4 w-4 animate-spin" />}
         제안 보내기

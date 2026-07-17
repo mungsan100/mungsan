@@ -11,12 +11,18 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
+import { callAction } from '@/lib/forms/call-action';
 import { registerCompanyAction } from '@/app/(auth)/company/commands/register-company.action';
 import type { IndustryOption } from '@/app/(auth)/company/queries/industries.query';
 
+// 서버 액션 본문 한도(next.config bodySizeLimit) 안에서 안전하도록 제출 전에 크기를 막는다 —
+// 한도 초과 시 서버가 요청을 즉시 끊어(400) 사용자에겐 무반응으로 보이기 때문.
+const FILE_MAX_BYTES = 10 * 1024 * 1024; // 10MB — register-company.action의 서버 검증과 동일
+
 const fileSchema = z
   .instanceof(File, { error: '파일을 첨부해 주세요.' })
-  .refine((f) => f.size > 0, '파일을 첨부해 주세요.');
+  .refine((f) => f.size > 0, '파일을 첨부해 주세요.')
+  .refine((f) => f.size <= FILE_MAX_BYTES, '파일 크기는 10MB 이하여야 합니다.');
 
 const schema = z.object({
   name: z.string().trim().min(1, '회사명을 입력해 주세요.'),
@@ -48,7 +54,11 @@ export const CompanyForm = ({ industries }: { industries: IndustryOption[] }) =>
   });
 
   const onSubmit = handleSubmit(async (values) => {
-    const result = await registerCompanyAction(values);
+    const result = await callAction(
+      () => registerCompanyAction(values),
+      '등록 요청에 실패했습니다. 파일이 너무 크거나 네트워크 문제일 수 있어요.',
+    );
+    if (result === null) return;
     if (!result.ok) {
       if (
         result.field === 'name' ||

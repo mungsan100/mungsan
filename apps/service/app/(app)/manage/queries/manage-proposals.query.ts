@@ -1,19 +1,21 @@
 import 'server-only';
 
 import { prisma } from '@mungsan/db';
+import type { DB } from '@mungsan/db';
 
-// 내가 작성한 공고(post.authorId=현재 유저)가 받은 제안들. 상태는 열람/응답 시각에서 파생한다.
+// 내가 작성한 공고(post.authorId=현재 유저)가 받은 제안들. 상태는 DB의 ProposalStatus enum.
 // canonical 값만 반환(Date·원시) — 상대시간·라벨 등 표시 변환은 ui가 담당.
-export type ProposalStatus = 'unread' | 'viewed' | 'replied';
-
 export type ManageProposalView = {
   id: string;
   postId: string;
   postTitle: string;
-  proposerCompanyName: string; // 제안자 회사명, 없으면 이름
+  proposerCompanyName: string; // 제안자 회사명, 없으면 "회사 미등록"(실명 비노출)
   message: string;
+  contributionRole: string | null;
   createdAt: Date;
-  status: ProposalStatus;
+  status: DB.ProposalStatus;
+  respondable: boolean; // 아직 응답 전(수락/반려/미팅요청 가능)
+  hasBrochure: boolean; // 제안자 회사 소개서 존재 여부(열람은 서명 URL 액션 경유)
 };
 
 export async function getManageProposalsQuery(userId: string): Promise<ManageProposalView[]> {
@@ -23,22 +25,38 @@ export async function getManageProposalsQuery(userId: string): Promise<ManagePro
     select: {
       id: true,
       message: true,
+      contributionRole: true,
       createdAt: true,
-      viewedAt: true,
+      status: true,
       respondedAt: true,
       postId: true,
       post: { select: { title: true } },
-      proposer: { select: { name: true, company: { select: { name: true } } } },
+      proposer: { select: { company: { select: { id: true, name: true } } } },
     },
   });
+
+  // 소개서 존재 여부 일괄 조회(N+1 방지) — Attachment는 무FK 폴리모픽이라 ownerId로 직접 조회.
+  const companyIds = [
+    ...new Set(proposals.map((p) => p.proposer.company?.id).filter((id): id is string => !!id)),
+  ];
+  const brochures = companyIds.length
+    ? await prisma.attachment.findMany({
+        where: { ownerType: 'COMPANY', ownerId: { in: companyIds }, kind: 'BROCHURE' },
+        select: { ownerId: true },
+      })
+    : [];
+  const hasBrochureByCompany = new Set(brochures.map((b) => b.ownerId));
 
   return proposals.map((p) => ({
     id: p.id,
     postId: p.postId,
     postTitle: p.post.title,
-    proposerCompanyName: p.proposer.company?.name ?? p.proposer.name,
+    proposerCompanyName: p.proposer.company?.name ?? '회사 미등록',
     message: p.message,
+    contributionRole: p.contributionRole,
     createdAt: p.createdAt,
-    status: p.respondedAt != null ? 'replied' : p.viewedAt != null ? 'viewed' : 'unread',
+    status: p.status,
+    respondable: p.respondedAt == null,
+    hasBrochure: p.proposer.company ? hasBrochureByCompany.has(p.proposer.company.id) : false,
   }));
 }

@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { callAction } from '@/lib/forms/call-action';
 import { cn } from '@/lib/utils';
 
 import type { IndustryOption } from '../../queries/collab-industries.query';
@@ -53,6 +54,10 @@ const schema = z
     requiredSkillIds: z.array(z.string()),
     industryTagIds: z.array(z.string()),
     isPublic: z.boolean(),
+    attachments: z
+      .array(z.instanceof(File))
+      .max(3, '첨부는 최대 3개까지 가능합니다.')
+      .refine((files) => files.every((f) => f.size <= 5 * 1024 * 1024), '첨부파일은 개당 5MB 이하여야 합니다.'),
   })
   .superRefine((val, ctx) => {
     if (
@@ -82,9 +87,10 @@ const EMPTY: FormInput = {
   requiredSkillIds: [],
   industryTagIds: [],
   isPublic: true,
+  attachments: [],
 };
 
-const FIELD_KEYS = ['title', 'description', 'maxBudgetInCheonwon'] as const;
+const FIELD_KEYS = ['title', 'description', 'maxBudgetInCheonwon', 'attachments'] as const;
 
 interface WriteCollabPostFormProps {
   industries: IndustryOption[];
@@ -106,7 +112,11 @@ export const WriteCollabPostForm = ({ industries, skills }: WriteCollabPostFormP
   });
 
   const onSubmit = handleSubmit(async (values) => {
-    const result = await createCollabPostAction(values);
+    const result = await callAction(
+      () => createCollabPostAction(values),
+      '등록 요청에 실패했습니다. 첨부파일이 너무 크거나 네트워크 문제일 수 있어요.',
+    );
+    if (result === null) return;
     if (!result.ok) {
       if (result.field && (FIELD_KEYS as readonly string[]).includes(result.field))
         setError(result.field as (typeof FIELD_KEYS)[number], { message: result.message });
@@ -207,6 +217,28 @@ export const WriteCollabPostForm = ({ industries, skills }: WriteCollabPostFormP
             <ChipMultiSelect options={industries} value={field.value} onChange={field.onChange} />
           )}
         />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="attachments">첨부파일 (선택, 최대 3개 · 개당 5MB)</Label>
+        <Controller
+          control={control}
+          name="attachments"
+          render={({ field: { onChange, name, onBlur, ref } }) => (
+            <input
+              id="attachments"
+              name={name}
+              ref={ref}
+              type="file"
+              multiple
+              accept="application/pdf,image/*"
+              onBlur={onBlur}
+              onChange={(e) => onChange(Array.from(e.target.files ?? []))}
+              className="text-ink-600 w-full text-sm"
+            />
+          )}
+        />
+        {errors.attachments && <p className="text-danger text-xs">{errors.attachments.message}</p>}
       </div>
 
       <div className="space-y-2">

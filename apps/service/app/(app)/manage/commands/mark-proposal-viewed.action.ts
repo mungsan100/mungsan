@@ -11,7 +11,8 @@ export type ActionResult<D = undefined> =
 
 export type MarkProposalViewedCommand = { proposalId: string };
 
-// 제안 열람 처리 — 현재 유저가 그 공고 작성자이고 아직 미열람일 때만 열람 시각을 찍는다.
+// 제안 열람 처리 — 현재 유저가 그 공고 작성자이고 아직 미열람일 때만 열람 시각을 찍고,
+// 상태도 제안완료(SUBMITTED) → 검토중(UNDER_REVIEW)으로 전이한다.
 // 사전조건을 where에 실은 updateMany로 레이스(동시 열람)를 DB에서 닫는다.
 export async function markProposalViewedAction(
   cmd: MarkProposalViewedCommand,
@@ -20,7 +21,7 @@ export async function markProposalViewedAction(
 
   await prisma.collaborationProposal.updateMany({
     where: { id: cmd.proposalId, viewedAt: null, post: { authorId: user.id } },
-    data: { viewedAt: new Date() },
+    data: { viewedAt: new Date(), status: 'UNDER_REVIEW' },
   });
 
   revalidatePath('/manage');
