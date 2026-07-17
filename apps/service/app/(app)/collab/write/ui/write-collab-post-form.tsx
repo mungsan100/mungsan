@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { callAction } from '@/lib/forms/call-action';
 import { cn } from '@/lib/utils';
 
 import type { IndustryOption } from '../../queries/collab-industries.query';
@@ -111,7 +112,11 @@ export const WriteCollabPostForm = ({ industries, skills }: WriteCollabPostFormP
   });
 
   const onSubmit = handleSubmit(async (values) => {
-    const result = await createCollabPostAction(values);
+    const result = await callAction(
+      () => createCollabPostAction(values),
+      '등록 요청에 실패했습니다. 첨부파일이 너무 크거나 네트워크 문제일 수 있어요.',
+    );
+    if (result === null) return;
     if (!result.ok) {
       if (result.field && (FIELD_KEYS as readonly string[]).includes(result.field))
         setError(result.field as (typeof FIELD_KEYS)[number], { message: result.message });
