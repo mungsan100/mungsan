@@ -24,7 +24,7 @@ export async function createProposalAction(cmd: CreateProposalCommand): Promise<
   const contributionRole = cmd.contributionRole?.trim() || null;
 
   const post = await prisma.collaborationPost.findFirst({
-    where: { id: cmd.postId, isPublic: true, deletedAt: null },
+    where: { id: cmd.postId, isPublic: true, deletedAt: null, hiddenAt: null },
     select: { id: true, authorId: true },
   }); // 2. 로드
   if (!post) return { ok: false, code: 'NOT_FOUND', message: '공고를 찾을 수 없습니다.' };

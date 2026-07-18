@@ -36,6 +36,7 @@ export async function getLoungeFeedQuery({
   const posts = await prisma.loungePost.findMany({
     where: {
       deletedAt: null,
+      hiddenAt: null,
       ...(industry ? { author: { company: { industry: { name: industry } } } } : {}),
       ...(category ? { category } : {}),
       ...(q

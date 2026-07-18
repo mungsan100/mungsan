@@ -26,6 +26,7 @@ model CollaborationPost {
   // 상태
   isPublic  Boolean // 공개 여부
   deletedAt DateTime?
+  hiddenAt  DateTime? // 운영 숨김(신고 처리) — 삭제와 구분, null 복원으로 되돌림
 
   // 비정규화
   viewCount     Int @default(0) // 조회수

@@ -32,6 +32,7 @@ model LoungePost {
 
   // 상태
   deletedAt DateTime?
+  hiddenAt  DateTime? // 운영 숨김(신고 처리) — 삭제와 구분, null 복원으로 되돌림
 
   // 비정규화
   viewCount     Int @default(0) // 조회수
@@ -73,6 +74,7 @@ model LoungeComment {
 
   // 상태
   deletedAt DateTime?
+  hiddenAt  DateTime? // 운영 숨김(신고 처리) — 삭제와 구분, null 복원으로 되돌림
 
   // 비정규화
   likeCount Int @default(0) // 좋아요수 캐시

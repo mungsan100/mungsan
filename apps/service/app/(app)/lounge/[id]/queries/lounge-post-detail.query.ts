@@ -28,7 +28,7 @@ export async function getLoungePostDetailQuery({
   userId,
 }: LoungePostDetailQuery): Promise<LoungePostDetail | null> {
   const post = await prisma.loungePost.findFirst({
-    where: { id: postId, deletedAt: null },
+    where: { id: postId, deletedAt: null, hiddenAt: null },
     select: {
       id: true,
       createdAt: true,

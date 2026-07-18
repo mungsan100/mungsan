@@ -25,5 +25,5 @@ export default async function proxy(request: NextRequest) {
 // proxy 는 항상 Node.js 런타임 — middleware 와 달리 runtime 지정이 금지된다(빌드 에러).
 // ⚠ /api/health(배포 헬스체크)는 인증 없이 200이어야 하므로 matcher 에 절대 포함하지 말 것.
 export const config = {
-  matcher: ['/', '/approvals/:path*'],
+  matcher: ['/', '/approvals/:path*', '/reports/:path*'],
 };

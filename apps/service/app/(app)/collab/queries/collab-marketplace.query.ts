@@ -41,6 +41,7 @@ export async function getCollabMarketplaceQuery({
     where: {
       isPublic: true,
       deletedAt: null,
+      hiddenAt: null,
       // 산업축 필터 = 작성자 회사의 업종(카드가 노출하는 정체성 축)
       ...(industryId ? { author: { company: { industryId } } } : {}),
       ...(q
@@ -140,5 +141,5 @@ function computeMatchRate(
 }
 
 export async function getCollabPostCountQuery(): Promise<number> {
-  return prisma.collaborationPost.count({ where: { isPublic: true, deletedAt: null } });
+  return prisma.collaborationPost.count({ where: { isPublic: true, deletedAt: null, hiddenAt: null } });
 }

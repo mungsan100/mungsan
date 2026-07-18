@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { LuBadgeCheck } from 'react-icons/lu';
 import type { DB } from '@mungsan/db';
 
+import { ReportButton } from '@/components/report-button';
 import { Avatar } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { formatRelativeKorean } from '@/lib/datetime/relative-time';
@@ -39,13 +40,16 @@ export const CommentItem = ({ postId, comment }: CommentItemProps) => {
     <div>
       <CommentBody postId={postId} comment={comment} />
 
-      <button
-        type="button"
-        onClick={() => setReplyOpen((v) => !v)}
-        className="text-ink-400 mt-1.5 ml-12 text-xs font-medium"
-      >
-        답글 달기
-      </button>
+      <div className="mt-1.5 ml-12 flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          onClick={() => setReplyOpen((v) => !v)}
+          className="text-ink-400 text-xs font-medium"
+        >
+          답글 달기
+        </button>
+        <ReportButton targetType="LOUNGE_COMMENT" targetId={comment.id} compact />
+      </div>
 
       {replyOpen && (
         <div className="mt-2 ml-12">
