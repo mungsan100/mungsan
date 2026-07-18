@@ -14,6 +14,7 @@ export type CollabDetail = {
   collaborationMethod: string | null;
   startDate: Date | null;
   endDate: Date | null;
+  applicationDeadline: Date | null; // 신청 마감일 — 지났으면 제안 폼 대신 마감 안내
   requiredPartnerSkills: string[]; // requiredSkillIds → Skill명
   postIndustries: string[]; // industryTagIds → Industry명
   viewCount: number;
@@ -34,6 +35,17 @@ export type CollabDetail = {
   capabilityTags: string[]; // 회사 capabilityIds → Skill명
   verified: boolean;
   attachments: { id: string; fileName: string; size: number | null }[]; // 공고 첨부(열람은 서명 URL 액션 경유)
+  myDraft: ProposalDraft | null; // 현재 유저의 임시저장 제안(있으면 폼 초기값으로 복원)
+};
+
+export type ProposalDraft = {
+  id: string;
+  introduction: string | null;
+  interestReason: string | null;
+  contributionCapability: string | null;
+  collaborationMethod: string | null;
+  meetingAvailability: string | null;
+  contributionRole: string | null;
 };
 
 export async function getCollabDetailQuery({
@@ -55,6 +67,7 @@ export async function getCollabDetailQuery({
       collaborationMethod: true,
       startDate: true,
       endDate: true,
+      applicationDeadline: true,
       requiredSkillIds: true,
       industryTagIds: true,
       viewCount: true,
@@ -106,6 +119,20 @@ export async function getCollabDetailQuery({
       select: { id: true, fileName: true, size: true },
     }),
   ]);
+
+  // 현재 유저의 임시저장 제안 — 있으면 제안 폼이 초기값으로 복원한다(공고당 1건 유지).
+  const myDraft = await prisma.collaborationProposal.findFirst({
+    where: { postId: post.id, proposerId: userId, status: 'DRAFT' },
+    select: {
+      id: true,
+      introduction: true,
+      interestReason: true,
+      contributionCapability: true,
+      collaborationMethod: true,
+      meetingAvailability: true,
+      contributionRole: true,
+    },
+  });
   const skillName = new Map(skills.map((s) => [s.id, s.name]));
   const industryName = new Map(industries.map((i) => [i.id, i.name]));
   const resolve = (ids: string[], m: Map<string, string>) =>
@@ -121,6 +148,7 @@ export async function getCollabDetailQuery({
     collaborationMethod: post.collaborationMethod,
     startDate: post.startDate,
     endDate: post.endDate,
+    applicationDeadline: post.applicationDeadline,
     requiredPartnerSkills: resolve(post.requiredSkillIds, skillName),
     postIndustries: resolve(post.industryTagIds, industryName),
     viewCount: post.viewCount,
@@ -141,5 +169,6 @@ export async function getCollabDetailQuery({
     capabilityTags: resolve(company?.capabilityIds ?? [], skillName),
     verified: post.author.approvedAt != null,
     attachments,
+    myDraft,
   };
 }

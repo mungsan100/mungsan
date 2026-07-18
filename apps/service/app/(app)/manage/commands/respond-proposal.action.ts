@@ -34,7 +34,12 @@ export async function respondProposalAction(cmd: RespondProposalCommand): Promis
   if (cmd.response === 'ACCEPTED') {
     const transitioned = await prisma.$transaction(async (tx) => {
       const updated = await tx.collaborationProposal.updateMany({
-        where: { id: cmd.proposalId, respondedAt: null, post: { authorId: user.id } },
+        where: {
+          id: cmd.proposalId,
+          respondedAt: null,
+          status: { not: 'DRAFT' }, // 임시저장(미제출)에는 응답 불가
+          post: { authorId: user.id },
+        },
         data: { respondedAt: new Date(), status: 'IN_PROGRESS' },
       });
       if (updated.count === 0) return false;
@@ -62,7 +67,12 @@ export async function respondProposalAction(cmd: RespondProposalCommand): Promis
   }
 
   const updated = await prisma.collaborationProposal.updateMany({
-    where: { id: cmd.proposalId, respondedAt: null, post: { authorId: user.id } },
+    where: {
+      id: cmd.proposalId,
+      respondedAt: null,
+      status: { not: 'DRAFT' }, // 임시저장(미제출)에는 응답 불가
+      post: { authorId: user.id },
+    },
     data: { respondedAt: new Date(), status: cmd.response },
   });
   if (updated.count === 0)

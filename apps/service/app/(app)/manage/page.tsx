@@ -6,6 +6,7 @@ import { logoutAction } from '@/app/(auth)/pending/commands/logout.action';
 import { AssetReportSection } from './ui/asset-report-section';
 import { LoungeProfileSection } from './ui/lounge-profile-section';
 import { ProposalSection } from './ui/proposal-section';
+import { SentProposalSection } from './ui/sent-proposal-section';
 import { TrustScoreCard } from './ui/trust-score-card';
 import { WithdrawSection } from './ui/withdraw-section';
 
@@ -35,6 +36,10 @@ export default function ManagePage() {
 
         <Suspense fallback={<ListSkeleton />}>
           <ProposalSection />
+        </Suspense>
+
+        <Suspense fallback={<ListSkeleton />}>
+          <SentProposalSection />
         </Suspense>
 
         <Suspense fallback={<ListSkeleton />}>

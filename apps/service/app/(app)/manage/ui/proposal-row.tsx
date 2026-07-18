@@ -22,6 +22,7 @@ const STATUS_META: Record<
   DB.ProposalStatus,
   { label: string; variant: 'danger' | 'secondary' | 'success' | 'default' }
 > = {
+  DRAFT: { label: '임시저장', variant: 'secondary' }, // 받은제안 목록엔 안 나옴(쿼리에서 제외) — 타입 완전성용
   SUBMITTED: { label: '제안 완료', variant: 'danger' },
   UNDER_REVIEW: { label: '검토 중', variant: 'secondary' },
   ACCEPTED: { label: '수락', variant: 'success' },

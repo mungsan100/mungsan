@@ -22,6 +22,7 @@ export type CreateCollabPostCommand = {
   collaborationMethod: string | null;
   startDate: Date | null;
   endDate: Date | null;
+  applicationDeadline: Date | null;
   requiredSkillIds: string[];
   industryTagIds: string[];
   isPublic: boolean;
@@ -47,6 +48,7 @@ export async function createCollabPostAction(
     collaborationMethod: cmd.collaborationMethod,
     startDate: cmd.startDate,
     endDate: cmd.endDate,
+    applicationDeadline: cmd.applicationDeadline,
     requiredSkillIds: cmd.requiredSkillIds,
     industryTagIds: cmd.industryTagIds,
   });
@@ -86,6 +88,7 @@ export async function createCollabPostAction(
         collaborationMethod: post.collaborationMethod,
         startDate: post.startDate,
         endDate: post.endDate,
+        applicationDeadline: post.applicationDeadline,
         requiredSkillIds: post.requiredSkillIds,
         industryTagIds: post.industryTagIds,
         authorId: user.id,
@@ -134,6 +137,8 @@ function fieldOf(code: string): string | undefined {
     case 'BUDGET_NEGATIVE':
     case 'BUDGET_RANGE':
       return 'maxBudgetInCheonwon';
+    case 'DEADLINE_PAST':
+      return 'applicationDeadline';
     default:
       return undefined;
   }

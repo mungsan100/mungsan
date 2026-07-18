@@ -5,6 +5,7 @@ import { CategoryFilterSection } from './ui/category-filter-section';
 import { CollabCount } from './ui/collab-count';
 import { CollabSearchBar } from './ui/collab-search-bar';
 import { CollabWriteFab } from './ui/collab-write-fab';
+import { FilterBarSection } from './ui/filter-bar-section';
 import { MarketplaceFeed } from './ui/marketplace-feed';
 
 // 협업 마켓플레이스 — 밝은 헤더(로켓 + 실 count) · 실 검색 · 산업축 탭 · 파트너 카드 리스트.
@@ -13,7 +14,17 @@ import { MarketplaceFeed } from './ui/marketplace-feed';
 export default function CollabPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; industry?: string }>;
+  searchParams: Promise<{
+    q?: string;
+    industry?: string;
+    skill?: string;
+    region?: string;
+    budget?: string;
+    duration?: string;
+    status?: string;
+    deadline?: string;
+    sort?: string;
+  }>;
 }) {
   return (
     <>
@@ -30,6 +41,9 @@ export default function CollabPage({
         </Suspense>
         <Suspense fallback={<FilterSkeleton />}>
           <CategoryFilterSection />
+        </Suspense>
+        <Suspense fallback={<FilterSkeleton />}>
+          <FilterBarSection />
         </Suspense>
       </header>
 

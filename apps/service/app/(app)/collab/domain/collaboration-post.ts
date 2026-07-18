@@ -8,7 +8,8 @@ type CollaborationPostErr =
   | { code: 'TITLE_REQUIRED'; message: string }
   | { code: 'DESCRIPTION_REQUIRED'; message: string }
   | { code: 'BUDGET_NEGATIVE'; message: string }
-  | { code: 'BUDGET_RANGE'; message: string };
+  | { code: 'BUDGET_RANGE'; message: string }
+  | { code: 'DEADLINE_PAST'; message: string };
 
 export type CreateCollaborationPostInput = {
   title: string;
@@ -19,6 +20,7 @@ export type CreateCollaborationPostInput = {
   collaborationMethod: string | null;
   startDate: Date | null;
   endDate: Date | null;
+  applicationDeadline: Date | null;
   requiredSkillIds: string[];
   industryTagIds: string[];
 };
@@ -32,6 +34,7 @@ export class CollaborationPost {
   public readonly collaborationMethod: string | null;
   public readonly startDate: Date | null;
   public readonly endDate: Date | null;
+  public readonly applicationDeadline: Date | null;
   public readonly requiredSkillIds: string[];
   public readonly industryTagIds: string[];
 
@@ -44,6 +47,7 @@ export class CollaborationPost {
     collaborationMethod: string | null,
     startDate: Date | null,
     endDate: Date | null,
+    applicationDeadline: Date | null,
     requiredSkillIds: string[],
     industryTagIds: string[],
   ) {
@@ -55,6 +59,7 @@ export class CollaborationPost {
     this.collaborationMethod = collaborationMethod;
     this.startDate = startDate;
     this.endDate = endDate;
+    this.applicationDeadline = applicationDeadline;
     this.requiredSkillIds = requiredSkillIds;
     this.industryTagIds = industryTagIds;
   }
@@ -76,6 +81,14 @@ export class CollaborationPost {
     const region = input.region?.trim() || null;
     const collaborationMethod = input.collaborationMethod?.trim() || null;
 
+    // 마감일은 "그날 하루 종일 신청 가능"으로 해석 — 오늘 날짜 선택은 허용, 어제 이전만 거부.
+    if (input.applicationDeadline != null) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (input.applicationDeadline < today)
+        return err({ code: 'DEADLINE_PAST', message: '신청 마감일은 오늘 이후여야 합니다.' });
+    }
+
     return ok(
       new CollaborationPost(
         title,
@@ -86,6 +99,7 @@ export class CollaborationPost {
         collaborationMethod,
         input.startDate,
         input.endDate,
+        input.applicationDeadline,
         [...input.requiredSkillIds],
         [...input.industryTagIds],
       ),
