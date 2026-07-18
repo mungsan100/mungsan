@@ -15,8 +15,9 @@ export type MyInfoView = {
   company: {
     name: string;
     businessRegistrationNo: string;
+    industryId: string; // 수정 폼 초기값
     industryName: string;
-  } | null; // 회사 정보는 조회만(수정은 사업자등록증 재검증 이슈로 별도)
+  } | null; // 회사 정보 수정 시 재심사(가입심사중) 전환 — update-company.action 참고
 };
 
 export async function getMyInfoQuery(userId: string): Promise<MyInfoView> {
@@ -33,6 +34,7 @@ export async function getMyInfoQuery(userId: string): Promise<MyInfoView> {
         select: {
           name: true,
           businessRegistrationNo: true,
+          industryId: true,
           industry: { select: { name: true } },
         },
       },
@@ -50,8 +52,17 @@ export async function getMyInfoQuery(userId: string): Promise<MyInfoView> {
       ? {
           name: user.company.name,
           businessRegistrationNo: user.company.businessRegistrationNo,
+          industryId: user.company.industryId,
           industryName: user.company.industry.name,
         }
       : null,
   };
+}
+
+// 업종 선택지(회사 정보 수정 폼) — (auth)/company의 industries 쿼리와 동일 형태지만
+// 레이어 규칙상 feature 간 import 가 금지라 소비 feature 로컬에 둔다.
+export type IndustryOptionView = { id: string; name: string };
+
+export async function getIndustryOptionsQuery(): Promise<IndustryOptionView[]> {
+  return prisma.industry.findMany({ orderBy: { name: 'asc' }, select: { id: true, name: true } });
 }

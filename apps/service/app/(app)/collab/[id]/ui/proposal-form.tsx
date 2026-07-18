@@ -3,7 +3,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { LuLoaderCircle, LuSave } from 'react-icons/lu';
 import { toast } from 'sonner';
 import { z } from 'zod';
@@ -37,6 +37,11 @@ const proposalSchema = z.object({
   collaborationMethod: optionalField,
   meetingAvailability: optionalField,
   contributionRole: z.string().trim().max(100, '기여 역할은 100자 이내로 입력해 주세요.').optional(),
+  // 참고 자료 — 공고 첨부와 동일 정책(최대 3개·개당 5MB). 서버 검증과 값을 맞출 것.
+  attachments: z
+    .array(z.instanceof(File))
+    .max(3, '참고 자료는 최대 3개까지 첨부할 수 있습니다.')
+    .refine((files) => files.every((f) => f.size <= 5 * 1024 * 1024), '참고 자료는 개당 5MB 이하여야 합니다.'),
 });
 type ProposalInput = z.input<typeof proposalSchema>;
 type ProposalOutput = z.output<typeof proposalSchema>;
@@ -48,6 +53,7 @@ const FIELD_KEYS = [
   'collaborationMethod',
   'meetingAvailability',
   'contributionRole',
+  'attachments',
 ] as const;
 
 interface ProposalFormProps {
@@ -64,6 +70,7 @@ export const ProposalForm = ({ postId, draft }: ProposalFormProps) => {
     getValues,
     reset,
     setError,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<ProposalInput, unknown, ProposalOutput>({
     resolver: zodResolver(proposalSchema),
@@ -74,6 +81,7 @@ export const ProposalForm = ({ postId, draft }: ProposalFormProps) => {
       collaborationMethod: draft?.collaborationMethod ?? '',
       meetingAvailability: draft?.meetingAvailability ?? '',
       contributionRole: draft?.contributionRole ?? '',
+      attachments: [],
     },
   });
 
@@ -85,8 +93,8 @@ export const ProposalForm = ({ postId, draft }: ProposalFormProps) => {
 
   async function onSubmit(values: ProposalOutput) {
     const res = await callAction(
-      () => createProposalAction({ postId, ...normalize(values) }),
-      '제안 전송에 실패했습니다. 잠시 후 다시 시도해 주세요.',
+      () => createProposalAction({ postId, ...normalize(values), attachments: values.attachments }),
+      '제안 전송에 실패했습니다. 파일이 너무 크거나 네트워크 문제일 수 있어요.',
     );
     if (res === null) return;
     if (!res.ok) {
@@ -189,9 +197,35 @@ export const ProposalForm = ({ postId, draft }: ProposalFormProps) => {
         />
       </Field>
 
-      <p className="text-ink-400 text-[12px]">
-        내 회사 정보와 회사 소개서(등록된 경우)가 제안과 함께 상대 기업에 전달됩니다.
-      </p>
+      <Field
+        id="attachments"
+        label="참고 자료 (선택, 최대 3개 · 개당 5MB)"
+        error={errors.attachments?.message}
+      >
+        <Controller
+          control={control}
+          name="attachments"
+          render={({ field: { onChange, name, onBlur, ref } }) => (
+            <input
+              id="attachments"
+              name={name}
+              ref={ref}
+              type="file"
+              multiple
+              accept="application/pdf,image/*"
+              onBlur={onBlur}
+              onChange={(e) => onChange(Array.from(e.target.files ?? []))}
+              className="text-ink-600 w-full text-sm"
+            />
+          )}
+        />
+        <p className="text-ink-400 text-[12px]">
+          회사 소개서 등 자유롭게 첨부할 수 있어요. 임시 저장에는 파일이 포함되지 않고, 제안을
+          보낼 때 함께 전달됩니다.
+        </p>
+      </Field>
+
+      <p className="text-ink-400 text-[12px]">내 회사 정보가 제안과 함께 상대 기업에 전달됩니다.</p>
 
       <div className="flex gap-2">
         <Button

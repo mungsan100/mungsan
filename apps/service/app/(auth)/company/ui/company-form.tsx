@@ -33,7 +33,7 @@ const schema = z.object({
   businessRegistrationNo: z.string().trim().min(1, '사업자등록번호를 입력해 주세요.'),
   industryId: z.string().min(1, '업종을 선택해 주세요.'),
   businessCertFile: fileSchema,
-  brochureFile: fileSchema,
+  brochureFile: fileSchema.optional(), // 회사 소개서는 선택 — 사업자등록증만 필수
 });
 type FormInput = z.input<typeof schema>;
 type FormOutput = z.output<typeof schema>;
@@ -53,7 +53,7 @@ export const CompanyForm = ({ industries }: { industries: IndustryOption[] }) =>
       businessRegistrationNo: '',
       industryId: '',
       businessCertFile: undefined as unknown as File,
-      brochureFile: undefined as unknown as File,
+      brochureFile: undefined,
     },
   });
 
@@ -139,13 +139,14 @@ export const CompanyForm = ({ industries }: { industries: IndustryOption[] }) =>
         render={({ field: { onChange, name, onBlur, ref, value } }) => (
           <FileDropField
             id="brochureFile"
-            label="회사 소개서"
+            label="회사 소개서 (선택)"
             file={value}
             error={errors.brochureFile?.message}
             name={name}
             inputRef={ref}
             onBlur={onBlur}
             onChange={onChange}
+            onClear={() => onChange(undefined)}
           />
         )}
       />
@@ -169,6 +170,7 @@ const FileDropField = ({
   inputRef,
   onBlur,
   onChange,
+  onClear,
 }: {
   id: string;
   label: string;
@@ -178,9 +180,21 @@ const FileDropField = ({
   inputRef: React.Ref<HTMLInputElement>;
   onBlur: () => void;
   onChange: (file: File | undefined) => void;
+  onClear?: () => void; // 선택 필드에서만 전달 — 첨부를 없던 상태로 되돌린다
 }) => (
   <div className="space-y-2">
-    <Label htmlFor={id}>{label}</Label>
+    <div className="flex items-center justify-between">
+      <Label htmlFor={id}>{label}</Label>
+      {onClear && file && (
+        <button
+          type="button"
+          onClick={onClear}
+          className="text-ink-400 hover:text-ink-600 text-xs underline underline-offset-2"
+        >
+          첨부 취소
+        </button>
+      )}
+    </div>
     <label
       htmlFor={id}
       className={`block cursor-pointer rounded-xl border-2 border-dashed px-4 py-5 transition-colors ${

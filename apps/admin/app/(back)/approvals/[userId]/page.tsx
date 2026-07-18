@@ -29,6 +29,7 @@ const KIND_LABELS: Record<DB.AttachmentKind, string> = {
   EXECUTIVE_PROOF: '임원 증빙',
   BROCHURE: '회사 소개서',
   POST_ATTACHMENT: '공고 첨부',
+  PROPOSAL_ATTACHMENT: '제안 참고 자료', // COMPANY 소유 조회에는 안 나옴 — 타입 완전성용
 };
 
 // 가입 신청 상세 — 기업·신청자 정보 + 첨부 서류 열람 + 승인/반려 처리.
@@ -61,7 +62,14 @@ async function DetailSection({ params }: { params: Promise<{ userId: string }> }
 
   return (
     <div className="space-y-5">
-      <h1 className="text-2xl font-bold text-slate-900">{detail.companyName}</h1>
+      <div className="flex items-center gap-2">
+        <h1 className="text-2xl font-bold text-slate-900">{detail.companyName}</h1>
+        {detail.revisions.length > 0 && (
+          <span className="inline-block rounded-full bg-violet-100 px-2.5 py-1 text-xs font-semibold text-violet-700">
+            재심사 — 회사 정보 수정
+          </span>
+        )}
+      </div>
 
       <div className="grid gap-5 md:grid-cols-2">
         <section className="rounded-xl border border-slate-200 bg-white p-5">
@@ -84,6 +92,42 @@ async function DetailSection({ params }: { params: Promise<{ userId: string }> }
           </dl>
         </section>
       </div>
+
+      {detail.revisions.length > 0 && (
+        <section className="rounded-xl border border-violet-200 bg-white p-5">
+          <h2 className="mb-1 text-sm font-bold text-slate-900">회사 정보 변경 이력</h2>
+          <p className="mb-4 text-xs text-slate-500">
+            회원이 회사 정보를 수정하면 승인이 되돌려지고 재심사 대기로 등록됩니다. 아래는 수정
+            시점의 이전 값 → 새 값입니다(최신순).
+          </p>
+          <ul className="space-y-3">
+            {detail.revisions.map((revision) => (
+              <li key={revision.id} className="rounded-lg border border-slate-100 bg-slate-50 p-3">
+                <p className="mb-2 text-xs font-semibold text-slate-500">
+                  {formatKstDateTime(revision.revisedAt)} 수정
+                </p>
+                <dl className="space-y-1">
+                  <ChangeRow
+                    label="회사명"
+                    before={revision.nameBefore}
+                    after={revision.nameAfter}
+                  />
+                  <ChangeRow
+                    label="사업자등록번호"
+                    before={revision.businessRegistrationNoBefore}
+                    after={revision.businessRegistrationNoAfter}
+                  />
+                  <ChangeRow
+                    label="업종"
+                    before={revision.industryNameBefore}
+                    after={revision.industryNameAfter}
+                  />
+                </dl>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <section className="rounded-xl border border-slate-200 bg-white p-5">
         <h2 className="mb-4 text-sm font-bold text-slate-900">첨부 서류</h2>
@@ -135,6 +179,22 @@ const InfoRow = ({ label, value }: { label: string; value: string }) => (
   <div className="flex gap-3">
     <dt className="w-32 shrink-0 text-sm text-slate-400">{label}</dt>
     <dd className="text-sm break-all text-slate-900">{value}</dd>
+  </div>
+);
+
+// 변경 이력 한 줄 — 값이 그대로면 "변경 없음"으로 흐리게, 바뀌었으면 이전 → 새 값을 강조.
+const ChangeRow = ({ label, before, after }: { label: string; before: string; after: string }) => (
+  <div className="flex flex-wrap gap-3 text-sm">
+    <dt className="w-32 shrink-0 text-slate-400">{label}</dt>
+    {before === after ? (
+      <dd className="text-slate-400">변경 없음 ({after})</dd>
+    ) : (
+      <dd className="break-all text-slate-900">
+        <span className="text-slate-500 line-through">{before}</span>
+        <span className="mx-1.5 text-slate-400">→</span>
+        <span className="font-semibold text-violet-700">{after}</span>
+      </dd>
+    )}
   </div>
 );
 

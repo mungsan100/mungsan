@@ -15,7 +15,7 @@ export type ManageProposalView = {
   createdAt: Date;
   status: DB.ProposalStatus;
   respondable: boolean; // 아직 응답 전(수락/반려/미팅요청 가능)
-  hasBrochure: boolean; // 제안자 회사 소개서 존재 여부(열람은 서명 URL 액션 경유)
+  attachments: { id: string; fileName: string }[]; // 제안 참고 자료(열람은 서명 URL 액션 경유)
 };
 
 export async function getManageProposalsQuery(userId: string): Promise<ManageProposalView[]> {
@@ -32,21 +32,29 @@ export async function getManageProposalsQuery(userId: string): Promise<ManagePro
       respondedAt: true,
       postId: true,
       post: { select: { title: true } },
-      proposer: { select: { company: { select: { id: true, name: true } } } },
+      proposer: { select: { company: { select: { name: true } } } },
     },
   });
 
-  // 소개서 존재 여부 일괄 조회(N+1 방지) — Attachment는 무FK 폴리모픽이라 ownerId로 직접 조회.
-  const companyIds = [
-    ...new Set(proposals.map((p) => p.proposer.company?.id).filter((id): id is string => !!id)),
-  ];
-  const brochures = companyIds.length
+  // 참고 자료 일괄 조회(N+1 방지) — Attachment는 무FK 폴리모픽이라 ownerId로 직접 조회.
+  const proposalIds = proposals.map((p) => p.id);
+  const attachmentRows = proposalIds.length
     ? await prisma.attachment.findMany({
-        where: { ownerType: 'COMPANY', ownerId: { in: companyIds }, kind: 'BROCHURE' },
-        select: { ownerId: true },
+        where: {
+          ownerType: 'COLLABORATION_PROPOSAL',
+          ownerId: { in: proposalIds },
+          kind: 'PROPOSAL_ATTACHMENT',
+        },
+        orderBy: { createdAt: 'asc' },
+        select: { id: true, ownerId: true, fileName: true },
       })
     : [];
-  const hasBrochureByCompany = new Set(brochures.map((b) => b.ownerId));
+  const attachmentsByProposal = new Map<string, { id: string; fileName: string }[]>();
+  for (const row of attachmentRows) {
+    const list = attachmentsByProposal.get(row.ownerId) ?? [];
+    list.push({ id: row.id, fileName: row.fileName });
+    attachmentsByProposal.set(row.ownerId, list);
+  }
 
   return proposals.map((p) => ({
     id: p.id,
@@ -58,6 +66,6 @@ export async function getManageProposalsQuery(userId: string): Promise<ManagePro
     createdAt: p.createdAt,
     status: p.status,
     respondable: p.respondedAt == null,
-    hasBrochure: p.proposer.company ? hasBrochureByCompany.has(p.proposer.company.id) : false,
+    attachments: attachmentsByProposal.get(p.id) ?? [],
   }));
 }
