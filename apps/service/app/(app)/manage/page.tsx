@@ -7,6 +7,7 @@ import { AssetReportSection } from './ui/asset-report-section';
 import { LoungeProfileSection } from './ui/lounge-profile-section';
 import { ProposalSection } from './ui/proposal-section';
 import { TrustScoreCard } from './ui/trust-score-card';
+import { WithdrawSection } from './ui/withdraw-section';
 
 // 관리 — 밝은 헤더 + 신뢰 지수 + 받은 제안 + 자산 리포트. 각 비동기 섹션은 국소 Suspense로 스트리밍.
 export default function ManagePage() {
@@ -50,6 +51,10 @@ export default function ManagePage() {
               로그아웃
             </button>
           </form>
+        </section>
+
+        <section className="px-5">
+          <WithdrawSection />
         </section>
       </div>
     </>
