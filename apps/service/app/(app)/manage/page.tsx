@@ -5,6 +5,7 @@ import { logoutAction } from '@/app/(auth)/pending/commands/logout.action';
 
 import { AssetReportSection } from './ui/asset-report-section';
 import { LoungeProfileSection } from './ui/lounge-profile-section';
+import { MyInfoSection } from './ui/my-info-section';
 import { ProposalSection } from './ui/proposal-section';
 import { SentProposalSection } from './ui/sent-proposal-section';
 import { TrustScoreCard } from './ui/trust-score-card';
@@ -27,6 +28,10 @@ export default function ManagePage() {
             <TrustScoreCard />
           </Suspense>
         </section>
+
+        <Suspense fallback={<ListSkeleton />}>
+          <MyInfoSection />
+        </Suspense>
 
         <section className="px-5">
           <Suspense fallback={<CardSkeleton />}>

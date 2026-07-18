@@ -77,6 +77,16 @@ export const getSession = cache(async (): Promise<SessionUser | null> => {
   };
 });
 
+// 현재 세션만 남기고 이 사용자의 다른 모든 세션을 파기한다 — 비밀번호 변경 시 탈취 대비
+// (변경한 기기는 로그인 유지, 나머지 기기는 로그아웃).
+export async function destroyOtherSessions(userId: string): Promise<void> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get(COOKIE_NAME)?.value;
+  await prisma.session.deleteMany({
+    where: { userId, ...(token ? { tokenHash: { not: hashToken(token) } } : {}) },
+  });
+}
+
 // 로그아웃 — DB 세션 row 삭제 + 쿠키 제거.
 export async function destroySession(): Promise<void> {
   const cookieStore = await cookies();
