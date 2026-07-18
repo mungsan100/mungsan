@@ -23,6 +23,7 @@ model CollaborationPost {
   applicationDeadline DateTime? // 신청 마감일 — 지나면 새 제안 불가, 목록에 "마감" 표시
   requiredSkillIds    String[] // 필요 역량 id — Skill.id
   industryTagIds      String[] // 업종 태그 id — Industry.id
+  partnerTypes        String[] // 필요한 파트너사 유형 — 자유 태그(카탈로그 아님, 예: "B2B 영업사")
 
   // 상태
   isPublic  Boolean // 공개 여부

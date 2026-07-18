@@ -17,6 +17,7 @@ export type PartnerCard = {
   foundedDate: Date | null; // 회사 설립일 → ui가 업력("N년차") 파생
   capabilityTags: string[]; // 회사 capabilityIds → Skill명
   requiredPartnerSkills: string[]; // 공고 requiredSkillIds → Skill명
+  partnerTypes: string[]; // 필요한 파트너사 유형(자유 태그)
   startDate: Date | null;
   endDate: Date | null;
   applicationDeadline: Date | null; // 신청 마감일 — ui가 "마감"/"D-n" 배지 파생
@@ -130,6 +131,7 @@ export async function getCollabMarketplaceQuery({
       description: true,
       requiredSkillIds: true,
       industryTagIds: true,
+      partnerTypes: true,
       startDate: true,
       endDate: true,
       applicationDeadline: true,
@@ -184,6 +186,7 @@ export async function getCollabMarketplaceQuery({
       foundedDate: company?.foundedDate ?? null,
       capabilityTags: namesOf(company?.capabilityIds ?? []),
       requiredPartnerSkills: namesOf(p.requiredSkillIds),
+      partnerTypes: p.partnerTypes,
       startDate: p.startDate,
       endDate: p.endDate,
       applicationDeadline: p.applicationDeadline,

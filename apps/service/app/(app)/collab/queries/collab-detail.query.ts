@@ -16,6 +16,7 @@ export type CollabDetail = {
   endDate: Date | null;
   applicationDeadline: Date | null; // 신청 마감일 — 지났으면 제안 폼 대신 마감 안내
   requiredPartnerSkills: string[]; // requiredSkillIds → Skill명
+  partnerTypes: string[]; // 필요한 파트너사 유형(자유 태그)
   postIndustries: string[]; // industryTagIds → Industry명
   viewCount: number;
   proposalCount: number;
@@ -70,6 +71,7 @@ export async function getCollabDetailQuery({
       applicationDeadline: true,
       requiredSkillIds: true,
       industryTagIds: true,
+      partnerTypes: true,
       viewCount: true,
       proposalCount: true,
       bookmarkCount: true,
@@ -150,6 +152,7 @@ export async function getCollabDetailQuery({
     endDate: post.endDate,
     applicationDeadline: post.applicationDeadline,
     requiredPartnerSkills: resolve(post.requiredSkillIds, skillName),
+    partnerTypes: post.partnerTypes,
     postIndustries: resolve(post.industryTagIds, industryName),
     viewCount: post.viewCount,
     proposalCount: post.proposalCount,

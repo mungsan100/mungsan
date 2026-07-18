@@ -23,6 +23,7 @@ export type CreateCollaborationPostInput = {
   applicationDeadline: Date | null;
   requiredSkillIds: string[];
   industryTagIds: string[];
+  partnerTypes: string[]; // 자유 태그 — trim·빈값 제거·상한은 create가 정규화
 };
 
 export class CollaborationPost {
@@ -37,6 +38,7 @@ export class CollaborationPost {
   public readonly applicationDeadline: Date | null;
   public readonly requiredSkillIds: string[];
   public readonly industryTagIds: string[];
+  public readonly partnerTypes: string[];
 
   private constructor(
     title: string,
@@ -50,6 +52,7 @@ export class CollaborationPost {
     applicationDeadline: Date | null,
     requiredSkillIds: string[],
     industryTagIds: string[],
+    partnerTypes: string[],
   ) {
     this.title = title;
     this.description = description;
@@ -62,6 +65,7 @@ export class CollaborationPost {
     this.applicationDeadline = applicationDeadline;
     this.requiredSkillIds = requiredSkillIds;
     this.industryTagIds = industryTagIds;
+    this.partnerTypes = partnerTypes;
   }
 
   public static create(
@@ -89,6 +93,11 @@ export class CollaborationPost {
         return err({ code: 'DEADLINE_PAST', message: '신청 마감일은 오늘 이후여야 합니다.' });
     }
 
+    // 파트너사 유형 — 자유 태그 정규화: trim·빈값 제거·중복 제거·최대 10개·각 30자 절단.
+    const partnerTypes = [
+      ...new Set(input.partnerTypes.map((t) => t.trim()).filter(Boolean)),
+    ].slice(0, 10).map((t) => t.slice(0, 30));
+
     return ok(
       new CollaborationPost(
         title,
@@ -102,6 +111,7 @@ export class CollaborationPost {
         input.applicationDeadline,
         [...input.requiredSkillIds],
         [...input.industryTagIds],
+        partnerTypes,
       ),
     );
   }
