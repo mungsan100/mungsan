@@ -9,7 +9,7 @@ import type { DB } from '@mungsan/db';
 import { Badge } from '@/components/ui/badge';
 import { formatRelativeKorean } from '@/lib/datetime/relative-time';
 
-import { getProposalBrochureUrlAction } from '../commands/get-proposal-brochure-url.action';
+import { getProposalAttachmentUrlAction } from '../commands/get-proposal-attachment-url.action';
 import { markProposalViewedAction } from '../commands/mark-proposal-viewed.action';
 import {
   respondProposalAction,
@@ -55,9 +55,9 @@ export const ProposalRow = ({ proposal }: ProposalRowProps) => {
     });
   }
 
-  function openBrochure() {
+  function openAttachment(attachmentId: string) {
     startTransition(async () => {
-      const result = await getProposalBrochureUrlAction({ proposalId: proposal.id });
+      const result = await getProposalAttachmentUrlAction({ attachmentId });
       if (result.ok) window.open(result.data.url, '_blank', 'noopener');
       else toast.error(result.message);
     });
@@ -93,17 +93,19 @@ export const ProposalRow = ({ proposal }: ProposalRowProps) => {
       </button>
 
       <div className="border-ink-100 mt-3 flex flex-wrap items-center gap-2 border-t pt-3">
-        {proposal.hasBrochure && (
+        {proposal.attachments.map((attachment) => (
           <button
+            key={attachment.id}
             type="button"
-            onClick={openBrochure}
+            onClick={() => openAttachment(attachment.id)}
             disabled={isPending}
-            className="border-ink-200 text-ink-600 flex items-center gap-1 rounded-lg border bg-white px-2.5 py-1.5 text-[12px] font-semibold disabled:opacity-60"
+            title={attachment.fileName}
+            className="border-ink-200 text-ink-600 flex max-w-44 items-center gap-1 rounded-lg border bg-white px-2.5 py-1.5 text-[12px] font-semibold disabled:opacity-60"
           >
-            <LuFileText className="h-3.5 w-3.5" />
-            회사 소개서
+            <LuFileText className="h-3.5 w-3.5 shrink-0" />
+            <span className="truncate">{attachment.fileName}</span>
           </button>
-        )}
+        ))}
         {proposal.respondable && (
           <div className="ml-auto flex gap-2">
             <button
