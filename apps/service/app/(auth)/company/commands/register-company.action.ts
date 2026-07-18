@@ -17,7 +17,7 @@ export type RegisterCompanyCommand = {
   businessRegistrationNo: string;
   industryId: string;
   businessCertFile: File;
-  brochureFile: File;
+  brochureFile?: File; // 회사 소개서는 선택 — 사업자등록증만 필수
 };
 
 const ALLOWED_TYPES = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];
@@ -50,8 +50,11 @@ export async function registerCompanyAction(cmd: RegisterCompanyCommand): Promis
 
   const certCheck = validateFile(cmd.businessCertFile);
   if (!certCheck.ok) return { ok: false, field: 'businessCertFile', message: certCheck.message };
-  const brochureCheck = validateFile(cmd.brochureFile);
-  if (!brochureCheck.ok) return { ok: false, field: 'brochureFile', message: brochureCheck.message };
+  const brochureFile = cmd.brochureFile; // 선택 — 있으면만 검증·업로드
+  if (brochureFile) {
+    const brochureCheck = validateFile(brochureFile);
+    if (!brochureCheck.ok) return { ok: false, field: 'brochureFile', message: brochureCheck.message };
+  }
 
   // 이 Blob 스토어는 private-only로 프로비저닝되어 access:'public' 업로드 자체가 거부된다.
   // MEMBER 등급(소개서)도 blob 레벨에선 private로 올리고, 열람 시 getSignedReadUrl로 연다
@@ -61,10 +64,12 @@ export async function registerCompanyAction(cmd: RegisterCompanyCommand): Promis
       access: 'private',
       contentType: cmd.businessCertFile.type,
     }),
-    putFile(uploadPathname(cmd.brochureFile), cmd.brochureFile, {
-      access: 'private',
-      contentType: cmd.brochureFile.type,
-    }),
+    brochureFile
+      ? putFile(uploadPathname(brochureFile), brochureFile, {
+          access: 'private',
+          contentType: brochureFile.type,
+        })
+      : null,
   ]);
 
   await prisma.$transaction(async (tx) => {
@@ -81,25 +86,29 @@ export async function registerCompanyAction(cmd: RegisterCompanyCommand): Promis
     await tx.attachment.createMany({
       data: [
         {
-          ownerType: 'COMPANY',
+          ownerType: 'COMPANY' as const,
           ownerId: company.id,
-          kind: 'BUSINESS_CERT',
-          access: 'PRIVATE',
+          kind: 'BUSINESS_CERT' as const,
+          access: 'PRIVATE' as const,
           pathname: businessCert.pathname,
           fileName: cmd.businessCertFile.name,
           mimeType: businessCert.contentType,
           size: cmd.businessCertFile.size,
         },
-        {
-          ownerType: 'COMPANY',
-          ownerId: company.id,
-          kind: 'BROCHURE',
-          access: 'MEMBER',
-          pathname: brochure.pathname,
-          fileName: cmd.brochureFile.name,
-          mimeType: brochure.contentType,
-          size: cmd.brochureFile.size,
-        },
+        ...(brochure && brochureFile
+          ? [
+              {
+                ownerType: 'COMPANY' as const,
+                ownerId: company.id,
+                kind: 'BROCHURE' as const,
+                access: 'MEMBER' as const,
+                pathname: brochure.pathname,
+                fileName: brochureFile.name,
+                mimeType: brochure.contentType,
+                size: brochureFile.size,
+              },
+            ]
+          : []),
       ],
     });
   });
