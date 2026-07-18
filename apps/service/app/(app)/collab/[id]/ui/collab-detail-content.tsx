@@ -206,7 +206,7 @@ export const CollabDetailContent = async ({ params }: { params: Promise<{ id: st
           </p>
         ) : (
           <div className="mt-3.5">
-            <ProposalForm postId={detail.postId} />
+            <ProposalForm postId={detail.postId} draft={detail.myDraft} />
           </div>
         )}
       </Card>
