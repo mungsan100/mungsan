@@ -51,6 +51,7 @@ const schema = z
     collaborationMethod: optionalText,
     startDate: dateField,
     endDate: dateField,
+    applicationDeadline: dateField,
     requiredSkillIds: z.array(z.string()),
     industryTagIds: z.array(z.string()),
     isPublic: z.boolean(),
@@ -84,6 +85,7 @@ const EMPTY: FormInput = {
   collaborationMethod: '',
   startDate: '',
   endDate: '',
+  applicationDeadline: '',
   requiredSkillIds: [],
   industryTagIds: [],
   isPublic: true,
@@ -195,6 +197,20 @@ export const WriteCollabPostForm = ({ industries, skills }: WriteCollabPostFormP
           <span className="text-ink-400 shrink-0 text-sm">~</span>
           <Input type="date" {...register('endDate')} className="text-ink-700" />
         </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="applicationDeadline">신청 마감일 (선택)</Label>
+        <Input
+          id="applicationDeadline"
+          type="date"
+          {...register('applicationDeadline')}
+          className="text-ink-700"
+        />
+        <p className="text-ink-400 text-xs">마감일이 지나면 새 제안을 받을 수 없어요.</p>
+        {errors.applicationDeadline && (
+          <p className="text-danger text-xs">{errors.applicationDeadline.message}</p>
+        )}
       </div>
 
       <div className="space-y-2">

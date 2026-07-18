@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { prisma } from '@mungsan/db';
 
 import { getCurrentUser } from '@/lib/auth/get-current-user';
+import { isDeadlinePassed } from '@/lib/collab/deadline';
 
 export type ActionResult<D = undefined> =
   | { ok: true; data: D; message: string }
@@ -25,13 +26,15 @@ export async function createProposalAction(cmd: CreateProposalCommand): Promise<
 
   const post = await prisma.collaborationPost.findFirst({
     where: { id: cmd.postId, isPublic: true, deletedAt: null, hiddenAt: null },
-    select: { id: true, authorId: true },
+    select: { id: true, authorId: true, applicationDeadline: true },
   }); // 2. 로드
   if (!post) return { ok: false, code: 'NOT_FOUND', message: '공고를 찾을 수 없습니다.' };
 
-  // 3. 인가 — 본인 공고에는 제안 불가
+  // 3. 인가 — 본인 공고에는 제안 불가, 마감된 공고에는 새 제안 불가
   if (post.authorId === user.id)
     return { ok: false, code: 'OWN_POST', message: '내가 올린 공고에는 제안할 수 없습니다.' };
+  if (isDeadlinePassed(post.applicationDeadline))
+    return { ok: false, code: 'DEADLINE_PASSED', message: '마감된 공고에는 제안할 수 없습니다.' };
 
   // 4. 영속화(제안 생성 + 제안수 캐시 증가) + 무효화. status는 명시(컨벤션 — default 없음).
   await prisma.$transaction([

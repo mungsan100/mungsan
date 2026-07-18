@@ -19,6 +19,7 @@ export type PartnerCard = {
   requiredPartnerSkills: string[]; // 공고 requiredSkillIds → Skill명
   startDate: Date | null;
   endDate: Date | null;
+  applicationDeadline: Date | null; // 신청 마감일 — ui가 "마감"/"D-n" 배지 파생
   // 적합도(0~100) — 뷰어 회사와 공고의 업종·역량 겹침으로 파생. 뷰어 회사가 없으면 null.
   matchRate: number | null;
 };
@@ -64,6 +65,7 @@ export async function getCollabMarketplaceQuery({
       industryTagIds: true,
       startDate: true,
       endDate: true,
+      applicationDeadline: true,
       author: {
         select: {
           name: true,
@@ -117,6 +119,7 @@ export async function getCollabMarketplaceQuery({
       requiredPartnerSkills: namesOf(p.requiredSkillIds),
       startDate: p.startDate,
       endDate: p.endDate,
+      applicationDeadline: p.applicationDeadline,
       matchRate: computeMatchRate(viewer, {
         industryTagIds: p.industryTagIds,
         requiredSkillIds: p.requiredSkillIds,

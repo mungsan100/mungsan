@@ -6,6 +6,7 @@ import { Avatar } from '@/components/ui/avatar';
 import { buttonVariants } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ProgressBar } from '@/components/ui/progress-bar';
+import { daysUntilDeadline, isDeadlinePassed } from '@/lib/collab/deadline';
 import { cn } from '@/lib/utils';
 
 import type { PartnerCard as PartnerCardData } from '../queries/collab-marketplace.query';
@@ -54,6 +55,17 @@ export const PartnerCard = ({ partner, featured = false }: PartnerCardProps) => 
       </div>
 
       <div className="text-ink-400 mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px]">
+        {isDeadlinePassed(partner.applicationDeadline) ? (
+          <span className="bg-ink-200 text-ink-500 rounded-md px-1.5 py-0.5 text-[11px] font-semibold">
+            마감
+          </span>
+        ) : (
+          deadlineDday(partner.applicationDeadline) && (
+            <span className="bg-danger/10 text-danger rounded-md px-1.5 py-0.5 text-[11px] font-semibold">
+              {deadlineDday(partner.applicationDeadline)}
+            </span>
+          )
+        )}
         {partner.industryName && (
           <span className="bg-ink-100 text-ink-600 rounded-md px-1.5 py-0.5 text-[11px] font-semibold">
             {partner.industryName}
@@ -168,6 +180,13 @@ function formatYearsInBusiness(foundedDate: Date | null): string | null {
   if (!foundedDate) return null;
   const years = differenceInCalendarYears(new Date(), foundedDate) + 1;
   return `업력 ${years}년차`;
+}
+
+// 마감 D-day 라벨 — 7일 이내일 때만 강조 표기(그 외엔 배지 없음).
+function deadlineDday(deadline: Date | null): string | null {
+  const days = daysUntilDeadline(deadline);
+  if (days == null || days > 7) return null;
+  return days === 0 ? '오늘 마감' : `마감 D-${days}`;
 }
 
 function formatDuration(start: Date | null, end: Date | null): string | null {

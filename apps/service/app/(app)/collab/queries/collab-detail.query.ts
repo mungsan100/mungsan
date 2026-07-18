@@ -14,6 +14,7 @@ export type CollabDetail = {
   collaborationMethod: string | null;
   startDate: Date | null;
   endDate: Date | null;
+  applicationDeadline: Date | null; // 신청 마감일 — 지났으면 제안 폼 대신 마감 안내
   requiredPartnerSkills: string[]; // requiredSkillIds → Skill명
   postIndustries: string[]; // industryTagIds → Industry명
   viewCount: number;
@@ -55,6 +56,7 @@ export async function getCollabDetailQuery({
       collaborationMethod: true,
       startDate: true,
       endDate: true,
+      applicationDeadline: true,
       requiredSkillIds: true,
       industryTagIds: true,
       viewCount: true,
@@ -121,6 +123,7 @@ export async function getCollabDetailQuery({
     collaborationMethod: post.collaborationMethod,
     startDate: post.startDate,
     endDate: post.endDate,
+    applicationDeadline: post.applicationDeadline,
     requiredPartnerSkills: resolve(post.requiredSkillIds, skillName),
     postIndustries: resolve(post.industryTagIds, industryName),
     viewCount: post.viewCount,

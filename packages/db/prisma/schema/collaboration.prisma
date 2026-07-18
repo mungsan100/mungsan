@@ -20,6 +20,7 @@ model CollaborationPost {
   collaborationMethod String? // 협업 방식
   startDate           DateTime? // 시작일
   endDate             DateTime? // 종료일
+  applicationDeadline DateTime? // 신청 마감일 — 지나면 새 제안 불가, 목록에 "마감" 표시
   requiredSkillIds    String[] // 필요 역량 id — Skill.id
   industryTagIds      String[] // 업종 태그 id — Industry.id
 
@@ -47,9 +48,15 @@ model CollaborationProposal {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // 내용
-  message          String // 제안 메시지
-  contributionRole String? // 기여 역할
+  // 내용 — message 는 5개 구조화 필드를 합친 전문(구조화 이전 데이터·기존 화면과 호환).
+  // 구조화 필드(PRD FR-CLBMK-3)는 개별 컬럼으로도 저장해 새 화면이 항목별로 표시한다.
+  message                String // 제안 메시지 전문
+  introduction           String? // 자기소개
+  interestReason         String? // 관심 이유
+  contributionCapability String? // 기여 가능 역량
+  collaborationMethod    String? // 협업 가능 방식
+  meetingAvailability    String? // 미팅 가능 일정
+  contributionRole       String? // 기여 역할(협업 가능 영역)
 
   // 상태
   status      ProposalStatus // 제안 상태 워크플로 — 커맨드가 명시값을 보낸다(@default 없음, 컨벤션)
@@ -65,10 +72,12 @@ model CollaborationProposal {
   proposer   User   @relation(fields: [proposerId], references: [id])
 }
 
-/// 제안 상태 워크플로 — 제안완료 → 검토중 → 수락/반려/미팅요청 → 협업진행중.
+/// 제안 상태 워크플로 — (임시저장) → 제안완료 → 검토중 → 수락/반려/미팅요청 → 협업진행중.
 /// 열람(viewedAt 기록) 시 SUBMITTED→UNDER_REVIEW 전이, 응답 액션이 respondedAt과 함께
-/// ACCEPTED/REJECTED/MEETING_REQUESTED 기록. IN_PROGRESS는 수락 후 협업 개시 전이(추후 Project 연동).
+/// ACCEPTED/REJECTED/MEETING_REQUESTED 기록. IN_PROGRESS는 수락 시 Project 생성과 함께 전이.
+/// DRAFT 는 제안자 본인만 보는 임시저장 — 받은제안 목록·proposalCount 에서 제외해야 한다.
 enum ProposalStatus {
+  DRAFT // 임시저장(미제출 — 공고 작성자에게 보이지 않음)
   SUBMITTED // 제안 완료(미열람)
   UNDER_REVIEW // 검토 중(공고 작성자가 열람)
   ACCEPTED // 수락

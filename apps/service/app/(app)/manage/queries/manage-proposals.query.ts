@@ -20,7 +20,8 @@ export type ManageProposalView = {
 
 export async function getManageProposalsQuery(userId: string): Promise<ManageProposalView[]> {
   const proposals = await prisma.collaborationProposal.findMany({
-    where: { post: { authorId: userId } },
+    // DRAFT(임시저장)는 제안자 본인만 보는 미제출 상태 — 받은 제안에서 제외.
+    where: { post: { authorId: userId }, status: { not: 'DRAFT' } },
     orderBy: { createdAt: 'desc' },
     select: {
       id: true,

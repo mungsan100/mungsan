@@ -14,6 +14,7 @@ import {
 } from 'react-icons/lu';
 
 import { ReportButton } from '@/components/report-button';
+import { isDeadlinePassed } from '@/lib/collab/deadline';
 import { Avatar } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
@@ -81,6 +82,15 @@ export const CollabDetailContent = async ({ params }: { params: Promise<{ id: st
               icon={<LuHandshake className="h-4 w-4" />}
               label="협업 방식"
               value={detail.collaborationMethod}
+            />
+          )}
+          {detail.applicationDeadline && (
+            <MetaRow
+              icon={<LuCalendar className="h-4 w-4" />}
+              label="신청 마감"
+              value={`${formatKst(detail.applicationDeadline, 'yyyy.MM.dd')}${
+                isDeadlinePassed(detail.applicationDeadline) ? ' (마감됨)' : ''
+              }`}
             />
           )}
         </div>
@@ -190,6 +200,10 @@ export const CollabDetailContent = async ({ params }: { params: Promise<{ id: st
         <h3 className="text-ink-900 text-base font-bold">협업 제안하기</h3>
         {detail.isOwnPost ? (
           <p className="text-ink-500 mt-2 text-[13px]">내가 올린 공고입니다.</p>
+        ) : isDeadlinePassed(detail.applicationDeadline) ? (
+          <p className="text-ink-500 mt-2 text-[13px]">
+            마감된 공고입니다. 새 제안을 받을 수 없어요.
+          </p>
         ) : (
           <div className="mt-3.5">
             <ProposalForm postId={detail.postId} />
