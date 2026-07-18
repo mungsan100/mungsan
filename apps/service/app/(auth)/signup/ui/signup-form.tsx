@@ -173,7 +173,12 @@ export const SignupForm = () => {
           render={({ field }) => (
             <label className="flex items-center gap-2 text-sm">
               <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-              이용약관에 동의합니다 (필수)
+              <span>
+                <Link href="/terms" target="_blank" className="underline underline-offset-2">
+                  이용약관
+                </Link>
+                에 동의합니다 (필수)
+              </span>
             </label>
           )}
         />
@@ -185,7 +190,12 @@ export const SignupForm = () => {
           render={({ field }) => (
             <label className="flex items-center gap-2 text-sm">
               <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-              개인정보 수집·이용에 동의합니다 (필수)
+              <span>
+                <Link href="/privacy" target="_blank" className="underline underline-offset-2">
+                  개인정보 수집·이용
+                </Link>
+                에 동의합니다 (필수)
+              </span>
             </label>
           )}
         />
