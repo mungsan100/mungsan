@@ -1,6 +1,8 @@
 import { Suspense } from 'react';
 import { LuShieldCheck } from 'react-icons/lu';
 
+import { logoutAction } from '@/app/(auth)/pending/commands/logout.action';
+
 import { AssetReportSection } from './ui/asset-report-section';
 import { LoungeProfileSection } from './ui/lounge-profile-section';
 import { ProposalSection } from './ui/proposal-section';
@@ -37,6 +39,18 @@ export default function ManagePage() {
         <Suspense fallback={<ListSkeleton />}>
           <AssetReportSection />
         </Suspense>
+
+        {/* 로그아웃 — 로그인 후 유일한 로그아웃 진입점(가입심사중 화면의 로그아웃과 같은 액션). */}
+        <section className="px-5">
+          <form action={logoutAction}>
+            <button
+              type="submit"
+              className="border-ink-200 text-ink-500 hover:bg-ink-100 w-full rounded-xl border bg-white py-3 text-sm font-semibold"
+            >
+              로그아웃
+            </button>
+          </form>
+        </section>
       </div>
     </>
   );
