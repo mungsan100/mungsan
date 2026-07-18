@@ -14,4 +14,21 @@ model Admin {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  sessions AdminSession[]
+}
+
+/// 운영자 로그인 세션. user.prisma 의 Session 과 동형 — 쿠키엔 원문 토큰,
+/// DB엔 sha256(원문)만 보관해 DB 유출로 세션이 탈취되지 않는다.
+model AdminSession {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  expiresAt DateTime
+
+  adminId String
+  admin   Admin  @relation(fields: [adminId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([adminId])
 }

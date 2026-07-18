@@ -6,6 +6,7 @@
 //
 //  상태는 별도 enum 없이 "시각 presence"로 표현한다.
 //    · approvedAt  == null → 가입신청중 / != null → 승인(이용가능)
+//    · rejectedAt  != null → 가입 반려(approvedAt과 배타 — 승인 시 반려 기록을 지운다)
 //    · suspendedAt != null → 정지   · withdrawnAt != null → 탈퇴   · deletedAt → 소프트삭제
 // ════════════════════════════════════════════════════════════════════════
 
@@ -24,10 +25,12 @@ model User {
   jobTitle      String? // executiveRole == OTHER 일 때만 채우는 비표준 직책 원본
 
   // status
-  deletedAt   DateTime?
-  suspendedAt DateTime?
-  withdrawnAt DateTime?
-  approvedAt  DateTime? // 가입 승인 (관리자)
+  deletedAt      DateTime?
+  suspendedAt    DateTime?
+  withdrawnAt    DateTime?
+  approvedAt     DateTime? // 가입 승인 (관리자)
+  rejectedAt     DateTime? // 가입 반려 (관리자). approvedAt과 배타 — 승인 시 null로 되돌린다
+  rejectedReason String? // 반려 사유 (관리자 선택 입력)
 
   // timestamps
   createdAt DateTime @default(now())
