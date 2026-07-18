@@ -52,6 +52,7 @@ const schema = z
     startDate: dateField,
     endDate: dateField,
     applicationDeadline: dateField,
+    partnerTypesText: z.string().trim().max(400, '파트너사 유형은 400자 이내로 입력해 주세요.').optional(),
     requiredSkillIds: z.array(z.string()),
     industryTagIds: z.array(z.string()),
     isPublic: z.boolean(),
@@ -86,6 +87,7 @@ const EMPTY: FormInput = {
   startDate: '',
   endDate: '',
   applicationDeadline: '',
+  partnerTypesText: '',
   requiredSkillIds: [],
   industryTagIds: [],
   isPublic: true,
@@ -114,8 +116,14 @@ export const WriteCollabPostForm = ({ industries, skills }: WriteCollabPostFormP
   });
 
   const onSubmit = handleSubmit(async (values) => {
+    const { partnerTypesText, ...rest } = values;
     const result = await callAction(
-      () => createCollabPostAction(values),
+      () =>
+        createCollabPostAction({
+          ...rest,
+          // 쉼표 구분 자유 태그 → 배열(정규화·상한은 도메인이 담당)
+          partnerTypes: (partnerTypesText ?? '').split(',').map((t) => t.trim()).filter(Boolean),
+        }),
       '등록 요청에 실패했습니다. 첨부파일이 너무 크거나 네트워크 문제일 수 있어요.',
     );
     if (result === null) return;
@@ -210,6 +218,19 @@ export const WriteCollabPostForm = ({ industries, skills }: WriteCollabPostFormP
         <p className="text-ink-400 text-xs">마감일이 지나면 새 제안을 받을 수 없어요.</p>
         {errors.applicationDeadline && (
           <p className="text-danger text-xs">{errors.applicationDeadline.message}</p>
+        )}
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="partnerTypesText">필요한 파트너사 유형 (선택)</Label>
+        <Input
+          id="partnerTypesText"
+          {...register('partnerTypesText')}
+          placeholder="예: B2B 영업사, SI 구축사, 기획 운영사"
+        />
+        <p className="text-ink-400 text-xs">쉼표(,)로 구분해 여러 개 입력할 수 있어요. 최대 10개.</p>
+        {errors.partnerTypesText && (
+          <p className="text-danger text-xs">{errors.partnerTypesText.message}</p>
         )}
       </div>
 

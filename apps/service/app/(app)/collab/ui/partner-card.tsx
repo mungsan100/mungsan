@@ -91,11 +91,15 @@ export const PartnerCard = ({ partner, featured = false }: PartnerCardProps) => 
         ))}
       </div>
 
-      {featured && partner.requiredPartnerSkills.length > 0 && (
+      {featured && (partner.partnerTypes.length > 0 || partner.requiredPartnerSkills.length > 0) && (
         <div className="mt-3.5">
           <p className="text-ink-700 text-[13px] font-semibold">필요한 파트너사</p>
           <p className="text-ink-500 mt-1 text-[13px]">
-            {partner.requiredPartnerSkills.join(' · ')}
+            {/* 공고가 선언한 파트너사 유형(자유 태그)을 우선 표시, 없으면 필요 역량으로 폴백 */}
+            {(partner.partnerTypes.length > 0
+              ? partner.partnerTypes
+              : partner.requiredPartnerSkills
+            ).join(' · ')}
             {duration && <span className="text-ink-400"> / {duration}</span>}
           </p>
         </div>

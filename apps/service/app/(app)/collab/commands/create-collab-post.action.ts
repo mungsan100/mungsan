@@ -25,6 +25,7 @@ export type CreateCollabPostCommand = {
   applicationDeadline: Date | null;
   requiredSkillIds: string[];
   industryTagIds: string[];
+  partnerTypes: string[]; // 필요한 파트너사 유형(자유 태그)
   isPublic: boolean;
   attachments: File[]; // 공고 첨부(선택, 최대 3개)
 };
@@ -51,6 +52,7 @@ export async function createCollabPostAction(
     applicationDeadline: cmd.applicationDeadline,
     requiredSkillIds: cmd.requiredSkillIds,
     industryTagIds: cmd.industryTagIds,
+    partnerTypes: cmd.partnerTypes,
   });
   if (result.isErr())
     return { ok: false, code: result.error.code, field: fieldOf(result.error.code), message: result.error.message };
@@ -90,6 +92,7 @@ export async function createCollabPostAction(
         endDate: post.endDate,
         applicationDeadline: post.applicationDeadline,
         requiredSkillIds: post.requiredSkillIds,
+        partnerTypes: post.partnerTypes,
         industryTagIds: post.industryTagIds,
         authorId: user.id,
         isPublic: cmd.isPublic,

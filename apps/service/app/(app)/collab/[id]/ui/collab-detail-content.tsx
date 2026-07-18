@@ -95,6 +95,22 @@ export const CollabDetailContent = async ({ params }: { params: Promise<{ id: st
           )}
         </div>
 
+        {detail.partnerTypes.length > 0 && (
+          <div className="mt-4">
+            <p className="text-ink-700 text-[13px] font-semibold">필요한 파트너사</p>
+            <div className="mt-1.5 flex flex-wrap gap-1.5">
+              {detail.partnerTypes.map((type) => (
+                <span
+                  key={type}
+                  className="bg-brand-soft text-brand-sub02 rounded-full px-2.5 py-1 text-[12px] font-medium"
+                >
+                  {type}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
         {detail.requiredPartnerSkills.length > 0 && (
           <div className="mt-4">
             <p className="text-ink-700 text-[13px] font-semibold">필요 역량</p>
