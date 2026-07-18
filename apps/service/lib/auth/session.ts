@@ -39,6 +39,8 @@ export type SessionUser = {
   name: string;
   executiveRole: DB.ExecutiveRole;
   approvedAt: Date | null;
+  rejectedAt: Date | null;
+  rejectedReason: string | null;
   suspendedAt: Date | null;
   withdrawnAt: Date | null;
   company: { id: string } | null;
@@ -67,6 +69,8 @@ export const getSession = cache(async (): Promise<SessionUser | null> => {
     name: user.name,
     executiveRole: user.executiveRole,
     approvedAt: user.approvedAt,
+    rejectedAt: user.rejectedAt,
+    rejectedReason: user.rejectedReason,
     suspendedAt: user.suspendedAt,
     withdrawnAt: user.withdrawnAt,
     company: user.company,
