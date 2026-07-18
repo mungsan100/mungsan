@@ -71,6 +71,14 @@ export const LoginForm = () => {
           회원가입
         </Link>
       </p>
+      <p className="text-center">
+        <Link
+          href="/reset-password"
+          className="text-ink-400 text-xs underline underline-offset-2"
+        >
+          비밀번호를 잊으셨나요?
+        </Link>
+      </p>
     </form>
   );
 };
