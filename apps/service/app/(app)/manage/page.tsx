@@ -7,6 +7,7 @@ import { AssetReportSection } from './ui/asset-report-section';
 import { LoungeProfileSection } from './ui/lounge-profile-section';
 import { MyInfoSection } from './ui/my-info-section';
 import { ProposalSection } from './ui/proposal-section';
+import { SavedSection } from './ui/saved-section';
 import { SentProposalSection } from './ui/sent-proposal-section';
 import { TrustScoreCard } from './ui/trust-score-card';
 import { WithdrawSection } from './ui/withdraw-section';
@@ -31,6 +32,10 @@ export default function ManagePage() {
 
         <Suspense fallback={<ListSkeleton />}>
           <MyInfoSection />
+        </Suspense>
+
+        <Suspense fallback={<ListSkeleton />}>
+          <SavedSection />
         </Suspense>
 
         <section className="px-5">
