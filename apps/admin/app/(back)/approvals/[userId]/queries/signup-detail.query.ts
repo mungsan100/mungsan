@@ -11,6 +11,17 @@ export type SignupAttachmentView = {
   size: number | null;
 };
 
+export type CompanyRevisionView = {
+  id: string;
+  revisedAt: Date;
+  nameBefore: string;
+  nameAfter: string;
+  businessRegistrationNoBefore: string;
+  businessRegistrationNoAfter: string;
+  industryNameBefore: string;
+  industryNameAfter: string;
+};
+
 export type SignupDetailView = {
   userId: string;
   applicantName: string;
@@ -28,6 +39,7 @@ export type SignupDetailView = {
   rejectedAt: Date | null;
   rejectedReason: string | null;
   attachments: SignupAttachmentView[];
+  revisions: CompanyRevisionView[]; // 회사 정보 수정 이력(최신순) — 있으면 재심사 건
 };
 
 // 가입 신청 단건 상세 — 신청자·기업 정보 + 해당 회사의 첨부 서류 전부.
@@ -60,11 +72,28 @@ export async function getSignupDetailQuery(userId: string): Promise<SignupDetail
   if (!user?.company) return null;
 
   // Attachment 는 무FK 폴리모픽 — ownerType+ownerId 로 직접 조회.
-  const attachments = await prisma.attachment.findMany({
-    where: { ownerType: 'COMPANY', ownerId: user.company.id },
-    orderBy: { createdAt: 'asc' },
-    select: { id: true, kind: true, fileName: true, mimeType: true, size: true },
-  });
+  const [attachments, revisions] = await Promise.all([
+    prisma.attachment.findMany({
+      where: { ownerType: 'COMPANY', ownerId: user.company.id },
+      orderBy: { createdAt: 'asc' },
+      select: { id: true, kind: true, fileName: true, mimeType: true, size: true },
+    }),
+    prisma.companyRevision.findMany({
+      where: { companyId: user.company.id },
+      orderBy: { createdAt: 'desc' },
+      take: 20,
+      select: {
+        id: true,
+        createdAt: true,
+        nameBefore: true,
+        nameAfter: true,
+        businessRegistrationNoBefore: true,
+        businessRegistrationNoAfter: true,
+        industryNameBefore: true,
+        industryNameAfter: true,
+      },
+    }),
+  ]);
 
   return {
     userId: user.id,
@@ -83,5 +112,15 @@ export async function getSignupDetailQuery(userId: string): Promise<SignupDetail
     rejectedAt: user.rejectedAt,
     rejectedReason: user.rejectedReason,
     attachments,
+    revisions: revisions.map((revision) => ({
+      id: revision.id,
+      revisedAt: revision.createdAt,
+      nameBefore: revision.nameBefore,
+      nameAfter: revision.nameAfter,
+      businessRegistrationNoBefore: revision.businessRegistrationNoBefore,
+      businessRegistrationNoAfter: revision.businessRegistrationNoAfter,
+      industryNameBefore: revision.industryNameBefore,
+      industryNameAfter: revision.industryNameAfter,
+    })),
   };
 }

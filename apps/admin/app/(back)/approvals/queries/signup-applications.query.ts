@@ -16,6 +16,8 @@ export type SignupApplicationView = {
   appliedAt: Date; // 기업정보 제출 시각(Company.createdAt) = 심사 시작 시점
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
   decidedAt: Date | null; // 승인/반려 처리 시각
+  isRereview: boolean; // 회사 정보 수정 이력 보유 — 신규 가입이 아닌 재심사 건
+  lastRevisedAt: Date | null; // 마지막 수정 시각(재심사 대기 정렬·표시용)
 };
 
 // pending: 심사 대기(기업정보는 냈고 승인도 반려도 안 된 건), 오래 기다린 순.
@@ -45,6 +47,8 @@ export async function getSignupApplicationsQuery(
           businessRegistrationNo: true,
           createdAt: true,
           industry: { select: { name: true } },
+          // 수정 이력 최신 1건 — 있으면 재심사 건(회사 정보 수정으로 승인이 되돌려진 경우)
+          revisions: { orderBy: { createdAt: 'desc' }, take: 1, select: { createdAt: true } },
         },
       },
     },
@@ -52,6 +56,7 @@ export async function getSignupApplicationsQuery(
 
   return users.flatMap((user) => {
     if (!user.company) return []; // where 가 보장하지만 타입상 nullable — 방어적으로 제외
+    const lastRevision = user.company.revisions[0] ?? null;
     return [
       {
         userId: user.id,
@@ -64,6 +69,8 @@ export async function getSignupApplicationsQuery(
         appliedAt: user.company.createdAt,
         status: user.approvedAt ? 'APPROVED' : user.rejectedAt ? 'REJECTED' : 'PENDING',
         decidedAt: user.approvedAt ?? user.rejectedAt,
+        isRereview: lastRevision != null,
+        lastRevisedAt: lastRevision?.createdAt ?? null,
       } satisfies SignupApplicationView,
     ];
   });

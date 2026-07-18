@@ -45,6 +45,11 @@ export const ApplicationRow = ({ application }: ApplicationRowProps) => {
         >
           {application.companyName}
         </Link>
+        {application.isRereview && (
+          <span className="ml-2 inline-block rounded-full bg-violet-100 px-2 py-0.5 text-xs font-semibold text-violet-700">
+            재심사
+          </span>
+        )}
       </td>
       <td className="px-4 py-3 text-slate-700">
         {application.applicantName}

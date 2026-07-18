@@ -36,4 +36,27 @@ model Company {
   // 회사 등록자
   userId String @unique
   user   User   @relation(fields: [userId], references: [id])
+
+  revisions CompanyRevision[]
+}
+
+/// 회사 심사 대상 정보(회사명·사업자등록번호·업종) 수정 이력 — 수정 시점의
+/// "이전 값 → 새 값"을 한 행에 보존한다. 수정 저장 시 User.approvedAt 을 null 로
+/// 되돌려 재심사로 전환하고, admin 심사 화면이 이 이력을 근거 자료로 보여준다.
+/// 업종은 표시 안정성을 위해 이름을 비정규화해 저장(Industry 개편에도 이력 불변).
+model CompanyRevision {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id])
+
+  nameBefore                   String
+  nameAfter                    String
+  businessRegistrationNoBefore String
+  businessRegistrationNoAfter  String
+  industryNameBefore           String
+  industryNameAfter            String
+
+  @@index([companyId, createdAt])
 }
