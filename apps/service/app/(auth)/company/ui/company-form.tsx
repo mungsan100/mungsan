@@ -3,7 +3,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { LuLoaderCircle } from 'react-icons/lu';
+import { LuFileText, LuLoaderCircle, LuUpload } from 'react-icons/lu';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
@@ -17,12 +17,16 @@ import type { IndustryOption } from '@/app/(auth)/company/queries/industries.que
 
 // 서버 액션 본문 한도(next.config bodySizeLimit) 안에서 안전하도록 제출 전에 크기를 막는다 —
 // 한도 초과 시 서버가 요청을 즉시 끊어(400) 사용자에겐 무반응으로 보이기 때문.
-const FILE_MAX_BYTES = 10 * 1024 * 1024; // 10MB — register-company.action의 서버 검증과 동일
+// 값·형식은 register-company.action의 서버 검증(MAX_BYTES·ALLOWED_TYPES)과 동일하게 유지할 것.
+const FILE_MAX_MB = 10;
+const FILE_MAX_BYTES = FILE_MAX_MB * 1024 * 1024;
+const FILE_ACCEPT = 'application/pdf,image/jpeg,image/png,image/webp';
+const FILE_NOTICE = `PDF 또는 이미지(JPG·PNG·WebP) · 최대 ${FILE_MAX_MB}MB`;
 
 const fileSchema = z
   .instanceof(File, { error: '파일을 첨부해 주세요.' })
   .refine((f) => f.size > 0, '파일을 첨부해 주세요.')
-  .refine((f) => f.size <= FILE_MAX_BYTES, '파일 크기는 10MB 이하여야 합니다.');
+  .refine((f) => f.size <= FILE_MAX_BYTES, `파일 크기는 ${FILE_MAX_MB}MB 이하여야 합니다.`);
 
 const schema = z.object({
   name: z.string().trim().min(1, '회사명을 입력해 주세요.'),
@@ -115,44 +119,34 @@ export const CompanyForm = ({ industries }: { industries: IndustryOption[] }) =>
       <Controller
         control={control}
         name="businessCertFile"
-        render={({ field: { onChange, name, onBlur, ref } }) => (
-          <div className="space-y-2">
-            <Label htmlFor="businessCertFile">사업자등록증</Label>
-            <input
-              id="businessCertFile"
-              name={name}
-              ref={ref}
-              type="file"
-              accept="application/pdf,image/*"
-              onBlur={onBlur}
-              onChange={(e) => onChange(e.target.files?.[0])}
-              className="text-ink-600 w-full text-sm"
-            />
-            {errors.businessCertFile && (
-              <p className="text-danger text-xs">{errors.businessCertFile.message}</p>
-            )}
-          </div>
+        render={({ field: { onChange, name, onBlur, ref, value } }) => (
+          <FileDropField
+            id="businessCertFile"
+            label="사업자등록증"
+            file={value}
+            error={errors.businessCertFile?.message}
+            name={name}
+            inputRef={ref}
+            onBlur={onBlur}
+            onChange={onChange}
+          />
         )}
       />
 
       <Controller
         control={control}
         name="brochureFile"
-        render={({ field: { onChange, name, onBlur, ref } }) => (
-          <div className="space-y-2">
-            <Label htmlFor="brochureFile">회사 소개서</Label>
-            <input
-              id="brochureFile"
-              name={name}
-              ref={ref}
-              type="file"
-              accept="application/pdf,image/*"
-              onBlur={onBlur}
-              onChange={(e) => onChange(e.target.files?.[0])}
-              className="text-ink-600 w-full text-sm"
-            />
-            {errors.brochureFile && <p className="text-danger text-xs">{errors.brochureFile.message}</p>}
-          </div>
+        render={({ field: { onChange, name, onBlur, ref, value } }) => (
+          <FileDropField
+            id="brochureFile"
+            label="회사 소개서"
+            file={value}
+            error={errors.brochureFile?.message}
+            name={name}
+            inputRef={ref}
+            onBlur={onBlur}
+            onChange={onChange}
+          />
         )}
       />
 
@@ -163,3 +157,72 @@ export const CompanyForm = ({ industries }: { industries: IndustryOption[] }) =>
     </form>
   );
 };
+
+// 파일 첨부 박스 — 경계가 뚜렷한 드롭존 스타일(클릭 영역 전체가 파일 선택 트리거).
+// 실제 input은 sr-only로 숨기고 label 박스가 클릭·포커스 표면을 담당한다.
+const FileDropField = ({
+  id,
+  label,
+  file,
+  error,
+  name,
+  inputRef,
+  onBlur,
+  onChange,
+}: {
+  id: string;
+  label: string;
+  file: File | undefined;
+  error: string | undefined;
+  name: string;
+  inputRef: React.Ref<HTMLInputElement>;
+  onBlur: () => void;
+  onChange: (file: File | undefined) => void;
+}) => (
+  <div className="space-y-2">
+    <Label htmlFor={id}>{label}</Label>
+    <label
+      htmlFor={id}
+      className={`block cursor-pointer rounded-xl border-2 border-dashed px-4 py-5 transition-colors ${
+        error
+          ? 'border-danger/60 bg-danger/5'
+          : 'border-ink-300 bg-ink-50 hover:border-ink-400 hover:bg-ink-100 focus-within:border-brand'
+      }`}
+    >
+      <input
+        id={id}
+        name={name}
+        ref={inputRef}
+        type="file"
+        accept={FILE_ACCEPT}
+        onBlur={onBlur}
+        onChange={(e) => onChange(e.target.files?.[0])}
+        className="sr-only"
+      />
+      {file ? (
+        <span className="flex items-center justify-center gap-2">
+          <LuFileText className="text-ink-600 h-5 w-5 shrink-0" />
+          <span className="min-w-0 text-left">
+            <span className="text-ink-900 block truncate text-sm font-semibold">{file.name}</span>
+            <span className="text-ink-500 block text-xs">
+              {formatFileSize(file.size)} · 눌러서 다른 파일로 변경
+            </span>
+          </span>
+        </span>
+      ) : (
+        <span className="flex flex-col items-center gap-1 text-center">
+          <LuUpload className="text-ink-400 h-6 w-6" />
+          <span className="text-ink-700 text-sm font-semibold">여기를 눌러 파일 첨부</span>
+          <span className="text-ink-500 text-xs">{FILE_NOTICE}</span>
+        </span>
+      )}
+    </label>
+    {error && <p className="text-danger text-xs">{error}</p>}
+  </div>
+);
+
+function formatFileSize(bytes: number): string {
+  if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
+  if (bytes >= 1024) return `${Math.round(bytes / 1024)}KB`;
+  return `${bytes}B`;
+}
