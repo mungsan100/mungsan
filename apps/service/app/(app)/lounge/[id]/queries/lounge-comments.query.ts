@@ -24,7 +24,7 @@ export async function getLoungeCommentsQuery({
   userId,
 }: LoungeCommentsQuery): Promise<LoungeCommentView[]> {
   const rows = await prisma.loungeComment.findMany({
-    where: { postId, deletedAt: null },
+    where: { postId, deletedAt: null, hiddenAt: null },
     orderBy: { createdAt: 'asc' },
     select: {
       id: true,

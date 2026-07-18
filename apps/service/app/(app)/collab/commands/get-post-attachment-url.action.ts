@@ -26,7 +26,7 @@ export async function getPostAttachmentUrlAction(
 
   // 참조 무결성은 command 레벨 검증(무FK 컨벤션) — 공고가 살아있고 공개인지 확인.
   const post = await prisma.collaborationPost.findFirst({
-    where: { id: attachment.ownerId, isPublic: true, deletedAt: null },
+    where: { id: attachment.ownerId, isPublic: true, deletedAt: null, hiddenAt: null },
     select: { id: true },
   });
   if (!post) return { ok: false, code: 'NOT_FOUND', message: '공고를 찾을 수 없습니다.' };

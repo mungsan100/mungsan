@@ -19,7 +19,7 @@ export async function getLoungeTrendsQuery(): Promise<LoungeTrend[]> {
   const since = new Date(Date.now() - TREND_WINDOW_DAYS * 24 * 60 * 60 * 1000);
 
   return prisma.loungePost.findMany({
-    where: { deletedAt: null, createdAt: { gte: since }, commentCount: { gt: 0 } },
+    where: { deletedAt: null, hiddenAt: null, createdAt: { gte: since }, commentCount: { gt: 0 } },
     orderBy: [{ commentCount: 'desc' }, { createdAt: 'desc' }],
     take: TREND_LIMIT,
     select: { id: true, title: true, commentCount: true },

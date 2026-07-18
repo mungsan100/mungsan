@@ -13,6 +13,7 @@ import {
   LuUsers,
 } from 'react-icons/lu';
 
+import { ReportButton } from '@/components/report-button';
 import { Avatar } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
@@ -47,7 +48,10 @@ export const CollabDetailContent = async ({ params }: { params: Promise<{ id: st
       <Card className="p-5">
         <div className="flex items-start justify-between gap-3">
           <h2 className="text-ink-900 text-xl font-bold leading-snug">{detail.title}</h2>
-          <DetailBookmarkButton postId={detail.postId} initialBookmarked={detail.bookmarked} />
+          <div className="flex shrink-0 items-center gap-2.5">
+            <ReportButton targetType="COLLABORATION_POST" targetId={detail.postId} />
+            <DetailBookmarkButton postId={detail.postId} initialBookmarked={detail.bookmarked} />
+          </div>
         </div>
 
         {detail.postIndustries.length > 0 && (

@@ -44,7 +44,7 @@ export async function getCollabDetailQuery({
   userId: string;
 }): Promise<CollabDetail | null> {
   const post = await prisma.collaborationPost.findFirst({
-    where: { id: postId, isPublic: true, deletedAt: null },
+    where: { id: postId, isPublic: true, deletedAt: null, hiddenAt: null },
     select: {
       id: true,
       title: true,

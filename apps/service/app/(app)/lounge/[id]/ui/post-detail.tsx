@@ -1,6 +1,7 @@
 import { LuBadgeCheck } from 'react-icons/lu';
 import type { DB } from '@mungsan/db';
 
+import { ReportButton } from '@/components/report-button';
 import { Avatar } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { formatRelativeKorean } from '@/lib/datetime/relative-time';
@@ -69,5 +70,9 @@ export const PostDetail = ({ post }: PostDetailProps) => (
       commentCount={post.commentCount}
       bookmarkCount={post.bookmarkCount}
     />
+
+    <div className="mt-3 flex justify-end">
+      <ReportButton targetType="LOUNGE_POST" targetId={post.id} />
+    </div>
   </article>
 );

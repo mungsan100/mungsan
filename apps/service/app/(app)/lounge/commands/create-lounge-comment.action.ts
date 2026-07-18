@@ -25,14 +25,14 @@ export async function createLoungeCommentAction(
   if (!content) return { ok: false, field: 'content', message: '댓글 내용을 입력해 주세요.' };
 
   const post = await prisma.loungePost.findFirst({
-    where: { id: cmd.postId, deletedAt: null },
+    where: { id: cmd.postId, deletedAt: null, hiddenAt: null },
     select: { id: true },
   });
   if (!post) return { ok: false, code: 'NOT_FOUND', message: '게시글을 찾을 수 없습니다.' };
 
   if (cmd.parentId) {
     const parent = await prisma.loungeComment.findFirst({
-      where: { id: cmd.parentId, postId: cmd.postId, deletedAt: null },
+      where: { id: cmd.parentId, postId: cmd.postId, deletedAt: null, hiddenAt: null },
       select: { id: true },
     });
     if (!parent) return { ok: false, code: 'NOT_FOUND', message: '원 댓글을 찾을 수 없습니다.' };
