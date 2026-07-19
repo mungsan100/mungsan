@@ -2,7 +2,6 @@ import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
 import { LuLoaderCircle } from 'react-icons/lu';
 
-import { Button } from '@/components/ui/button';
 import { getSession } from '@/lib/auth/session';
 import { logoutAction } from '@/app/(auth)/pending/commands/logout.action';
 import { isRereviewQuery } from '@/app/(auth)/pending/queries/rereview.query';
@@ -53,10 +52,22 @@ async function PendingContent() {
           </p>
         )}
       </div>
+
+      {/* 심사 소요 안내 — 반려 상태에는 심사 진행 문구가 어긋나므로 표시하지 않는다. */}
+      {!rejected && (
+        <p className="bg-brand-soft text-brand-sub02 rounded-lg px-4 py-3 text-sm font-semibold">
+          가입 심사가 진행 중이에요. 심사는 보통 1~2일 내에 완료됩니다.
+        </p>
+      )}
+
+      {/* 로그아웃은 이 화면의 주 행동이 아니라 보조 동선 — 텍스트 링크 스타일로 낮춘다. */}
       <form action={logoutAction}>
-        <Button type="submit" variant="outline" size="lg" className="w-full">
+        <button
+          type="submit"
+          className="text-ink-400 hover:text-ink-600 text-sm font-semibold underline underline-offset-2"
+        >
           로그아웃
-        </Button>
+        </button>
       </form>
     </div>
   );
