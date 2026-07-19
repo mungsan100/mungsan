@@ -1,0 +1,40 @@
+# 지원사업(K-Startup) 일일 동기화 — 신규 공고 수집(멱등 upsert)·마감 공고 자동 비활성.
+# AI 요약·업종 태깅은 AI_* Secrets 3종이 등록된 경우에만 실행된다(미등록 시 자동 생략,
+# 크레딧 소모 0 — 켜고 끄기는 GitHub Secrets 등록/삭제로 제어).
+# 실행: 매일 KST 06:00(UTC 21:00) + Actions 탭에서 수동 실행(Run workflow) 가능.
+name: sync-support-programs
+
+on:
+  schedule:
+    - cron: '0 21 * * *' # UTC 21:00 = KST 06:00
+  workflow_dispatch:
+
+concurrency:
+  group: sync-support-programs
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      # postinstall 이 prisma generate 까지 수행한다(루트 package.json).
+      - run: npm ci
+
+      - name: Run sync script
+        working-directory: apps/admin
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          KSTARTUP_API_KEY: ${{ secrets.KSTARTUP_API_KEY }}
+          # 아래 3종을 등록하면 AI 요약·태깅이 켜진다(회당 최대 60건). 미등록이면 수집만 한다.
+          AI_BASE_URL: ${{ secrets.AI_BASE_URL }}
+          AI_MODEL: ${{ secrets.AI_MODEL }}
+          AI_API_KEY: ${{ secrets.AI_API_KEY }}
+        run: node scripts/sync-support-programs.mjs
