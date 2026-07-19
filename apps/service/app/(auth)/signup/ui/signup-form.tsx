@@ -120,8 +120,11 @@ export const SignupForm = () => {
   return (
     <form onSubmit={onSubmit} className="space-y-5">
       <div className="space-y-2">
-        <Label htmlFor="name">이름</Label>
+        <Label htmlFor="name">대표자 성명</Label>
         <Input id="name" {...register('name')} placeholder="홍길동" />
+        <p className="text-ink-400 text-xs">
+          사업자등록증상 대표자 성명과 일치해야 하며, 불일치 시 가입이 반려될 수 있습니다.
+        </p>
         {errors.name && <p className="text-danger text-xs">{errors.name.message}</p>}
       </div>
 
