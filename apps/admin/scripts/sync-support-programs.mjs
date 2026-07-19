@@ -20,7 +20,8 @@ const KSTARTUP_API_KEY = process.env.KSTARTUP_API_KEY || null;
 const AI_BASE_URL = process.env.AI_BASE_URL || null;
 const AI_API_KEY = process.env.AI_API_KEY || null;
 const AI_MODEL = process.env.AI_MODEL || null;
-const aiEnabled = Boolean(AI_BASE_URL && AI_API_KEY && AI_MODEL);
+// --no-ai: 수집·갱신만 하고 AI 호출(크레딧 소모)은 건너뛴다 — 데이터 교정 재실행용.
+const aiEnabled = Boolean(AI_BASE_URL && AI_API_KEY && AI_MODEL) && !process.argv.includes('--no-ai');
 
 const KSTARTUP_ENDPOINT =
   'https://apis.data.go.kr/B552735/kisedKstartupService01/getAnnouncementInformation01';
@@ -31,10 +32,21 @@ const AI_BATCH_MAX = 60; // 1회 실행당 AI 처리 상한(비용 가드)
 
 // ── 1. 수집 ───────────────────────────────────────────────────────────────
 // 응답 필드는 공식 가이드 기준 + 방어적 후보 매핑(운영 중 필드명 변형 대비).
+// 원문에 섞여 오는 HTML 엔티티(&apos; 등)를 표시용 문자로 되돌린다.
+const decodeEntities = (text) =>
+  text
+    .replaceAll('&amp;', '&')
+    .replaceAll('&apos;', "'")
+    .replaceAll('&#39;', "'")
+    .replaceAll('&quot;', '"')
+    .replaceAll('&lt;', '<')
+    .replaceAll('&gt;', '>')
+    .replaceAll('&nbsp;', ' ');
+
 const pick = (item, keys) => {
   for (const key of keys) {
     const value = item?.[key];
-    if (value != null && String(value).trim() !== '') return String(value).trim();
+    if (value != null && String(value).trim() !== '') return decodeEntities(String(value).trim());
   }
   return null;
 };
@@ -202,7 +214,11 @@ async function aiSummarizeAndTag(program) {
 }
 
 if (!aiEnabled) {
-  console.log('[sync] AI env 미비 — AI 요약·태깅 생략(원문 요약으로 동작).');
+  console.log(
+    process.argv.includes('--no-ai')
+      ? '[sync] --no-ai — AI 요약·태깅 생략(크레딧 소모 없음).'
+      : '[sync] AI env 미비 — AI 요약·태깅 생략(원문 요약으로 동작).',
+  );
 } else {
   const pendingPrograms = await prisma.supportProgram.findMany({
     where: { source: 'KSTARTUP', isActive: true, aiTaggedAt: null },
