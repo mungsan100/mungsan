@@ -1,5 +1,6 @@
 import 'server-only';
 
+import { connection } from 'next/server';
 import { prisma } from '@mungsan/db';
 
 // 지표 대시보드(P1) — 상단 요약 + 주간(KST, 월요일 시작) 추이 4종(가입·공고·제안·신고).
@@ -43,6 +44,9 @@ function kstMonthDay(date: Date): string {
 }
 
 export async function getWeeklyMetricsQuery(): Promise<WeeklyRow[]> {
+  // cacheComponents 프리렌더 규칙 — 현재 시각(new Date)은 요청 시점 데이터라 connection()을
+  // 먼저 읽어 "이 함수는 요청마다 동적"임을 선언해야 한다(안 하면 admin 빌드가 프리렌더에서 실패).
+  await connection();
   const thisWeekStart = kstWeekStart(new Date());
   const rangeStart = new Date(thisWeekStart.getTime() - (WEEKS - 1) * WEEK_MS);
 
