@@ -25,9 +25,10 @@ model User {
   jobTitle      String? // executiveRole == OTHER 일 때만 채우는 비표준 직책 원본
 
   // status
-  deletedAt      DateTime?
-  suspendedAt    DateTime?
-  withdrawnAt    DateTime?
+  deletedAt       DateTime?
+  suspendedAt     DateTime?
+  suspendedReason String? // 정지 사유 (관리자 선택 입력 — rejectedReason 컨벤션 미러, 해제 시 null)
+  withdrawnAt     DateTime?
   approvedAt     DateTime? // 가입 승인 (관리자)
   rejectedAt     DateTime? // 가입 반려 (관리자). approvedAt과 배타 — 승인 시 null로 되돌린다
   rejectedReason String? // 반려 사유 (관리자 선택 입력)

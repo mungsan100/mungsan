@@ -6,7 +6,8 @@ import { toast } from 'sonner';
 
 import { suspendMemberAction, unsuspendMemberAction } from '../commands/suspend-member.action';
 
-// 이용 정지/해제 패널 — 정지는 되돌릴 수 있지만 전 세션이 즉시 끊기므로 인라인 확인 단계를 둔다.
+// 이용 정지/해제 패널 — 정지는 되돌릴 수 있지만 전 세션이 즉시 끊기므로 인라인 확인 단계를 두고,
+// 사유(선택)를 입력받아 기록한다(suspendedReason — 상태 이력에 표시).
 export const SuspendPanel = ({
   userId,
   suspended,
@@ -18,14 +19,25 @@ export const SuspendPanel = ({
 }) => {
   const router = useRouter();
   const [confirming, setConfirming] = useState(false);
+  const [reason, setReason] = useState('');
   const [isPending, startTransition] = useTransition();
 
-  function run(action: typeof suspendMemberAction) {
+  function suspend() {
     startTransition(async () => {
-      const result = await action({ userId });
+      const result = await suspendMemberAction({ userId, reason: reason.trim() || undefined });
       if (result.ok) toast.success(result.message);
       else toast.error(result.message);
       setConfirming(false);
+      setReason('');
+      router.refresh();
+    });
+  }
+
+  function unsuspend() {
+    startTransition(async () => {
+      const result = await unsuspendMemberAction({ userId });
+      if (result.ok) toast.success(result.message);
+      else toast.error(result.message);
       router.refresh();
     });
   }
@@ -39,7 +51,7 @@ export const SuspendPanel = ({
         <p className="text-sm text-slate-600">현재 이용 정지 상태입니다.</p>
         <button
           type="button"
-          onClick={() => run(unsuspendMemberAction)}
+          onClick={unsuspend}
           disabled={isPending}
           className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-slate-100 disabled:opacity-60"
         >
@@ -67,6 +79,20 @@ export const SuspendPanel = ({
           정지 즉시 모든 기기에서 로그아웃되고, 해제 전까지 로그인해도 정지 안내만 보게 됩니다.
         </p>
       </div>
+      <div>
+        <label htmlFor="suspend-reason" className="text-xs font-semibold text-slate-600">
+          정지 사유 (선택, 500자 이내 — 상태 이력에 기록됩니다)
+        </label>
+        <textarea
+          id="suspend-reason"
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          maxLength={500}
+          rows={2}
+          placeholder="예: 라운지 글 반복 신고 누적(운영정책 4조)"
+          className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-500 focus:outline-none"
+        />
+      </div>
       <div className="flex justify-end gap-2">
         <button
           type="button"
@@ -78,7 +104,7 @@ export const SuspendPanel = ({
         </button>
         <button
           type="button"
-          onClick={() => run(suspendMemberAction)}
+          onClick={suspend}
           disabled={isPending}
           className="rounded-lg bg-red-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-60"
         >

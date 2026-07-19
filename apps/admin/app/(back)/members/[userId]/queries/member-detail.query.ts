@@ -14,6 +14,7 @@ export type MemberDetail = {
   approvedAt: Date | null;
   rejectedAt: Date | null;
   suspendedAt: Date | null;
+  suspendedReason: string | null; // 정지 사유(관리자 입력) — 상태 이력에 표시
   withdrawnAt: Date | null;
   company: {
     name: string;
@@ -44,6 +45,7 @@ export async function getMemberDetailQuery(userId: string): Promise<MemberDetail
       approvedAt: true,
       rejectedAt: true,
       suspendedAt: true,
+      suspendedReason: true,
       withdrawnAt: true,
       company: {
         select: {
@@ -98,6 +100,7 @@ export async function getMemberDetailQuery(userId: string): Promise<MemberDetail
     approvedAt: user.approvedAt,
     rejectedAt: user.rejectedAt,
     suspendedAt: user.suspendedAt,
+    suspendedReason: user.suspendedReason,
     withdrawnAt: user.withdrawnAt,
     company: user.company
       ? {
