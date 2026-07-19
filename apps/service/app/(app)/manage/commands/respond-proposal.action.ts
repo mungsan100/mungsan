@@ -55,6 +55,16 @@ export async function respondProposalAction(cmd: RespondProposalCommand): Promis
           { title, userId: proposal.proposerId },
         ],
       });
+      // 제안자에게 수락 알림 — 같은 트랜잭션(원자성).
+      await tx.notification.create({
+        data: {
+          type: 'COLLABORATION',
+          title: '협업 제안이 수락됐어요',
+          body: `'${proposal.post.title}' 제안이 수락됐어요. 협업 프로젝트가 시작됩니다.`,
+          linkUrl: '/sherpa',
+          userId: proposal.proposerId,
+        },
+      });
       return true;
     });
     if (!transitioned)
@@ -66,16 +76,42 @@ export async function respondProposalAction(cmd: RespondProposalCommand): Promis
     return { ok: true, data: undefined, message: RESPONSES.ACCEPTED };
   }
 
-  const updated = await prisma.collaborationProposal.updateMany({
-    where: {
-      id: cmd.proposalId,
-      respondedAt: null,
-      status: { not: 'DRAFT' }, // 임시저장(미제출)에는 응답 불가
-      post: { authorId: user.id },
-    },
-    data: { respondedAt: new Date(), status: cmd.response },
+  // 반려/미팅요청 — 상태 전이와 제안자 알림을 같은 트랜잭션으로(원자성).
+  const responded = await prisma.$transaction(async (tx) => {
+    const updated = await tx.collaborationProposal.updateMany({
+      where: {
+        id: cmd.proposalId,
+        respondedAt: null,
+        status: { not: 'DRAFT' }, // 임시저장(미제출)에는 응답 불가
+        post: { authorId: user.id },
+      },
+      data: { respondedAt: new Date(), status: cmd.response },
+    });
+    if (updated.count === 0) return false;
+
+    const proposal = await tx.collaborationProposal.findUniqueOrThrow({
+      where: { id: cmd.proposalId },
+      select: { proposerId: true, post: { select: { title: true } } },
+    });
+    await tx.notification.create({
+      data: {
+        type: 'COLLABORATION',
+        ...(cmd.response === 'MEETING_REQUESTED'
+          ? {
+              title: '미팅 요청이 도착했어요',
+              body: `'${proposal.post.title}' 공고 기업이 미팅을 요청했어요. 제안 내용을 확인해 주세요.`,
+            }
+          : {
+              title: '협업 제안 결과가 도착했어요',
+              body: `'${proposal.post.title}' 제안이 이번에는 성사되지 않았어요.`,
+            }),
+        linkUrl: '/manage',
+        userId: proposal.proposerId,
+      },
+    });
+    return true;
   });
-  if (updated.count === 0)
+  if (!responded)
     return { ok: false, code: 'NOT_RESPONDABLE', message: '이미 응답했거나 권한이 없는 제안입니다.' };
 
   revalidatePath('/manage');

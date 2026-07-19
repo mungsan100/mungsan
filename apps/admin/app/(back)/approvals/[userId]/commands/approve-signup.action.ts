@@ -17,17 +17,32 @@ export async function approveSignupAction(cmd: ApproveSignupCommand): Promise<Ac
   const admin = await getAdminSession();
   if (!admin) return { ok: false, code: 'UNAUTHORIZED', message: '관리자 로그인이 필요합니다.' };
 
-  const updated = await prisma.user.updateMany({
-    where: {
-      id: cmd.userId,
-      approvedAt: null,
-      deletedAt: null,
-      withdrawnAt: null,
-      company: { isNot: null }, // 기업정보 없는 유저는 심사 대상 아님
-    },
-    data: { approvedAt: new Date(), rejectedAt: null, rejectedReason: null },
+  // 승인 전이와 대상자 알림을 같은 트랜잭션으로(원자성) — 홈 의사결정 알림·벨에 노출된다.
+  const approved = await prisma.$transaction(async (tx) => {
+    const updated = await tx.user.updateMany({
+      where: {
+        id: cmd.userId,
+        approvedAt: null,
+        deletedAt: null,
+        withdrawnAt: null,
+        company: { isNot: null }, // 기업정보 없는 유저는 심사 대상 아님
+      },
+      data: { approvedAt: new Date(), rejectedAt: null, rejectedReason: null },
+    });
+    if (updated.count === 0) return false;
+
+    await tx.notification.create({
+      data: {
+        type: 'MEMBERSHIP',
+        title: '가입 심사가 승인됐어요',
+        body: '뭉산의 모든 기능을 이용할 수 있어요. 협업 파트너를 찾아보세요.',
+        linkUrl: '/',
+        userId: cmd.userId,
+      },
+    });
+    return true;
   });
-  if (updated.count === 0)
+  if (!approved)
     return { ok: false, code: 'NOT_APPROVABLE', message: '이미 승인됐거나 처리할 수 없는 신청입니다.' };
 
   revalidatePath('/approvals');
