@@ -22,20 +22,13 @@ export default function ManagePage() {
         </div>
       </header>
 
+      {/* 섹션 순서: 자주 쓰는 제안 관리(받은/보낸)를 신뢰 지수 바로 아래로, 저장한 글은 뒤로. */}
       <div className="space-y-6 pb-24">
         <section className="px-5">
           <Suspense fallback={<CardSkeleton />}>
             <TrustScoreCard />
           </Suspense>
         </section>
-
-        <Suspense fallback={<ListSkeleton />}>
-          <MyInfoSection />
-        </Suspense>
-
-        <Suspense fallback={<ListSkeleton />}>
-          <SavedSection />
-        </Suspense>
 
         <Suspense fallback={<ListSkeleton />}>
           <ProposalSection />
@@ -46,7 +39,15 @@ export default function ManagePage() {
         </Suspense>
 
         <Suspense fallback={<ListSkeleton />}>
+          <MyInfoSection />
+        </Suspense>
+
+        <Suspense fallback={<ListSkeleton />}>
           <AssetReportSection />
+        </Suspense>
+
+        <Suspense fallback={<ListSkeleton />}>
+          <SavedSection />
         </Suspense>
 
         {/* 로그아웃 — 로그인 후 유일한 로그아웃 진입점(가입심사중 화면의 로그아웃과 같은 액션). */}
