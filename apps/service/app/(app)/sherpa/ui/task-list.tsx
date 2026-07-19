@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import {
   LuCheck,
   LuChevronDown,
+  LuChevronRight,
   LuChevronUp,
   LuLoaderCircle,
   LuPlus,
@@ -48,8 +49,23 @@ interface TaskListProps {
   milestoneOptions: { id: string; title: string }[];
 }
 
+// 활성 목록 정렬 — 표시 전용(클라이언트). '내 순서'는 서버의 sort 키 순서를 그대로 쓴다.
+type SortMode = 'manual' | 'dueDate';
+
 export const TaskList = ({ projectId, tasks, milestoneOptions }: TaskListProps) => {
   const [formOpen, setFormOpen] = useState(false);
+  const [sortMode, setSortMode] = useState<SortMode>('manual');
+  const [completedOpen, setCompletedOpen] = useState(false);
+
+  // 완료 항목은 하단 "완료됨 (N)" 접힘 섹션으로 분리(구글 태스크 패턴) — 활성 목록을 깔끔하게 유지.
+  const active = tasks.filter((task) => task.status !== 'COMPLETED');
+  const completed = tasks.filter((task) => task.status === 'COMPLETED');
+  const visibleActive =
+    sortMode === 'dueDate'
+      ? [...active].sort(
+          (a, b) => (a.dueDate?.getTime() ?? Infinity) - (b.dueDate?.getTime() ?? Infinity),
+        )
+      : active;
 
   return (
     <div className="space-y-3">
@@ -58,13 +74,59 @@ export const TaskList = ({ projectId, tasks, milestoneOptions }: TaskListProps) 
           아직 할 일이 없습니다. 첫 업무를 등록해 보세요.
         </p>
       ) : (
-        <ul className="space-y-2.5">
-          {tasks.map((task) => (
-            <li key={task.id}>
-              <TaskItem task={task} />
-            </li>
-          ))}
-        </ul>
+        <>
+          {active.length > 0 && (
+            <div className="flex items-center justify-between">
+              <p className="text-ink-400 text-[12px]">진행할 일 {active.length}건</p>
+              <div className="bg-ink-100 flex rounded-lg p-0.5">
+                <SortTab active={sortMode === 'manual'} onClick={() => setSortMode('manual')}>
+                  내 순서
+                </SortTab>
+                <SortTab active={sortMode === 'dueDate'} onClick={() => setSortMode('dueDate')}>
+                  마감일순
+                </SortTab>
+              </div>
+            </div>
+          )}
+
+          {active.length === 0 ? (
+            <p className="text-ink-400 py-4 text-center text-sm">남은 할 일이 없습니다. 🎉</p>
+          ) : (
+            <ul className="space-y-2.5">
+              {visibleActive.map((task) => (
+                <li key={task.id}>
+                  <TaskItem task={task} />
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {completed.length > 0 && (
+            <div>
+              <button
+                type="button"
+                onClick={() => setCompletedOpen((v) => !v)}
+                className="text-ink-500 flex w-full items-center gap-1 py-1 text-[13px] font-semibold"
+              >
+                {completedOpen ? (
+                  <LuChevronDown className="h-4 w-4" />
+                ) : (
+                  <LuChevronRight className="h-4 w-4" />
+                )}
+                완료됨 ({completed.length})
+              </button>
+              {completedOpen && (
+                <ul className="mt-2 space-y-2.5">
+                  {completed.map((task) => (
+                    <li key={task.id}>
+                      <TaskItem task={task} />
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+        </>
       )}
 
       {formOpen ? (
@@ -82,6 +144,27 @@ export const TaskList = ({ projectId, tasks, milestoneOptions }: TaskListProps) 
   );
 };
 
+const SortTab = ({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className={cn(
+      'rounded-md px-2 py-1 text-[12px] font-semibold transition-colors',
+      active ? 'text-ink-900 bg-white shadow-sm' : 'text-ink-400',
+    )}
+  >
+    {children}
+  </button>
+);
+
 const TaskItem = ({ task }: { task: SherpaTaskView }) => {
   const [isPending, startTransition] = useTransition();
   const [editOpen, setEditOpen] = useState(false);
@@ -89,9 +172,21 @@ const TaskItem = ({ task }: { task: SherpaTaskView }) => {
   const status = STATUS_META[task.status];
 
   function toggleComplete() {
+    // 완료 처리에만 실행취소를 제공한다(구글 태스크 패턴) — 취소는 같은 토글 액션 재호출.
+    const completing = task.status !== 'COMPLETED';
     startTransition(async () => {
       const result = await toggleTaskCompleteAction({ taskId: task.id });
-      if (!result.ok) toast.error(result.message);
+      if (!result.ok) {
+        toast.error(result.message);
+        return;
+      }
+      if (completing)
+        toast.success('완료 처리했습니다.', {
+          action: {
+            label: '실행취소',
+            onClick: () => void toggleTaskCompleteAction({ taskId: task.id }),
+          },
+        });
     });
   }
 
