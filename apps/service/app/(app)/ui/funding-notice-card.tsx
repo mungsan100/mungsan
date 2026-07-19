@@ -3,27 +3,27 @@ import { cn } from '@/lib/utils';
 
 import { MatchRing } from './match-ring';
 
-// AI 맞춤 사업 공고 카드 표시 모델.
+// 홈 지원사업 카드 표시 모델 — 맞춤 추천 단(매칭률 링)·새 공고 단(등록일) 공용.
 export type FundingNoticeTag = {
   label: string;
-  variant: 'fit' | 'review' | 'dday' | 'ai';
+  variant: 'fit' | 'review' | 'dday';
 };
 
 export type FundingNotice = {
   organization: string;
   title: string;
   description: string;
-  matchRate: number; // 0~100, 원형 게이지 표시값
+  matchRate: number | null; // 0~100 원형 게이지 — null이면(새 공고 단) 링 대신 registeredOn 표시
+  registeredOn: string | null; // 등록일 라벨(예: "7.18 등록") — 새 공고 단 전용
   tags: FundingNoticeTag[];
   detailUrl: string | null; // 원문 공고 페이지 — 있으면 카드가 새 탭 링크가 된다
 };
 
-// 태그 종류 → 스타일. 적합(연녹 채움)·검토(녹색 외곽선)·D-day(진녹 채움)·AI 요약(회색 채움).
+// 태그 종류 → 스타일. 적합(연녹 채움)·검토(녹색 외곽선)·D-day(진녹 채움).
 const TAG: Record<FundingNoticeTag['variant'], string> = {
   fit: 'bg-brand-soft text-brand-sub02',
   review: 'border border-brand-sub01/30 text-brand-sub01',
   dday: 'bg-brand-sub02 text-white',
-  ai: 'bg-ink-100 text-ink-600',
 };
 
 interface FundingNoticeCardProps {
@@ -54,10 +54,16 @@ export const FundingNoticeCard = ({ notice }: FundingNoticeCardProps) => {
             ))}
           </div>
         </div>
-        <div className="flex shrink-0 flex-col items-center gap-1">
-          <MatchRing value={notice.matchRate} />
-          <span className="text-ink-400 text-[11px]">매칭률</span>
-        </div>
+        {notice.matchRate != null ? (
+          <div className="flex shrink-0 flex-col items-center gap-1">
+            <MatchRing value={notice.matchRate} />
+            <span className="text-ink-400 text-[11px]">매칭률</span>
+          </div>
+        ) : (
+          notice.registeredOn && (
+            <span className="text-ink-400 shrink-0 text-[11px]">{notice.registeredOn}</span>
+          )
+        )}
       </div>
     </Card>
   );
