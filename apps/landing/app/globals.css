@@ -1,0 +1,40 @@
+@import 'tailwindcss';
+
+@theme {
+    /* Brand — 뭉산 forest green (apps/service와 동일한 팔레트) */
+    --color-brand: #16a34a;
+    --color-brand-sub01: #15803d;
+    --color-brand-sub02: #166534;
+    --color-brand-deep: #0b4a2f;
+    --color-brand-soft: #ecfdf3;
+
+    /* Ink — neutral slate */
+    --color-ink-50: #f8fafc;
+    --color-ink-100: #f1f5f9;
+    --color-ink-200: #e2e8f0;
+    --color-ink-300: #cbd5e1;
+    --color-ink-400: #94a3b8;
+    --color-ink-500: #64748b;
+    --color-ink-600: #475569;
+    --color-ink-700: #334155;
+    --color-ink-800: #1e293b;
+    --color-ink-900: #0f172a;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    background: #ffffff;
+    color: var(--color-ink-900);
+    font-family:
+        -apple-system, BlinkMacSystemFont, 'Pretendard', 'Noto Sans KR', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    /* 한글 제목이 어절 중간에서 끊기지 않도록 */
+    word-break: keep-all;
+}
