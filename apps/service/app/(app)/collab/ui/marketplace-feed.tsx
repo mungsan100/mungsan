@@ -10,7 +10,7 @@ import {
 import { PartnerCard } from './partner-card';
 
 // 마켓플레이스 피드 — searchParams(promise)를 여기서 await(cacheComponents 정적 셸 보호)해
-// 검색·필터 파라미터를 파싱하고 필터한 파트너 목록을 렌더한다. 첫 카드는 AI 추천 최우선(featured)로 강조.
+// 검색·필터 파라미터를 파싱하고 필터한 파트너 목록을 렌더한다. 첫 카드는 추천 최우선(featured)로 강조.
 // 뷰어(현재 유저) 기준 적합도를 계산하려 userId를 query에 넘긴다.
 export const MarketplaceFeed = async ({
   searchParams,

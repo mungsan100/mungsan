@@ -12,7 +12,7 @@ export const HomeHeader = ({ greeting, bell }: HomeHeaderProps) => (
     <div className="flex items-start justify-between">
       <span className="bg-ink-100 text-ink-600 flex w-fit items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-semibold">
         <LuSparkles className="text-brand h-3.5 w-3.5" />
-        AI 브리핑
+        뭉산 브리핑
       </span>
       {bell}
     </div>

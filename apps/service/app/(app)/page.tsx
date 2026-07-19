@@ -11,7 +11,7 @@ import { NotificationBellCount } from './ui/notification-bell-count';
 import { ProjectProgressSection } from './ui/project-progress-section';
 import { UpcomingTasks } from './ui/upcoming-tasks';
 
-// 홈 — AI 브리핑 밝은 헤더 + 오늘의 협업 전략. 정적 셸에 동적 섹션을 국소 Suspense로 스트리밍한다.
+// 홈 — 뭉산 브리핑 밝은 헤더 + 오늘의 협업 전략. 정적 셸에 동적 섹션을 국소 Suspense로 스트리밍한다.
 export default function HomePage() {
   return (
     <>
