@@ -120,6 +120,9 @@ export const CompanyInfoForm = ({
             </option>
           ))}
         </Select>
+        <p className="text-ink-400 text-xs">
+          정확히 일치하는 업종이 없으면 가장 가까운 업종을 선택해 주세요.
+        </p>
         {error?.field === 'industryId' && <p className="text-danger text-xs">{error.message}</p>}
       </div>
       {error && !error.field && <p className="text-danger text-xs">{error.message}</p>}
