@@ -32,7 +32,9 @@ model LoungePost {
 
   // 상태
   deletedAt DateTime?
-  hiddenAt  DateTime? // 운영 숨김(신고 처리) — 삭제와 구분, null 복원으로 되돌림
+  hiddenAt  DateTime? // 운영 숨김(신고·콘텐츠 관리) — 삭제와 구분, null 복원으로 되돌림
+  hiddenReason    String? // 숨김 사유(운영 기록)
+  hiddenByAdminId String? // 처리한 운영자(Admin.id, 무FK — 표시용)
 
   // 비정규화
   viewCount     Int @default(0) // 조회수
@@ -74,7 +76,9 @@ model LoungeComment {
 
   // 상태
   deletedAt DateTime?
-  hiddenAt  DateTime? // 운영 숨김(신고 처리) — 삭제와 구분, null 복원으로 되돌림
+  hiddenAt  DateTime? // 운영 숨김(신고·콘텐츠 관리) — 삭제와 구분, null 복원으로 되돌림
+  hiddenReason    String? // 숨김 사유(운영 기록)
+  hiddenByAdminId String? // 처리한 운영자(Admin.id, 무FK — 표시용)
 
   // 비정규화
   likeCount Int @default(0) // 좋아요수 캐시

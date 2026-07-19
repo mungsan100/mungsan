@@ -31,6 +31,18 @@ interface PostDetailProps {
 // 글 상세 본문 — 작성자 메타 + 카테고리 태그 + 제목 + 본문 + 반응 바.
 export const PostDetail = ({ post }: PostDetailProps) => (
   <article className="px-5">
+    {/* 운영 숨김 글 — 이 화면은 작성자 본인에게만 열린다(타인은 쿼리에서 차단). */}
+    {post.hiddenForOthers && (
+      <div className="bg-ink-100 mb-4 rounded-xl px-4 py-3">
+        <p className="text-ink-700 text-sm font-semibold">
+          운영정책 위반으로 숨김 처리된 글입니다.
+        </p>
+        <p className="text-ink-500 mt-0.5 text-xs">
+          이 글은 작성자인 회원님에게만 보이며, 다른 회원에게는 노출되지 않습니다. 문의는
+          운영팀으로 부탁드립니다.
+        </p>
+      </div>
+    )}
     <div className="flex items-start gap-3">
       <Avatar fallback={[...post.nickname][0] ?? ''} className="bg-brand text-white" />
       <div className="min-w-0 flex-1">

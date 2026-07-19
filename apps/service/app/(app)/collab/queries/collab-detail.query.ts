@@ -37,6 +37,7 @@ export type CollabDetail = {
   verified: boolean;
   attachments: { id: string; fileName: string; size: number | null }[]; // 공고 첨부(열람은 서명 URL 액션 경유)
   myDraft: ProposalDraft | null; // 현재 유저의 임시저장 제안(있으면 폼 초기값으로 복원)
+  hiddenForOthers: boolean; // 운영 숨김 공고를 작성자 본인이 보는 중(안내 배너용)
 };
 
 export type ProposalDraft = {
@@ -56,11 +57,19 @@ export async function getCollabDetailQuery({
   postId: string;
   userId: string;
 }): Promise<CollabDetail | null> {
+  // 운영 숨김(hiddenAt) 공고는 타인에겐 없는 글이지만 작성자 본인에게는 안내와 함께
+  // 열람을 허용한다(라운지 상세와 동일 정책 — 사유 확인·운영팀 문의의 근거 화면).
   const post = await prisma.collaborationPost.findFirst({
-    where: { id: postId, isPublic: true, deletedAt: null, hiddenAt: null },
+    where: {
+      id: postId,
+      isPublic: true,
+      deletedAt: null,
+      OR: [{ hiddenAt: null }, { authorId: userId }],
+    },
     select: {
       id: true,
       title: true,
+      hiddenAt: true,
       description: true,
       minBudgetInCheonwon: true,
       maxBudgetInCheonwon: true,
@@ -173,5 +182,6 @@ export async function getCollabDetailQuery({
     verified: post.author.approvedAt != null,
     attachments,
     myDraft,
+    hiddenForOthers: post.hiddenAt != null,
   };
 }

@@ -26,7 +26,7 @@ export async function hideContentAction(cmd: HideContentCommand): Promise<Action
     });
     if (!report) return false;
 
-    await hideTarget(tx, report.targetType, report.targetId);
+    await hideTarget(tx, report.targetType, report.targetId, admin.id);
 
     // 자기 자신 포함, 같은 대상의 PENDING 신고 일괄 종료(where 의 PENDING 조건이 레이스 가드).
     await tx.report.updateMany({
@@ -42,14 +42,16 @@ export async function hideContentAction(cmd: HideContentCommand): Promise<Action
   return { ok: true, data: undefined, message: '콘텐츠를 숨기고 신고를 처리했습니다.' };
 }
 
-// 이미 숨겨진 대상은 최초 숨김 시각을 보존한다(hiddenAt null 조건).
+// 이미 숨겨진 대상은 최초 숨김 시각·사유를 보존한다(hiddenAt null 조건).
+// 사유·처리자 기록은 콘텐츠 관리 화면과 공유되는 운영 이력이다.
 async function hideTarget(
   tx: DB.Prisma.TransactionClient,
   targetType: DB.ReportTargetType,
   targetId: string,
+  adminId: string,
 ): Promise<void> {
   const where = { id: targetId, hiddenAt: null };
-  const data = { hiddenAt: new Date() };
+  const data = { hiddenAt: new Date(), hiddenReason: '신고 처리', hiddenByAdminId: adminId };
   switch (targetType) {
     case 'LOUNGE_POST':
       await tx.loungePost.updateMany({ where, data });
