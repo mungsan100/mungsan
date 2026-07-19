@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "next dev -p 4200",
     "build": "next build",
-    "start": "next start -p 4200",
+    "//start": "배포(솜사탕클라우드)는 컨테이너가 $PORT에 바인딩되기를 요구한다. -p 플래그는 PORT 환경변수보다 우선하므로 절대 붙이지 말 것 — 붙이면 플랫폼이 헬스체크를 못 해 rollout timeout으로 배포가 실패한다. next start는 PORT가 있으면 그 값을, 없으면 3000을 쓴다.",
+    "start": "next start",
     "lint": "eslint"
   },
   "dependencies": {
