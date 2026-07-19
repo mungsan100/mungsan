@@ -12,7 +12,11 @@ export async function ensureLoungeProfile(userId: string): Promise<void> {
 
   for (let attempt = 0; attempt < 5; attempt++) {
     const nickname = generateAnonymousNickname();
-    const taken = await prisma.loungeProfile.findFirst({ where: { nickname }, select: { id: true } });
+    // 대소문자 무시 비교 — 닉네임 유니크(citext)와 같은 규칙.
+    const taken = await prisma.loungeProfile.findFirst({
+      where: { nickname: { equals: nickname, mode: 'insensitive' } },
+      select: { id: true },
+    });
     if (taken) continue;
     try {
       await prisma.loungeProfile.create({ data: { userId, nickname } });
