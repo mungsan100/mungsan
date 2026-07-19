@@ -169,20 +169,26 @@ export const SignupForm = () => {
         </div>
       )}
 
+      {/* 동의 라벨 안에 링크를 넣으면 모바일에서 체크하려는 탭이 약관 전문까지 열어버린다 —
+          라벨은 순수 텍스트(탭 = 체크만), 전문은 라벨 밖 "전문 보기" 링크로만 연다. */}
       <div className="space-y-3 pt-2">
         <Controller
           control={control}
           name="agreedTerms"
           render={({ field }) => (
-            <label className="flex items-center gap-2 text-sm">
-              <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-              <span>
-                <Link href="/terms" target="_blank" className="underline underline-offset-2">
-                  이용약관
-                </Link>
-                에 동의합니다 (필수)
-              </span>
-            </label>
+            <div className="flex items-center justify-between gap-2 text-sm">
+              <label className="flex items-center gap-2">
+                <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                이용약관에 동의합니다 (필수)
+              </label>
+              <Link
+                href="/terms"
+                target="_blank"
+                className="text-ink-400 shrink-0 text-xs underline underline-offset-2"
+              >
+                전문 보기
+              </Link>
+            </div>
           )}
         />
         {errors.agreedTerms && <p className="text-danger text-xs">{errors.agreedTerms.message}</p>}
@@ -191,15 +197,19 @@ export const SignupForm = () => {
           control={control}
           name="agreedPrivacy"
           render={({ field }) => (
-            <label className="flex items-center gap-2 text-sm">
-              <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-              <span>
-                <Link href="/privacy" target="_blank" className="underline underline-offset-2">
-                  개인정보 수집·이용
-                </Link>
-                에 동의합니다 (필수)
-              </span>
-            </label>
+            <div className="flex items-center justify-between gap-2 text-sm">
+              <label className="flex items-center gap-2">
+                <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                개인정보 수집·이용에 동의합니다 (필수)
+              </label>
+              <Link
+                href="/privacy"
+                target="_blank"
+                className="text-ink-400 shrink-0 text-xs underline underline-offset-2"
+              >
+                전문 보기
+              </Link>
+            </div>
           )}
         />
         {errors.agreedPrivacy && <p className="text-danger text-xs">{errors.agreedPrivacy.message}</p>}

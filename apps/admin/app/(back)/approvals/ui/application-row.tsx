@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { DB } from '@mungsan/db';
 
 import { formatKstDateTime } from '@/lib/datetime/format-kst';
+import { formatBrnDisplay } from '@/lib/format/business-registration-no';
 
 import type { SignupApplicationView } from '../queries/signup-applications.query';
 
@@ -57,7 +58,7 @@ export const ApplicationRow = ({ application }: ApplicationRowProps) => {
       </td>
       <td className="px-4 py-3 text-slate-700">{application.industryName}</td>
       <td className="px-4 py-3 tabular-nums text-slate-700">
-        {application.businessRegistrationNo}
+        {formatBrnDisplay(application.businessRegistrationNo)}
       </td>
       <td className="px-4 py-3 whitespace-nowrap text-slate-500">
         {formatKstDateTime(application.appliedAt)}

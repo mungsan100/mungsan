@@ -19,6 +19,7 @@ export type LoungePostDetail = {
   bookmarkCount: number;
   liked: boolean; // 현재 유저가 좋아요를 눌렀는지
   bookmarked: boolean; // 현재 유저가 북마크했는지
+  hiddenForOthers: boolean; // 운영 숨김 글을 작성자 본인이 보는 중(안내 배너용)
 };
 
 export type LoungePostDetailQuery = { postId: string; userId: string };
@@ -27,8 +28,15 @@ export async function getLoungePostDetailQuery({
   postId,
   userId,
 }: LoungePostDetailQuery): Promise<LoungePostDetail | null> {
+  // 운영 숨김(hiddenAt) 글은 타인에겐 없는 글이지만, 작성자 본인에게는 숨김 사실을
+  // 안내하며 열람을 허용한다 — 본인 글이 소리 없이 사라지면 오류로 오인하고,
+  // 사유 확인·이의 제기(운영팀 문의)의 근거 화면이 필요하기 때문.
   const post = await prisma.loungePost.findFirst({
-    where: { id: postId, deletedAt: null, hiddenAt: null },
+    where: {
+      id: postId,
+      deletedAt: null,
+      OR: [{ hiddenAt: null }, { authorId: userId }],
+    },
     select: {
       id: true,
       createdAt: true,
@@ -38,6 +46,7 @@ export async function getLoungePostDetailQuery({
       likeCount: true,
       commentCount: true,
       bookmarkCount: true,
+      hiddenAt: true,
       author: {
         select: {
           executiveRole: true,
@@ -70,5 +79,6 @@ export async function getLoungePostDetailQuery({
     bookmarkCount: post.bookmarkCount,
     liked: post.likes.length > 0,
     bookmarked: post.bookmarks.length > 0,
+    hiddenForOthers: post.hiddenAt != null,
   };
 }

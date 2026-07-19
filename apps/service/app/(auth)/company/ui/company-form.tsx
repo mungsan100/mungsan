@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
+import { formatBrnInput, isValidBrn } from '@/lib/format/business-registration-no';
 import { callAction } from '@/lib/forms/call-action';
 import { registerCompanyAction } from '@/app/(auth)/company/commands/register-company.action';
 import type { IndustryOption } from '@/app/(auth)/company/queries/industries.query';
@@ -30,7 +31,11 @@ const fileSchema = z
 
 const schema = z.object({
   name: z.string().trim().min(1, '회사명을 입력해 주세요.'),
-  businessRegistrationNo: z.string().trim().min(1, '사업자등록번호를 입력해 주세요.'),
+  businessRegistrationNo: z
+    .string()
+    .trim()
+    .min(1, '사업자등록번호를 입력해 주세요.')
+    .refine(isValidBrn, '사업자등록번호는 숫자 10자리여야 합니다. (예: 000-00-00000)'),
   industryId: z.string().min(1, '업종을 선택해 주세요.'),
   businessCertFile: fileSchema,
   brochureFile: fileSchema.optional(), // 회사 소개서는 선택 — 사업자등록증만 필수
@@ -93,7 +98,15 @@ export const CompanyForm = ({ industries }: { industries: IndustryOption[] }) =>
         <Label htmlFor="businessRegistrationNo">사업자등록번호</Label>
         <Input
           id="businessRegistrationNo"
-          {...register('businessRegistrationNo')}
+          inputMode="numeric"
+          maxLength={12}
+          {...register('businessRegistrationNo', {
+            // 숫자만 입력해도 000-00-00000 로 자동 포맷 — uncontrolled 값을 직접 교정해
+            // RHF 내부 값과 화면 표시를 동시에 맞춘다.
+            onChange: (e) => {
+              e.target.value = formatBrnInput(e.target.value);
+            },
+          })}
           placeholder="000-00-00000"
         />
         {errors.businessRegistrationNo && (

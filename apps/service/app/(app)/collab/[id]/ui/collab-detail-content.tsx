@@ -44,6 +44,18 @@ export const CollabDetailContent = async ({ params }: { params: Promise<{ id: st
 
   return (
     <div className="space-y-4">
+      {/* 운영 숨김 공고 — 이 화면은 작성자 본인에게만 열린다(타인은 쿼리에서 차단). */}
+      {detail.hiddenForOthers && (
+        <div className="bg-ink-100 rounded-xl px-4 py-3">
+          <p className="text-ink-700 text-sm font-semibold">
+            운영정책 위반으로 숨김 처리된 공고입니다.
+          </p>
+          <p className="text-ink-500 mt-0.5 text-xs">
+            이 공고는 작성자인 회원님에게만 보이며, 다른 회원에게는 노출되지 않습니다. 문의는
+            운영팀으로 부탁드립니다.
+          </p>
+        </div>
+      )}
       {/* 상세 콘텐츠와 함께 렌더 — 유효한 공고(notFound 통과)에서만 조회수 1회 증가 */}
       <ViewCounter postId={detail.postId} />
       <Card className="p-5">

@@ -9,6 +9,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
+import {
+  formatBrnDisplay,
+  formatBrnInput,
+  isValidBrn,
+} from '@/lib/format/business-registration-no';
 
 import { updateCompanyAction } from '../commands/update-company.action';
 import type { IndustryOptionView, MyInfoView } from '../queries/my-info.query';
@@ -28,7 +33,7 @@ export const CompanyInfoForm = ({
   const [isPending, startTransition] = useTransition();
   const [name, setName] = useState(company.name);
   const [businessRegistrationNo, setBusinessRegistrationNo] = useState(
-    company.businessRegistrationNo,
+    formatBrnInput(company.businessRegistrationNo),
   );
   const [industryId, setIndustryId] = useState(company.industryId);
   const [error, setError] = useState<{ field?: string; message: string } | null>(null);
@@ -37,11 +42,18 @@ export const CompanyInfoForm = ({
     setEditing(false);
     setError(null);
     setName(company.name);
-    setBusinessRegistrationNo(company.businessRegistrationNo);
+    setBusinessRegistrationNo(formatBrnInput(company.businessRegistrationNo));
     setIndustryId(company.industryId);
   }
 
   function save() {
+    if (!isValidBrn(businessRegistrationNo)) {
+      setError({
+        field: 'businessRegistrationNo',
+        message: '사업자등록번호는 숫자 10자리여야 합니다. (예: 000-00-00000)',
+      });
+      return;
+    }
     startTransition(async () => {
       const result = await updateCompanyAction({ name, businessRegistrationNo, industryId });
       if (!result.ok) {
@@ -69,7 +81,7 @@ export const CompanyInfoForm = ({
         </div>
         <dl className="space-y-1.5">
           <Row label="회사명" value={company.name} />
-          <Row label="사업자등록번호" value={company.businessRegistrationNo} />
+          <Row label="사업자등록번호" value={formatBrnDisplay(company.businessRegistrationNo)} />
           <Row label="업종" value={company.industryName} />
         </dl>
         <p className="text-ink-400 text-xs">
@@ -99,8 +111,10 @@ export const CompanyInfoForm = ({
         <Label htmlFor="company-brn">사업자등록번호</Label>
         <Input
           id="company-brn"
+          inputMode="numeric"
+          maxLength={12}
           value={businessRegistrationNo}
-          onChange={(e) => setBusinessRegistrationNo(e.target.value)}
+          onChange={(e) => setBusinessRegistrationNo(formatBrnInput(e.target.value))}
           placeholder="000-00-00000"
         />
         {error?.field === 'businessRegistrationNo' && (
