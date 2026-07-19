@@ -5,6 +5,7 @@ import {
   IconCalendar,
   IconChat,
   IconCheck,
+  IconChecklist,
   IconClipboard,
   IconCoin,
   IconData,
@@ -15,6 +16,7 @@ import {
   IconNetwork,
   IconProfile,
   IconProgress,
+  IconRadar,
   IconReceipt,
   IconRisk,
   IconScale,
@@ -114,6 +116,11 @@ const PROBLEMS = [
     title: '데이터 부족',
     desc: '어떤 기업과 함께해야 성공 가능성이 높은지 판단하기 어렵습니다.',
   },
+  {
+    Icon: IconChecklist,
+    title: '실행 관리 부족',
+    desc: '협업을 시작해도 진행 상황과 정산을 체계적으로 관리하기 어렵습니다.',
+  },
 ];
 
 const COMPARE_OUTSOURCE = [
@@ -166,6 +173,10 @@ const DATA_CARDS = [
   { Icon: IconHistory, title: '유사 사례 검토' },
   { Icon: IconScore, title: '매칭 스코어링' },
   { Icon: IconBulb, title: '설명 가능한 제안' },
+  // 요청받은 설명 문구: "협업 실패 가능성이 높은 조합을 사전에 걸러냅니다."
+  // 이 섹션의 카드는 6개 모두 제목만 노출하는 형식이라, 한 장에만 설명을 넣으면
+  // 균형이 깨져 제목만 표시한다. 6장 전부에 설명을 넣기로 하면 이 값을 살리면 된다.
+  { Icon: IconRadar, title: '리스크 신호 탐지' },
 ];
 
 const TRUST_STEPS = [
@@ -237,7 +248,12 @@ export default function Page() {
       {/* ── 2. 문제 제기 ─────────────────────────────────────────────── */}
       <Section>
         <div className="max-w-2xl">
-          <Heading>기회는 왔는데, 우리 회사 이름만으로는 부족했던 순간</Heading>
+          {/* 쉼표를 의미 단위 경계로 삼아 강제 줄바꿈. '순간'만 홀로 떨어지는 것을 막는다. */}
+          <Heading>
+            기회는 왔는데,
+            <br />
+            우리 회사 이름만으로는 부족했던 순간
+          </Heading>
         </div>
         <blockquote className="mt-10 border-l-4 border-brand pl-6 text-xl leading-relaxed font-medium text-ink-700 sm:text-2xl">
           &ldquo;제안서 마지막 장에서 항상 막혔습니다. 실적, 인력, 레퍼런스.&rdquo;
@@ -327,13 +343,19 @@ export default function Page() {
       {/* ── 5. 작동 원리 ─────────────────────────────────────────────── */}
       <Section className="bg-ink-50">
         <div className="mx-auto max-w-2xl text-center">
-          <Heading>뭉산은 부족한 부분을 찾아, 채워줄 파트너를 제안합니다</Heading>
+          {/* 쉼표 기준 2줄 고정 */}
+          <Heading>
+            뭉산은 부족한 부분을 찾아,
+            <br />
+            채워줄 파트너를 제안합니다
+          </Heading>
         </div>
         <ol className="mx-auto mt-16 flex max-w-lg flex-col items-stretch gap-3">
           {HOW_STEPS.map((step, i) => (
             <li key={step} className="flex flex-col items-center gap-3">
               <div
-                className={`flex w-full items-center gap-4 rounded-2xl px-7 py-5 ${
+                // 번호 원 + 텍스트를 한 덩어리로 묶어 카드 안에서 가로·세로 모두 가운데 정렬
+                className={`flex w-full items-center justify-center gap-4 rounded-2xl px-7 py-5 text-center ${
                   i === HOW_STEPS.length - 1
                     ? 'bg-brand-sub01 text-white shadow-[0_10px_30px_-10px_rgb(21_128_61/0.6)]'
                     : 'border border-ink-200 bg-white text-ink-800'
@@ -375,7 +397,8 @@ export default function Page() {
         </div>
         <div className="mt-16 grid gap-8 sm:grid-cols-3">
           {LOUNGE_POINTS.map(({ Icon, title, desc }) => (
-            <div key={title}>
+            // 가운데 정렬된 제목 아래에 놓이므로 카드 내용도 가운데로 맞춘다(8번 섹션과 동일 규칙).
+            <div key={title} className="flex flex-col items-center text-center">
               <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-soft text-brand-sub01">
                 <Icon />
               </span>
@@ -397,7 +420,8 @@ export default function Page() {
         </div>
         <div className="mt-16 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {MARKET_POINTS.map(({ Icon, title, desc }) => (
-            <div key={title}>
+            // 위와 동일 — 아이콘·제목·설명을 세로 가운데 축에 맞춘다.
+            <div key={title} className="flex flex-col items-center text-center">
               <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-brand-sub01 shadow-sm">
                 <Icon />
               </span>
@@ -452,9 +476,11 @@ export default function Page() {
           {DATA_CARDS.map(({ Icon, title }) => (
             <div
               key={title}
-              className="flex items-center gap-4 rounded-2xl border border-white/15 bg-white/5 px-6 py-6"
+              // 다크그린 배경 위에서 카드 경계가 보이도록 배경·테두리를 올리고,
+              // 아이콘 칩은 카드보다 한 단계 더 밝은 녹색으로 계층을 만든다.
+              className="flex items-center justify-center gap-4 rounded-2xl border border-white/25 bg-white/[0.08] px-6 py-6 text-center"
             >
-              <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/10 text-white">
+              <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand/45 text-white ring-1 ring-white/20">
                 <Icon className="h-5 w-5" />
               </span>
               <h3 className="font-semibold text-white">{title}</h3>
@@ -521,7 +547,7 @@ export default function Page() {
           {BETA_BENEFITS.map(({ Icon, title }) => (
             <div
               key={title}
-              className="flex items-center gap-5 rounded-3xl border border-ink-200 bg-white p-8"
+              className="flex items-center justify-center gap-5 rounded-3xl border border-ink-200 bg-white p-8 text-center"
             >
               <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-brand-soft text-brand-sub01">
                 <Icon />

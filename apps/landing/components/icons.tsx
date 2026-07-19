@@ -61,6 +61,15 @@ export const IconData = (p: IconProps) => (
   </Svg>
 );
 
+/* 실행 관리 부족 — 체크리스트 */
+export const IconChecklist = (p: IconProps) => (
+  <Svg {...p}>
+    <rect x="4" y="3.5" width="16" height="17" rx="2" />
+    <path d="m7.5 9 1.5 1.5L12 7.5M7.5 15.5 9 17l3-3" />
+    <path d="M15 10h2.5M15 16h2.5" />
+  </Svg>
+);
+
 /* 비교표 — X */
 export const IconX = (p: IconProps) => (
   <Svg {...p}>
@@ -188,6 +197,16 @@ export const IconBulb = (p: IconProps) => (
   <Svg {...p}>
     <path d="M9 17h6M10 20.5h4" />
     <path d="M12 3a6 6 0 0 0-3.5 10.9V17h7v-3.1A6 6 0 0 0 12 3Z" />
+  </Svg>
+);
+
+/* 리스크 신호 탐지 — 레이더 */
+export const IconRadar = (p: IconProps) => (
+  <Svg {...p}>
+    <circle cx="12" cy="12" r="8.5" />
+    <circle cx="12" cy="12" r="4" />
+    <path d="M12 12 18 6" />
+    <path d="M12 12v-8.5" opacity="0.45" />
   </Svg>
 );
 
