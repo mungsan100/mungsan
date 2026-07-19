@@ -42,7 +42,7 @@ export default function HomePage() {
         </section>
 
         <section className="px-5">
-          <SectionHeader title="AI 맞춤 사업 공고" />
+          <SectionHeader title="AI 맞춤 사업 공고" action={{ label: '전체보기', href: '/support' }} />
           <div className="mt-3">
             <Suspense fallback={<FundingSkeleton />}>
               <FundingNoticeSection />
