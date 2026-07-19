@@ -41,10 +41,12 @@ export async function DecisionAlertSection() {
 }
 
 // DB Notification → 알림 카드. 부제는 body(있으면) · 상대시각, linkUrl은 카드 링크로.
+// id 는 클릭 시 읽음 처리(markNotificationReadAction) 대상.
 function toAlert(n: HomeNotification): DecisionAlert {
   const { icon, tone } = ICON_TONE[n.type];
   const relative = formatRelativeKorean(n.createdAt);
   return {
+    id: n.id,
     icon,
     tone,
     title: n.title,

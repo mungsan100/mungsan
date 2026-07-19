@@ -115,7 +115,12 @@ async function MemberDetailContent({ params }: { params: Promise<{ userId: strin
             <InfoRow label="가입 반려" value={formatKstDateTime(member.rejectedAt)} />
           )}
           {member.suspendedAt && (
-            <InfoRow label="이용 정지" value={formatKstDateTime(member.suspendedAt)} />
+            <InfoRow
+              label="이용 정지"
+              value={`${formatKstDateTime(member.suspendedAt)}${
+                member.suspendedReason ? ` — 사유: ${member.suspendedReason}` : ''
+              }`}
+            />
           )}
           {member.withdrawnAt && (
             <InfoRow label="탈퇴" value={formatKstDateTime(member.withdrawnAt)} />

@@ -36,12 +36,14 @@
 // ════════════════════════════════════════════════════════════════════════
 
 generator client {
-  provider = "prisma-client-js"
-  output   = "../../generated/client"
+  provider        = "prisma-client-js"
+  output          = "../../generated/client"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
-  provider = "postgresql"
+  provider   = "postgresql"
+  extensions = [citext] // 대소문자 무시 텍스트(라운지 닉네임 유니크) — push 가 CREATE EXTENSION 수행
 }
 
 // 사이트 전역 설정(사업자 정보·고객센터 등).

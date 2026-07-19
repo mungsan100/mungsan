@@ -12,7 +12,11 @@ model LoungeProfile {
   updatedAt DateTime @updatedAt
 
   // 프로필 정보
-  nickname String @unique // 라운지 표시명 — 서로 다른 회원이 같은 가명을 쓰면 발화 주체가 섞여 중복 금지
+  // citext: 대소문자만 다른 닉네임("테크사업가K"/"테크사업가k")도 같은 가명으로 취급해
+  // DB 레벨에서 중복을 막는다(2026-07-20 버그 수정). 저장·표시는 입력한 원문 그대로.
+  nickname          String    @unique @db.Citext // 라운지 표시명 — 발화 주체가 섞이지 않게 중복 금지
+  nicknameChangedAt DateTime? // 회원이 직접 변경한 마지막 시각 — 30일 변경 제한 기준.
+  // null 이면 자동 가명(임원NNNN)에서 한 번도 안 바꾼 상태라 첫 변경은 제한 없이 허용.
 
   // 사용자
   userId String @unique
