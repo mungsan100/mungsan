@@ -11,7 +11,6 @@ export type { TrustScore, TrustMetric } from './compute-trust-score';
 // 요청 단위 메모이즈 — 한 요청의 홈/관리 여러 섹션이 호출해도 조회는 1회.
 export const getTrustScoreQuery = cache(async (userId: string) => {
   const [
-    user,
     company,
     loungePosts,
     loungeComments,
@@ -21,10 +20,6 @@ export const getTrustScoreQuery = cache(async (userId: string) => {
     respondedProposals,
     projectCount,
   ] = await Promise.all([
-    prisma.user.findUniqueOrThrow({
-      where: { id: userId },
-      select: { emailVerifiedAt: true, phoneVerifiedAt: true },
-    }),
     prisma.company.findUnique({
       where: { userId },
       select: {
@@ -40,9 +35,14 @@ export const getTrustScoreQuery = cache(async (userId: string) => {
     }),
     prisma.loungePost.count({ where: { authorId: userId, deletedAt: null } }),
     prisma.loungeComment.count({ where: { authorId: userId, deletedAt: null } }),
-    prisma.collaborationProposal.count({ where: { proposerId: userId } }),
+    // 임시저장(DRAFT)은 미제출이라 활동도, 응답 대상도 아니다 — 보낸/받은 제안 집계에서 제외.
+    prisma.collaborationProposal.count({
+      where: { proposerId: userId, status: { not: 'DRAFT' } },
+    }),
     prisma.collaborationPost.count({ where: { authorId: userId, deletedAt: null } }),
-    prisma.collaborationProposal.count({ where: { post: { authorId: userId } } }),
+    prisma.collaborationProposal.count({
+      where: { post: { authorId: userId }, status: { not: 'DRAFT' } },
+    }),
     prisma.collaborationProposal.count({
       where: { post: { authorId: userId }, respondedAt: { not: null } },
     }),
@@ -65,8 +65,6 @@ export const getTrustScoreQuery = cache(async (userId: string) => {
     : 0;
 
   return computeTrustScore({
-    emailVerified: user.emailVerifiedAt != null,
-    phoneVerified: user.phoneVerifiedAt != null,
     companyFieldsFilled,
     companyFieldsTotal,
     activityCount: loungePosts + loungeComments + sentProposals + collabPosts,

@@ -6,7 +6,7 @@ import { getCurrentUser } from '@/lib/auth/get-current-user';
 
 import { TrustGauge } from './trust-gauge';
 
-// 신뢰 지수 카드 — 실제 신호로 파생한 지수(getTrustScoreQuery). 반원 게이지 + 등급 배지 + 5개 지표.
+// 신뢰 지수 카드 — 실제 신호로 파생한 지수(getTrustScoreQuery). 반원 게이지 + 등급 배지 + 4개 지표.
 export async function TrustScoreCard() {
   const user = await getCurrentUser();
   const trust = await getTrustScoreQuery(user.id);
