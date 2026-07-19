@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import type { DB } from '@mungsan/db';
 
 import { formatKstDateTime } from '@/lib/datetime/format-kst';
+import { formatBrnDisplay } from '@/lib/format/business-registration-no';
 
 import { getSignupDetailQuery } from './queries/signup-detail.query';
 import { DecisionPanel } from './ui/decision-panel';
@@ -76,7 +77,7 @@ async function DetailSection({ params }: { params: Promise<{ userId: string }> }
           <h2 className="mb-4 text-sm font-bold text-slate-900">기업 정보</h2>
           <dl className="space-y-3">
             <InfoRow label="회사명" value={detail.companyName} />
-            <InfoRow label="사업자등록번호" value={detail.businessRegistrationNo} />
+            <InfoRow label="사업자등록번호" value={formatBrnDisplay(detail.businessRegistrationNo)} />
             <InfoRow label="업종" value={detail.industryName} />
             <InfoRow label="기업정보 제출일" value={formatKstDateTime(detail.appliedAt)} />
           </dl>
@@ -114,8 +115,8 @@ async function DetailSection({ params }: { params: Promise<{ userId: string }> }
                   />
                   <ChangeRow
                     label="사업자등록번호"
-                    before={revision.businessRegistrationNoBefore}
-                    after={revision.businessRegistrationNoAfter}
+                    before={formatBrnDisplay(revision.businessRegistrationNoBefore)}
+                    after={formatBrnDisplay(revision.businessRegistrationNoAfter)}
                   />
                   <ChangeRow
                     label="업종"
