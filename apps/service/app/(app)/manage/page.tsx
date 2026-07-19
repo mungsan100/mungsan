@@ -4,7 +4,6 @@ import { LuShieldCheck } from 'react-icons/lu';
 import { logoutAction } from '@/app/(auth)/pending/commands/logout.action';
 
 import { AssetReportSection } from './ui/asset-report-section';
-import { LoungeProfileSection } from './ui/lounge-profile-section';
 import { MyInfoSection } from './ui/my-info-section';
 import { ProposalSection } from './ui/proposal-section';
 import { SavedSection } from './ui/saved-section';
@@ -37,12 +36,6 @@ export default function ManagePage() {
         <Suspense fallback={<ListSkeleton />}>
           <SavedSection />
         </Suspense>
-
-        <section className="px-5">
-          <Suspense fallback={<CardSkeleton />}>
-            <LoungeProfileSection />
-          </Suspense>
-        </section>
 
         <Suspense fallback={<ListSkeleton />}>
           <ProposalSection />
