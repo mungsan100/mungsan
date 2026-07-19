@@ -42,6 +42,8 @@ function toNotice(program: HomeSupportProgram, now: Date): FundingNotice {
     tags.push({ label: `D-${daysLeft}`, variant: 'dday' });
 
   if (tags.length === 0) tags.push({ label: '검토 필요', variant: 'review' });
+  // AI 요약 배지는 신호 태그 뒤에 — 요약 실패(원문 노출) 공고에는 안 붙는다.
+  if (program.hasAiSummary) tags.push({ label: 'AI 요약', variant: 'ai' });
 
   return {
     organization: program.organization,
@@ -49,6 +51,7 @@ function toNotice(program: HomeSupportProgram, now: Date): FundingNotice {
     description: program.summary,
     matchRate: program.matchRate,
     tags,
+    detailUrl: program.detailUrl,
   };
 }
 

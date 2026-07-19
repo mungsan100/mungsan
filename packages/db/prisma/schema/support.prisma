@@ -6,19 +6,47 @@
 // ════════════════════════════════════════════════════════════════════════
 
 /// 지원사업(사업공고) 카탈로그. 업종 매칭으로 사용자별 적합도를 파생.
+/// 외부 수집(K-Startup 등)은 (source, sourceId) upsert 로 멱등 동기화한다 —
+/// 수집 파이프라인은 apps/admin/scripts/sync-support-programs.mjs.
 model SupportProgram {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   title        String // 공고 제목
-  summary      String // 한 줄 요약
+  summary      String // 한 줄 요약 — 수집 건은 aiSummary ?? rawSummary 절단으로 파생 저장
   organization String // 주관 기관
 
-  industryTagIds          String[] // 매칭 업종 id — Industry.id(무FK)
+  industryTagIds          String[] // 매칭 업종 id — Industry.id(무FK). 빈 배열 = 전 업종 대상
   supportAmountInCheonwon Int? // 지원 규모(천 원 단위)
   applicationEndDate      DateTime? // 접수 마감일(D-day 파생)
 
+  // 수집 출처 — 시드/수동 등록 행은 null(=MANUAL 취급). unique 는 upsert 멱등의 축.
+  source   SupportProgramSource?
+  sourceId String? // 원본 공고 식별자(K-Startup pbanc id 등)
+
+  // 수집 원문 (AI 요약이 실패해도 항상 원문으로 동작하기 위한 보존 필드)
+  applicationStartDate DateTime? // 접수 시작일
+  region               String? // 지원 지역(원문 표기, null = 전국)
+  targetAudience       String? // 지원대상 원문
+  detailUrl            String? // 원문 상세 페이지 URL
+  rawSummary           String? // 원문 개요(수집 시점 그대로)
+
+  // AI 파생 (없어도 기능 동작 — aiSummary null 이면 화면은 원문 요약을 쓴다)
+  aiSummary  String? // AI 한 줄 요약(80자 이내)
+  aiTaggedAt DateTime? // AI 요약·태깅 성공 시각 — null 이면 다음 동기화 때 재시도
+  fetchedAt  DateTime? // 마지막 수집(동기화) 시각
+
   // 상태
-  isActive Boolean // 노출 여부(폼/seed 가 명시)
+  isActive Boolean // 노출 여부(폼/seed/수집기가 명시 — 마감 지나면 수집기가 내린다)
+
+  @@unique([source, sourceId])
+  @@index([isActive, applicationEndDate])
+}
+
+/// 지원사업 수집 출처.
+enum SupportProgramSource {
+  KSTARTUP // 창업진흥원 K-Startup 오픈API
+  BIZINFO // 기업마당 오픈API(병행 대비 예약)
+  MANUAL // 수동 등록/시드
 }
