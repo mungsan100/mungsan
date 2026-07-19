@@ -31,7 +31,16 @@ export type Screenshot = {
   src: string | null;
   alt: string;
   label: string;
+  /** 바깥 박스의 가로세로 비율 */
   ratio: string;
+  /**
+   * 이미지를 어떤 모양으로 넣을지.
+   * - 'phone': 세로로 긴 앱 스크린샷을 가로 박스 가운데에 폰 모양으로 얹는다.
+   *   실제 앱(apps/service)이 480px 폭 모바일 셸이라 스크린샷이 세로로 길기 때문에,
+   *   가로 박스에 그대로 늘리면 찌그러진다. 기본값.
+   * - 'wide': 가로형 그래픽을 박스에 꽉 채운다.
+   */
+  mode?: 'phone' | 'wide';
 };
 
 export const SCREENSHOTS = {
@@ -69,5 +78,7 @@ export const SCREENSHOTS = {
     alt: '데이터 기반 파트너 추천 구조 그래픽',
     label: '데이터 기반 파트너 추천 구조 그래픽',
     ratio: '16 / 9',
+    // 앱 화면이 아니라 가로형 그래픽을 넣을 자리라 'wide'로 둔다.
+    mode: 'wide',
   },
 } satisfies Record<string, Screenshot>;
