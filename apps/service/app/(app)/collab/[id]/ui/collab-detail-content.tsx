@@ -13,6 +13,7 @@ import {
   LuUsers,
 } from 'react-icons/lu';
 
+import { DeleteContentButton } from '@/components/delete-content-button';
 import { ReportButton } from '@/components/report-button';
 import { isDeadlinePassed } from '@/lib/collab/deadline';
 import { Avatar } from '@/components/ui/avatar';
@@ -61,8 +62,13 @@ export const CollabDetailContent = async ({ params }: { params: Promise<{ id: st
       <Card className="p-5">
         <div className="flex items-start justify-between gap-3">
           <h2 className="text-ink-900 text-xl font-bold leading-snug">{detail.title}</h2>
+          {/* 본인 공고면 신고 대신 삭제 — 신고는 타인 콘텐츠 대상이라 서로 배타. */}
           <div className="flex shrink-0 items-center gap-2.5">
-            <ReportButton targetType="COLLABORATION_POST" targetId={detail.postId} />
+            {detail.isOwnPost ? (
+              <DeleteContentButton target="COLLABORATION_POST" postId={detail.postId} />
+            ) : (
+              <ReportButton targetType="COLLABORATION_POST" targetId={detail.postId} />
+            )}
             <DetailBookmarkButton postId={detail.postId} initialBookmarked={detail.bookmarked} />
           </div>
         </div>

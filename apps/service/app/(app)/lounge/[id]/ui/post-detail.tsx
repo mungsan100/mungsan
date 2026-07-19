@@ -1,6 +1,7 @@
 import { LuBadgeCheck } from 'react-icons/lu';
 import type { DB } from '@mungsan/db';
 
+import { DeleteContentButton } from '@/components/delete-content-button';
 import { ReportButton } from '@/components/report-button';
 import { Avatar } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -83,8 +84,13 @@ export const PostDetail = ({ post }: PostDetailProps) => (
       bookmarkCount={post.bookmarkCount}
     />
 
+    {/* 본인 글이면 삭제, 타인 글이면 신고 — 신고는 타인 콘텐츠 대상이라 서로 배타. */}
     <div className="mt-3 flex justify-end">
-      <ReportButton targetType="LOUNGE_POST" targetId={post.id} />
+      {post.isOwnPost ? (
+        <DeleteContentButton target="LOUNGE_POST" postId={post.id} />
+      ) : (
+        <ReportButton targetType="LOUNGE_POST" targetId={post.id} />
+      )}
     </div>
   </article>
 );

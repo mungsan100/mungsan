@@ -41,13 +41,11 @@ export default function HomePage() {
           </Suspense>
         </section>
 
+        {/* 지원사업 2단(맞춤 추천 + 새 공고) — 제목에 회원 이름이 들어가 헤더까지 섹션 컴포넌트가 렌더. */}
         <section className="px-5">
-          <SectionHeader title="AI 맞춤 사업 공고" action={{ label: '전체보기', href: '/support' }} />
-          <div className="mt-3">
-            <Suspense fallback={<FundingSkeleton />}>
-              <FundingNoticeSection />
-            </Suspense>
-          </div>
+          <Suspense fallback={<FundingSkeleton />}>
+            <FundingNoticeSection />
+          </Suspense>
         </section>
 
         <section className="px-5">
@@ -108,9 +106,16 @@ const CardsSkeleton = () => (
 );
 
 const FundingSkeleton = () => (
-  <div className="space-y-3">
-    {[0, 1, 2].map((i) => (
-      <div key={i} className="bg-ink-100 h-32 animate-pulse rounded-2xl" />
+  <div className="space-y-5">
+    {[0, 1].map((section) => (
+      <div key={section}>
+        <div className="bg-ink-100 h-6 w-44 animate-pulse rounded" />
+        <div className="mt-3 space-y-3">
+          {[0, 1].map((i) => (
+            <div key={i} className="bg-ink-100 h-32 animate-pulse rounded-2xl" />
+          ))}
+        </div>
+      </div>
     ))}
   </div>
 );

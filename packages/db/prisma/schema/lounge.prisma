@@ -12,7 +12,7 @@ model LoungeProfile {
   updatedAt DateTime @updatedAt
 
   // 프로필 정보
-  nickname String
+  nickname String @unique // 라운지 표시명 — 서로 다른 회원이 같은 가명을 쓰면 발화 주체가 섞여 중복 금지
 
   // 사용자
   userId String @unique
