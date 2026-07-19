@@ -20,6 +20,7 @@ export type LoungePostDetail = {
   liked: boolean; // 현재 유저가 좋아요를 눌렀는지
   bookmarked: boolean; // 현재 유저가 북마크했는지
   hiddenForOthers: boolean; // 운영 숨김 글을 작성자 본인이 보는 중(안내 배너용)
+  isOwnPost: boolean; // 현재 유저가 작성자인지 → 신고 대신 삭제 버튼 노출
 };
 
 export type LoungePostDetailQuery = { postId: string; userId: string };
@@ -47,6 +48,7 @@ export async function getLoungePostDetailQuery({
       commentCount: true,
       bookmarkCount: true,
       hiddenAt: true,
+      authorId: true,
       author: {
         select: {
           executiveRole: true,
@@ -80,5 +82,6 @@ export async function getLoungePostDetailQuery({
     liked: post.likes.length > 0,
     bookmarked: post.bookmarks.length > 0,
     hiddenForOthers: post.hiddenAt != null,
+    isOwnPost: post.authorId === userId,
   };
 }
