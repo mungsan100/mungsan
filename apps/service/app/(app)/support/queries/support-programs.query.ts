@@ -18,7 +18,6 @@ export type SupportProgramListItem = {
   applicationEndDate: Date | null;
   region: string | null;
   detailUrl: string | null;
-  hasAiSummary: boolean;
   industryNames: string[]; // 태그 업종명(표시용) — 빈 배열이면 "전 업종"
 };
 
@@ -65,7 +64,6 @@ export async function getSupportProgramsQuery(
         applicationEndDate: true,
         region: true,
         detailUrl: true,
-        aiSummary: true,
       },
     }),
   ]);
@@ -85,7 +83,6 @@ export async function getSupportProgramsQuery(
       applicationEndDate: program.applicationEndDate,
       region: program.region,
       detailUrl: program.detailUrl,
-      hasAiSummary: program.aiSummary != null,
       industryNames: program.industryTagIds
         .map((id) => industryNameById.get(id))
         .filter((name): name is string => name != null),

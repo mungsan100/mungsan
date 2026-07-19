@@ -11,7 +11,7 @@ import {
 import { SupportIndustryFilter } from './ui/support-industry-filter';
 import { SupportProgramRow } from './ui/support-program-row';
 
-// 지원사업 전체보기 — 홈 "AI 맞춤 사업 공고"의 확장 목록(마감 임박순 + 업종 칩 필터).
+// 지원사업 전체보기 — 홈 맞춤 지원사업 섹션의 확장 목록(마감 임박순 + 업종 칩 필터).
 // 동적 데이터(searchParams·세션·DB)는 Suspense 안 섹션으로 분리(cacheComponents).
 export default function SupportPage({
   searchParams,

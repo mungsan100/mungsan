@@ -46,7 +46,7 @@ export async function createProposalAction(cmd: CreateProposalCommand): Promise<
 
   const post = await prisma.collaborationPost.findFirst({
     where: { id: cmd.postId, isPublic: true, deletedAt: null, hiddenAt: null },
-    select: { id: true, authorId: true, applicationDeadline: true },
+    select: { id: true, title: true, authorId: true, applicationDeadline: true },
   }); // 2. 로드
   if (!post) return { ok: false, code: 'NOT_FOUND', message: '공고를 찾을 수 없습니다.' };
 
@@ -104,6 +104,20 @@ export async function createProposalAction(cmd: CreateProposalCommand): Promise<
     await tx.collaborationPost.update({
       where: { id: post.id },
       data: { proposalCount: { increment: 1 } },
+    });
+    // 공고 작성자에게 제안 수신 알림 — 본 작업과 같은 트랜잭션(원자성). 홈 의사결정 알림·벨에 노출.
+    const proposerCompany = await tx.company.findUnique({
+      where: { userId: user.id },
+      select: { name: true },
+    });
+    await tx.notification.create({
+      data: {
+        type: 'COLLABORATION',
+        title: '새 협업 제안이 도착했어요',
+        body: `'${post.title}' 공고에 ${proposerCompany?.name ?? user.name}의 제안이 도착했습니다.`,
+        linkUrl: '/manage',
+        userId: post.authorId,
+      },
     });
   });
   revalidatePath(`/collab/${post.id}`);

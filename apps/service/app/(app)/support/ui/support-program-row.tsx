@@ -9,7 +9,7 @@ import type { SupportProgramListItem } from '../queries/support-programs.query';
 // 마감 임박 기준(일) — 홈 카드와 동일 값.
 const DDAY_WINDOW = 14;
 
-// 지원사업 목록 행 — 기관·제목·요약·태그(D-day/업종/AI 요약)와 매칭률.
+// 지원사업 목록 행 — 기관·제목·요약·태그(D-day/업종)와 매칭률.
 // 원문 링크(수집 공고)가 있으면 행 전체가 새 탭 링크.
 export const SupportProgramRow = ({ program }: { program: SupportProgramListItem }) => {
   const daysLeft = program.applicationEndDate
@@ -57,11 +57,6 @@ export const SupportProgramRow = ({ program }: { program: SupportProgramListItem
           {program.industryNames.length > 0 ? program.industryNames.join(' · ') : '전 업종'}
           {program.region && ` · ${program.region}`}
         </span>
-        {program.hasAiSummary && (
-          <span className="bg-ink-100 text-ink-600 rounded-full px-2 py-0.5 text-[11px] font-semibold">
-            AI 요약
-          </span>
-        )}
       </div>
     </div>
   );

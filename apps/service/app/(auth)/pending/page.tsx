@@ -20,6 +20,10 @@ async function PendingContent() {
   const session = await getSession();
   if (!session) redirect('/login');
 
+  // 이용 정지가 최우선 분기 — 승인된 계정도 정지되면 middleware 가 이 화면으로 보낸다.
+  // 심사 문구를 보여주면 오해하므로 정지 안내만 표시한다.
+  if (session.suspendedAt != null) return <SuspendedContent />;
+
   const rejected = session.rejectedAt != null;
   // 회사 정보 수정으로 온 재심사인지 — 첫 가입 심사와 안내 문구를 구분한다.
   const rereview = !rejected && (await isRereviewQuery(session.id));
@@ -61,6 +65,29 @@ async function PendingContent() {
       )}
 
       {/* 로그아웃은 이 화면의 주 행동이 아니라 보조 동선 — 텍스트 링크 스타일로 낮춘다. */}
+      <form action={logoutAction}>
+        <button
+          type="submit"
+          className="text-ink-400 hover:text-ink-600 text-sm font-semibold underline underline-offset-2"
+        >
+          로그아웃
+        </button>
+      </form>
+    </div>
+  );
+}
+
+// 이용 정지 안내 — 정지 상태에선 심사 안내가 어긋나므로 별도 화면.
+function SuspendedContent() {
+  return (
+    <div className="space-y-6 text-center">
+      <div className="space-y-2">
+        <h1 className="text-ink-900 text-xl font-bold">이용이 정지되었습니다</h1>
+        <p className="text-ink-500 text-sm">
+          운영정책 위반으로 계정 이용이 정지된 상태입니다. 자세한 내용이나 이의 제기는 운영팀에
+          문의해 주세요.
+        </p>
+      </div>
       <form action={logoutAction}>
         <button
           type="submit"
