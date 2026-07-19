@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
@@ -10,6 +12,7 @@ export type UpcomingTask = {
   subtitle: string;
   statusLabel: string;
   tone: TaskTone;
+  href?: string; // 파생 할일(저장 공고·제안 등) — 있으면 카드가 해당 화면으로 이동
 };
 
 // 좌측 색 보더는 긴급도(마감 임박·진행중·그 외), 우측 배지는 상태.
@@ -29,15 +32,24 @@ interface UpcomingTaskCardProps {
   task: UpcomingTask;
 }
 
-export const UpcomingTaskCard = ({ task }: UpcomingTaskCardProps) => (
-  <Card className="relative flex items-center gap-3 overflow-hidden p-4 pl-5">
-    <span className={cn('absolute top-3 bottom-3 left-0 w-1 rounded-r-full', BAR[task.tone])} />
-    <div className="min-w-0 flex-1">
-      <p className="text-ink-900 truncate text-[15px] font-bold">{task.title}</p>
-      <p className="text-ink-400 mt-0.5 text-[13px]">{task.subtitle}</p>
-    </div>
-    <Badge size="md" className={cn('shrink-0', BADGE[task.tone])}>
-      {task.statusLabel}
-    </Badge>
-  </Card>
-);
+export const UpcomingTaskCard = ({ task }: UpcomingTaskCardProps) => {
+  const card = (
+    <Card className="relative flex items-center gap-3 overflow-hidden p-4 pl-5">
+      <span className={cn('absolute top-3 bottom-3 left-0 w-1 rounded-r-full', BAR[task.tone])} />
+      <div className="min-w-0 flex-1">
+        <p className="text-ink-900 truncate text-[15px] font-bold">{task.title}</p>
+        <p className="text-ink-400 mt-0.5 truncate text-[13px]">{task.subtitle}</p>
+      </div>
+      <Badge size="md" className={cn('shrink-0', BADGE[task.tone])}>
+        {task.statusLabel}
+      </Badge>
+    </Card>
+  );
+
+  if (!task.href) return card;
+  return (
+    <Link href={task.href} className="block">
+      {card}
+    </Link>
+  );
+};

@@ -7,6 +7,10 @@ import type { DB } from '@mungsan/db';
 import { getCurrentUser } from '@/lib/auth/get-current-user';
 import { formatRelativeKorean } from '@/lib/datetime/relative-time';
 
+import {
+  getHomeDerivedTasksQuery,
+  type DerivedHomeTask,
+} from '../queries/home-derived-tasks.query';
 import { getHomeTasksQuery, type HomeTask } from '../queries/home-tasks.query';
 import { UpcomingTaskCard, type TaskTone, type UpcomingTask } from './upcoming-task-card';
 
@@ -18,20 +22,25 @@ const STATUS_LABELS: Record<DB.TaskStatus, string> = {
   ON_HOLD: '보류',
 };
 
-// 다가오는 할 일 — 헤더(제목·개수·전체보기)까지 포함. 개수가 동적이라 헤더를 이 안에 둔다.
+// 다가오는 할 일 — 셰르파 Task(기존) + 파생 할일(저장 공고 마감·응답 대기 제안·임시저장 제안,
+// 결정 7)을 합성해 보여준다. 헤더(제목·개수·전체보기)까지 포함 — 개수가 동적이라 헤더를 이 안에 둔다.
 export async function UpcomingTasks() {
   const user = await getCurrentUser();
-  const tasks = await getHomeTasksQuery(user.id);
+  const [tasks, derived] = await Promise.all([
+    getHomeTasksQuery(user.id),
+    getHomeDerivedTasksQuery(user.id),
+  ]);
   const now = new Date();
+  const total = tasks.length + derived.length;
 
   return (
     <>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <h2 className="text-ink-900 text-[17px] font-bold">다가오는 할 일</h2>
-          {tasks.length > 0 && (
+          {total > 0 && (
             <span className="bg-ink-100 text-ink-500 flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[12px] font-bold">
-              {tasks.length}
+              {total}
             </span>
           )}
         </div>
@@ -41,17 +50,54 @@ export async function UpcomingTasks() {
         </Link>
       </div>
 
-      {tasks.length === 0 ? (
+      {total === 0 ? (
         <p className="text-ink-400 mt-3 text-sm">예정된 할 일이 없습니다.</p>
       ) : (
         <div className="mt-3 space-y-3">
           {tasks.map((t) => (
             <UpcomingTaskCard key={t.id} task={toCard(t, now)} />
           ))}
+          {derived.map((d) => (
+            <UpcomingTaskCard key={d.key} task={toDerivedCard(d, now)} />
+          ))}
         </div>
       )}
     </>
   );
+}
+
+// 파생 항목 → 카드. 출처(저장 공고/받은 제안/임시저장)를 배지로, D-2 이내면 danger 톤.
+function toDerivedCard(d: DerivedHomeTask, now: Date): UpcomingTask {
+  const daysLeft = d.dueDate ? kstCalendarDaysUntil(d.dueDate, now) : null;
+  const tone: TaskTone = daysLeft != null && daysLeft <= 2 ? 'danger' : 'warning';
+  const dday = daysLeft != null ? (daysLeft === 0 ? 'D-DAY' : `D-${daysLeft}`) : null;
+
+  if (d.kind === 'SAVED_POST_DEADLINE')
+    return {
+      id: d.key,
+      title: `저장한 공고 마감 ${dday}`,
+      subtitle: d.postTitle,
+      statusLabel: '저장 공고',
+      tone,
+      href: d.href,
+    };
+  if (d.kind === 'DRAFT_DEADLINE')
+    return {
+      id: d.key,
+      title: `임시저장 제안 마감 ${dday}`,
+      subtitle: `${d.postTitle} — 제출을 완료하세요`,
+      statusLabel: '임시저장',
+      tone,
+      href: d.href,
+    };
+  return {
+    id: d.key,
+    title: `응답 대기 제안 ${d.count}건`,
+    subtitle: d.postTitle,
+    statusLabel: '받은 제안',
+    tone: 'warning',
+    href: d.href,
+  };
 }
 
 // DB Task → 카드 표시 모델. 좌측 보더 색은 긴급도, 부제는 프로젝트명 · (마감 D-day 또는 갱신 상대시각).
