@@ -6,6 +6,7 @@ import type { DB } from '@mungsan/db';
 
 import { hashPassword } from '@/lib/auth/password';
 import { createSession } from '@/lib/auth/session';
+import { verifyTurnstileToken } from '@/lib/auth/verify-turnstile';
 import { SignupInput } from '@/app/(auth)/signup/domain/signup-input';
 
 export type ActionResult<D = undefined> =
@@ -22,11 +23,21 @@ export type SignupCommand = {
   agreedTerms: boolean;
   agreedPrivacy: boolean;
   agreedMarketing: boolean;
+  turnstileToken?: string | null; // 봇 방지 위젯 토큰(2026-07-20) — 서버 키 있으면 필수 검증
 };
 
 const TERMS_VERSION = '2026-07-15';
 
 export async function signupAction(cmd: SignupCommand): Promise<ActionResult> {
+  // 봇 방지 최우선 검증(2026-07-20) — 자동화 대량 가입 차단. 키 미설정(로컬)이면 통과.
+  const turnstile = await verifyTurnstileToken(cmd.turnstileToken ?? null);
+  if (!turnstile.ok)
+    return {
+      ok: false,
+      code: 'TURNSTILE_FAILED',
+      message: '보안 확인에 실패했습니다. 새로고침 후 다시 시도해 주세요.',
+    };
+
   const result = SignupInput.create(cmd);
   if (result.isErr())
     return {
