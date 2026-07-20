@@ -8,7 +8,6 @@ import {
 } from 'react-icons/lu';
 import type { DB } from '@mungsan/db';
 
-import { Avatar } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { formatRelativeKorean } from '@/lib/datetime/relative-time';
@@ -40,8 +39,8 @@ export const PostCard = ({ post }: PostCardProps) => {
   return (
     <Link href={`/lounge/${post.id}`} className="block">
       <Card className="p-4">
+        {/* 익명 게시판이라 아바타 없이 텍스트 메타만(2026-07-20 결정 — 프로필 사진 개념 불필요). */}
         <div className="flex items-start gap-3">
-          <Avatar fallback={[...post.nickname][0] ?? ''} className="bg-brand text-white" />
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1">
               <span className="text-ink-900 truncate text-[15px] font-bold">{post.nickname}</span>
