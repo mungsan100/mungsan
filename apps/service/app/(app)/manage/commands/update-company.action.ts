@@ -62,6 +62,23 @@ export async function updateCompanyAction(cmd: UpdateCompanyCommand): Promise<Ac
     company.industryId === industry.id;
   if (unchanged) return { ok: false, code: 'NO_CHANGE', message: '변경된 내용이 없습니다.' };
 
+  // 사업자등록번호 중복 차단(2026-07-20 보안 결정) — 수정으로도 승인된 타 계정의 번호를
+  // 가로챌 수 없게 등록 액션과 같은 규칙을 적용한다(자기 회사는 제외).
+  const approvedDuplicate = await prisma.company.findFirst({
+    where: {
+      businessRegistrationNo: digits,
+      id: { not: company.id },
+      user: { approvedAt: { not: null }, withdrawnAt: null, deletedAt: null },
+    },
+    select: { id: true },
+  });
+  if (approvedDuplicate)
+    return {
+      ok: false,
+      field: 'businessRegistrationNo',
+      message: '이미 가입된 사업자등록번호입니다. 본인 회사가 맞다면 운영팀에 문의해 주세요.',
+    };
+
   await prisma.$transaction(async (tx) => {
     await tx.company.update({
       where: { id: company.id },

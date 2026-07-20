@@ -40,6 +40,9 @@ export type SignupDetailView = {
   rejectedReason: string | null;
   attachments: SignupAttachmentView[];
   revisions: CompanyRevisionView[]; // 회사 정보 수정 이력(최신순) — 있으면 재심사 건
+  // 같은 사업자등록번호를 쓰는 타 계정 현황(2026-07-20 중복 방지) — 승인 건이 있으면
+  // 승인 액션이 거부하므로, 심사자가 상세에서 바로 알 수 있게 경고로 표시한다.
+  brnDuplicates: { approvedCount: number; pendingCount: number };
 };
 
 // 가입 신청 단건 상세 — 신청자·기업 정보 + 해당 회사의 첨부 서류 전부.
@@ -72,7 +75,16 @@ export async function getSignupDetailQuery(userId: string): Promise<SignupDetail
   if (!user?.company) return null;
 
   // Attachment 는 무FK 폴리모픽 — ownerType+ownerId 로 직접 조회.
-  const [attachments, revisions] = await Promise.all([
+  const duplicateWhere = (approved: boolean) => ({
+    businessRegistrationNo: user.company!.businessRegistrationNo,
+    userId: { not: userId },
+    user: {
+      approvedAt: approved ? { not: null } : null,
+      withdrawnAt: null,
+      deletedAt: null,
+    },
+  });
+  const [attachments, revisions, dupApproved, dupPending] = await Promise.all([
     prisma.attachment.findMany({
       where: { ownerType: 'COMPANY', ownerId: user.company.id },
       orderBy: { createdAt: 'asc' },
@@ -93,6 +105,8 @@ export async function getSignupDetailQuery(userId: string): Promise<SignupDetail
         industryNameAfter: true,
       },
     }),
+    prisma.company.count({ where: duplicateWhere(true) }),
+    prisma.company.count({ where: duplicateWhere(false) }),
   ]);
 
   return {
@@ -122,5 +136,6 @@ export async function getSignupDetailQuery(userId: string): Promise<SignupDetail
       industryNameBefore: revision.industryNameBefore,
       industryNameAfter: revision.industryNameAfter,
     })),
+    brnDuplicates: { approvedCount: dupApproved, pendingCount: dupPending },
   };
 }

@@ -48,6 +48,24 @@ export async function registerCompanyAction(cmd: RegisterCompanyCommand): Promis
   });
   if (!industry) return { ok: false, code: 'INDUSTRY_NOT_FOUND', field: 'industryId', message: '존재하지 않는 업종입니다.' };
 
+  // 사업자등록번호 중복 차단(2026-07-20 보안 결정) — 이미 "승인된" 타 계정이 같은 번호를 쓰면
+  // 등록 자체를 거부한다. 심사 대기끼리는 허용(선착순 승인, 최종 방어는 승인 액션) — 오타 재신청
+  // 등 정상 흐름을 막지 않기 위함. 저장값은 digits 정규화라 그대로 비교한다.
+  const approvedDuplicate = await prisma.company.findFirst({
+    where: {
+      businessRegistrationNo: input.businessRegistrationNo,
+      user: { approvedAt: { not: null }, withdrawnAt: null, deletedAt: null },
+    },
+    select: { id: true },
+  });
+  if (approvedDuplicate)
+    return {
+      ok: false,
+      code: 'DUPLICATE_BRN',
+      field: 'businessRegistrationNo',
+      message: '이미 가입된 사업자등록번호입니다. 본인 회사가 맞다면 운영팀에 문의해 주세요.',
+    };
+
   const certCheck = validateFile(cmd.businessCertFile);
   if (!certCheck.ok) return { ok: false, field: 'businessCertFile', message: certCheck.message };
   const brochureFile = cmd.brochureFile; // 선택 — 있으면만 검증·업로드
