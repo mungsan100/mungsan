@@ -4,6 +4,7 @@ import { LuShieldCheck } from 'react-icons/lu';
 import { logoutAction } from '@/app/(auth)/pending/commands/logout.action';
 
 import { AssetReportSection } from './ui/asset-report-section';
+import { InquirySection } from './ui/inquiry-section';
 import { MyInfoSection } from './ui/my-info-section';
 import { ProposalSection } from './ui/proposal-section';
 import { SavedSection } from './ui/saved-section';
@@ -49,6 +50,9 @@ export default function ManagePage() {
         <Suspense fallback={<ListSkeleton />}>
           <SavedSection />
         </Suspense>
+
+        {/* 문의하기 — 운영팀 연락 창구(정적이라 Suspense 불필요). */}
+        <InquirySection />
 
         {/* 로그아웃 — 로그인 후 유일한 로그아웃 진입점(가입심사중 화면의 로그아웃과 같은 액션). */}
         <section className="px-5">

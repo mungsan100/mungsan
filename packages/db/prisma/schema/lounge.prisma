@@ -58,7 +58,7 @@ model LoungePost {
   @@index([authorId])
 }
 
-/// 라운지 글 카테고리
+/// 라운지 글 카테고리 — 작성 시 AI 자동 분류(2026-07-20, 결정 5-3). 11종 + ETC 폴백.
 enum LoungeCategory {
   COLLABORATION // 협업 제안
   BUSINESS_CONCERN // 사업 고민
@@ -66,7 +66,11 @@ enum LoungeCategory {
   DEVELOPMENT_TECH // 개발/기술
   MARKETING_SALES // 마케팅/영업
   GOVERNMENT_SUPPORT // 정부지원사업
-  ETC // 기타
+  HIRING_HR // 채용/인사 (2026-07-20 추가)
+  ORG_CULTURE // 조직문화 (2026-07-20 추가)
+  OUTSOURCING // 외주/아웃소싱 (2026-07-20 추가)
+  BURNOUT_MENTAL // 번아웃/멘탈 (2026-07-20 추가)
+  ETC // 기타 (AI 분류 애매 시 폴백)
 }
 
 /// 라운지 댓글

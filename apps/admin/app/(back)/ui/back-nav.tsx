@@ -8,6 +8,7 @@ const MENUS = [
   { href: '/members', label: '회원 관리' },
   { href: '/reports', label: '신고 관리' },
   { href: '/contents', label: '콘텐츠 관리' },
+  { href: '/inquiries', label: '문의 관리' },
   { href: '/metrics', label: '지표' },
 ];
 

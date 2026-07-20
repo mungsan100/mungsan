@@ -58,6 +58,7 @@ model User {
   verificationTokens     VerificationToken[]
   sessions               Session[]
   reports                Report[]
+  inquiries              Inquiry[]
 
   @@index([approvedAt])
 }

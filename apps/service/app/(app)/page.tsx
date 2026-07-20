@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 
 import { SectionHeader } from '@/components/section-header';
 
+import { AnnouncementBanner } from './ui/announcement-banner';
 import { DecisionAlertSection } from './ui/decision-alert-section';
 import { FundingNoticeSection } from './ui/funding-notice-section';
 import { HomeGreeting } from './ui/home-greeting';
@@ -29,6 +30,11 @@ export default function HomePage() {
       />
 
       <div className="space-y-5 pb-5">
+        {/* 공지 배너 — 게시된 공지가 있을 때만 노출(4-1). 상단에 둬 눈에 먼저 들어오게. */}
+        <Suspense fallback={null}>
+          <AnnouncementBanner />
+        </Suspense>
+
         <section className="px-5">
           <Suspense fallback={<StatCardsSkeleton />}>
             <HomeStatCards />
