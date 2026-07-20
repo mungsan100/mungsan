@@ -17,6 +17,29 @@ export async function approveSignupAction(cmd: ApproveSignupCommand): Promise<Ac
   const admin = await getAdminSession();
   if (!admin) return { ok: false, code: 'UNAUTHORIZED', message: '관리자 로그인이 필요합니다.' };
 
+  // 사업자등록번호 중복 최종 방어(2026-07-20 보안 결정) — 심사 대기 중 같은 번호가 여러 건
+  // 들어와도 "승인은 선착순 한 곳만". 이미 승인된 타 계정과 같은 번호면 승인을 거부한다.
+  const targetCompany = await prisma.company.findUnique({
+    where: { userId: cmd.userId },
+    select: { businessRegistrationNo: true },
+  });
+  if (targetCompany) {
+    const approvedDuplicate = await prisma.company.findFirst({
+      where: {
+        businessRegistrationNo: targetCompany.businessRegistrationNo,
+        userId: { not: cmd.userId },
+        user: { approvedAt: { not: null }, withdrawnAt: null, deletedAt: null },
+      },
+      select: { userId: true },
+    });
+    if (approvedDuplicate)
+      return {
+        ok: false,
+        code: 'DUPLICATE_BRN',
+        message: '같은 사업자등록번호로 이미 승인된 계정이 있습니다. 중복 신청 여부를 확인해 주세요.',
+      };
+  }
+
   // 승인 전이와 대상자 알림을 같은 트랜잭션으로(원자성) — 홈 의사결정 알림·벨에 노출된다.
   const approved = await prisma.$transaction(async (tx) => {
     const updated = await tx.user.updateMany({

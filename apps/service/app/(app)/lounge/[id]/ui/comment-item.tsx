@@ -5,7 +5,6 @@ import { LuBadgeCheck } from 'react-icons/lu';
 import type { DB } from '@mungsan/db';
 
 import { ReportButton } from '@/components/report-button';
-import { Avatar } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { formatRelativeKorean } from '@/lib/datetime/relative-time';
 
@@ -75,12 +74,9 @@ export const CommentItem = ({ postId, comment }: CommentItemProps) => {
   );
 };
 
+// 익명 게시판이라 아바타 없이 텍스트 메타만(2026-07-20 결정).
 const CommentBody = ({ postId, comment }: { postId: string; comment: LoungeCommentView }) => (
   <div className="flex items-start gap-3">
-    <Avatar
-      fallback={[...comment.nickname][0] ?? ''}
-      className="bg-brand-soft text-brand-sub02 h-9 w-9 text-sm"
-    />
     <div className="min-w-0 flex-1">
       <div className="flex flex-wrap items-center gap-1.5">
         <span className="text-ink-900 truncate text-sm font-bold">{comment.nickname}</span>

@@ -72,6 +72,24 @@ async function DetailSection({ params }: { params: Promise<{ userId: string }> }
         )}
       </div>
 
+      {/* 동일 사업자번호 타 계정 경고(2026-07-20 중복 방지) — 승인 건이 있으면 승인이 거부된다. */}
+      {(detail.brnDuplicates.approvedCount > 0 || detail.brnDuplicates.pendingCount > 0) && (
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3">
+          <p className="text-sm font-bold text-red-700">
+            ⚠ 동일 사업자등록번호의 다른 계정 —{' '}
+            {detail.brnDuplicates.approvedCount > 0 &&
+              `이미 승인 ${detail.brnDuplicates.approvedCount}건`}
+            {detail.brnDuplicates.approvedCount > 0 && detail.brnDuplicates.pendingCount > 0 && ' · '}
+            {detail.brnDuplicates.pendingCount > 0 && `심사 대기 ${detail.brnDuplicates.pendingCount}건`}
+          </p>
+          <p className="mt-0.5 text-xs text-slate-600">
+            {detail.brnDuplicates.approvedCount > 0
+              ? '승인된 계정이 이미 있어 이 신청의 승인은 차단됩니다. 중복·도용 여부를 확인해 주세요.'
+              : '같은 번호의 신청이 여러 건입니다. 먼저 승인되는 한 곳만 통과되고 나머지는 차단됩니다.'}
+          </p>
+        </div>
+      )}
+
       <div className="grid gap-5 md:grid-cols-2">
         <section className="rounded-xl border border-slate-200 bg-white p-5">
           <h2 className="mb-4 text-sm font-bold text-slate-900">기업 정보</h2>

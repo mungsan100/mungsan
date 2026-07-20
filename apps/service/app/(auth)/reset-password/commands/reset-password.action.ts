@@ -47,7 +47,8 @@ export async function resetPasswordAction(cmd: ResetPasswordCommand): Promise<Ac
 
     await tx.user.update({
       where: { id: verification.userId ?? undefined },
-      data: { passwordHash },
+      // 재설정 성공은 본인 확인이므로 로그인 실패 잠금도 함께 해제한다(잠금 안내 문구의 약속).
+      data: { passwordHash, failedLoginCount: null, lockedUntil: null },
     });
     await tx.session.deleteMany({ where: { userId: verification.userId ?? undefined } });
     return true;
