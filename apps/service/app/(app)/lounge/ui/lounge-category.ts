@@ -9,5 +9,9 @@ export const LOUNGE_CATEGORY_LABELS: Record<DB.LoungeCategory, string> = {
   DEVELOPMENT_TECH: '개발·기술',
   MARKETING_SALES: '마케팅·영업',
   GOVERNMENT_SUPPORT: '정부지원',
+  HIRING_HR: '채용·인사',
+  ORG_CULTURE: '조직문화',
+  OUTSOURCING: '외주·아웃소싱',
+  BURNOUT_MENTAL: '번아웃·멘탈',
   ETC: '기타',
 };

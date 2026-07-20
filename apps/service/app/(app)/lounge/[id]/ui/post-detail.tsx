@@ -6,8 +6,8 @@ import { ReportButton } from '@/components/report-button';
 import { Badge } from '@/components/ui/badge';
 import { formatRelativeKorean } from '@/lib/datetime/relative-time';
 
-import { LOUNGE_CATEGORY_LABELS } from '../../ui/lounge-category';
 import type { LoungePostDetail } from '../queries/lounge-post-detail.query';
+import { CategoryEditor } from './category-editor';
 import { ReactionBar } from './reaction-bar';
 
 // 임원 직책 → 표시 라벨. 표시 매핑이라 소비처(ui) 로컬.
@@ -66,9 +66,10 @@ export const PostDetail = ({ post }: PostDetailProps) => (
       </div>
     </div>
 
-    <span className="bg-brand-soft text-brand-sub02 mt-4 inline-block rounded-full px-2.5 py-1 text-[11px] font-semibold">
-      {LOUNGE_CATEGORY_LABELS[post.category]}
-    </span>
+    {/* 카테고리 — AI 자동 분류(5-3). 작성자 본인은 여기서 바로 수정할 수 있다. */}
+    <div className="mt-4">
+      <CategoryEditor postId={post.id} category={post.category} editable={post.isOwnPost} />
+    </div>
     <h1 className="text-ink-900 mt-2 text-xl leading-snug font-bold">{post.title}</h1>
     <p className="text-ink-700 mt-3 text-[15px] leading-relaxed whitespace-pre-wrap">
       {post.content}

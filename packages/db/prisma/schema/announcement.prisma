@@ -1,0 +1,24 @@
+// ════════════════════════════════════════════════════════════════════════
+//  공지사항  ─  Announcement
+//  운영자가 작성해 게시하면 전 회원에게 노출된다(2026-07-20, 결정 4-1 B안).
+//  본체는 이 모델로 관리(게시/내림 토글)하고, 게시 시 선택적으로 SYSTEM 알림을
+//  전 회원에게 fan-out 할 수 있다(Notification 별도 — 회수 불가라 옵션).
+// ════════════════════════════════════════════════════════════════════════
+
+/// 공지 한 건. 노출 여부는 publishedAt presence(시각 presence 컨벤션 — null 이면 미게시/내려짐).
+model Announcement {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 내용
+  title   String
+  content String
+
+  // 게시 상태 — command 가 명시(기본값 없음, 컨벤션). publishedAt 있으면 회원에게 노출.
+  publishedAt     DateTime?
+  authorAdminId   String // 작성한 운영자(Admin.id, 무FK — 표시/감사용)
+  notifiedAt      DateTime? // SYSTEM 알림으로 fan-out 한 시각(중복 발송 방지 — 있으면 재발송 안 함)
+
+  @@index([publishedAt, createdAt])
+}

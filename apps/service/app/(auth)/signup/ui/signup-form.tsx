@@ -14,7 +14,11 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
+import { TurnstileWidget } from '@/components/turnstile-widget';
 import { signupAction } from '@/app/(auth)/signup/commands/signup.action';
+
+// 사이트 키가 있을 때만 위젯·토큰 요구(로컬 dev 는 키 없이 기존 흐름 유지).
+const TURNSTILE_ENABLED = Boolean(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY);
 
 const EXECUTIVE_ROLE_VALUES = [
   'CEO',
@@ -63,6 +67,7 @@ type FormOutput = z.output<typeof schema>;
 
 export const SignupForm = () => {
   const [isRedirecting, setIsRedirecting] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const {
     register,
     handleSubmit,
@@ -88,6 +93,11 @@ export const SignupForm = () => {
   const executiveRole = watch('executiveRole');
 
   const onSubmit = handleSubmit(async (values) => {
+    // 봇 방지 — 위젯이 켜져 있으면 토큰 없이는 제출하지 않는다(대부분 자동 발급돼 사용자는 무감).
+    if (TURNSTILE_ENABLED && !turnstileToken) {
+      toast.error('보안 확인이 완료될 때까지 잠시 기다려 주세요.');
+      return;
+    }
     const result = await signupAction({
       name: values.name,
       phone: values.phone,
@@ -98,6 +108,7 @@ export const SignupForm = () => {
       agreedTerms: values.agreedTerms,
       agreedPrivacy: values.agreedPrivacy,
       agreedMarketing: values.agreedMarketing,
+      turnstileToken,
     });
     if (!result.ok) {
       if (
@@ -225,6 +236,9 @@ export const SignupForm = () => {
           )}
         />
       </div>
+
+      {/* 봇 방지 위젯 — 대부분 자동 통과(Managed). 사이트 키 없으면(로컬) 렌더되지 않는다. */}
+      <TurnstileWidget onToken={setTurnstileToken} />
 
       <Button type="submit" variant="primary" size="lg" className="w-full" disabled={busy}>
         {busy && <LuLoaderCircle className="h-5 w-5 animate-spin" />}
