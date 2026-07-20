@@ -25,6 +25,111 @@
     box-sizing: border-box;
 }
 
+/* ==========================================================================
+ * 히어로 배경 애니메이션 — "개별 기업이 신뢰로 연결된다"
+ * --------------------------------------------------------------------------
+ * 노드 4개가 흩어진 상태에서 서서히 가운데로 모이고, 모였을 때만 연결선이
+ * 떠오른다. 선은 노드가 완전히 모이는 시점(50%)에만 진해지므로, 선의 양 끝과
+ * 노드 위치가 항상 맞아떨어진다 — 선 좌표를 매 프레임 다시 계산할 필요가 없어
+ * JS 없이 CSS만으로 구현된다.
+ *
+ * 속도 조절: 아래 --hero-cycle 한 줄만 바꾸면 전체 주기가 바뀐다.
+ * ======================================================================== */
+:root {
+    --hero-cycle: 9s;
+}
+
+@keyframes hero-node-a {
+    0%,
+    100% {
+        transform: translate(-72px, -48px);
+    }
+    50% {
+        transform: translate(0, 0);
+    }
+}
+
+@keyframes hero-node-b {
+    0%,
+    100% {
+        transform: translate(78px, -54px);
+    }
+    50% {
+        transform: translate(0, 0);
+    }
+}
+
+@keyframes hero-node-c {
+    0%,
+    100% {
+        transform: translate(-64px, 58px);
+    }
+    50% {
+        transform: translate(0, 0);
+    }
+}
+
+@keyframes hero-node-d {
+    0%,
+    100% {
+        transform: translate(70px, 52px);
+    }
+    50% {
+        transform: translate(0, 0);
+    }
+}
+
+/* 모였을 때만 선이 보이도록 */
+@keyframes hero-link {
+    0%,
+    28% {
+        opacity: 0;
+    }
+    50% {
+        opacity: 0.55;
+    }
+    72%,
+    100% {
+        opacity: 0;
+    }
+}
+
+.hero-node {
+    animation: var(--hero-cycle) ease-in-out infinite;
+}
+
+.hero-node-a {
+    animation-name: hero-node-a;
+}
+.hero-node-b {
+    animation-name: hero-node-b;
+}
+.hero-node-c {
+    animation-name: hero-node-c;
+}
+.hero-node-d {
+    animation-name: hero-node-d;
+}
+
+.hero-link {
+    opacity: 0;
+    animation: hero-link var(--hero-cycle) ease-in-out infinite;
+}
+
+/* 모션 최소화를 켠 사용자에게는 정지된 '연결된 상태'만 보여준다. */
+@media (prefers-reduced-motion: reduce) {
+    .hero-node,
+    .hero-link {
+        animation: none;
+    }
+    .hero-node {
+        transform: translate(0, 0);
+    }
+    .hero-link {
+        opacity: 0.4;
+    }
+}
+
 html {
     scroll-behavior: smooth;
 }

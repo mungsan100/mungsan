@@ -1,3 +1,4 @@
+import HeroBackdrop from '@/components/HeroBackdrop';
 import ScreenshotFrame from '@/components/ScreenshotFrame';
 import {
   IconBookmark,
@@ -228,7 +229,9 @@ export default function Page() {
     <main>
       {/* ── 1. 히어로 ────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden bg-gradient-to-b from-brand-soft via-white to-white px-6 pt-32 pb-28 sm:pt-40 sm:pb-36">
-        <div className="mx-auto flex max-w-3xl flex-col items-center text-center">
+        <HeroBackdrop />
+        {/* 배경 위에 텍스트가 오도록 스택 순서를 올린다 */}
+        <div className="relative mx-auto flex max-w-3xl flex-col items-center text-center">
           <Eyebrow>초기 스타트업을 위한 협업 파트너 플랫폼</Eyebrow>
           <h1 className="mt-8 text-4xl leading-[1.3] font-bold tracking-tight text-ink-900 sm:text-5xl sm:leading-[1.28]">
             더 큰 협업을 위한 기회

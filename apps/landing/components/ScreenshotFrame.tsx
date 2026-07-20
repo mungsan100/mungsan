@@ -37,8 +37,22 @@ export default function ScreenshotFrame({ shot, tone = 'light', badge }: Props) 
       )}
 
       {shot.src ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={shot.src} alt={shot.alt} className="h-full w-full object-cover" />
+        (shot.mode ?? 'phone') === 'phone' ? (
+          // 세로로 긴 앱 스크린샷 — 늘리지 않고 가운데에 폰 모양으로 얹는다.
+          <div className="flex h-full w-full items-center justify-center p-5 sm:p-8">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={shot.src}
+              alt={shot.alt}
+              className={`h-full w-auto rounded-2xl object-contain ${
+                isDark ? 'ring-1 ring-white/20' : 'shadow-[0_18px_50px_-18px_rgb(15_23_42/0.45)]'
+              }`}
+            />
+          </div>
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={shot.src} alt={shot.alt} className="h-full w-full object-cover" />
+        )
       ) : (
         <div className="flex h-full w-full flex-col items-center justify-center gap-3 px-6 text-center">
           <svg
