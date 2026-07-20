@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { formatKstDateTime } from '@/lib/datetime/format-kst';
 
 import type { MemberListItem } from '../queries/members.query';
+import { DeleteMemberButton } from './delete-member-button';
 
 // 회원 상태 배지 — 시각 presence 파생. 우선순위: 탈퇴 > 정지 > 활성 > 심사중.
 export function memberStatus(member: {
@@ -32,12 +33,18 @@ export const MemberRow = ({ member }: { member: MemberListItem }) => {
         </span>
       </td>
       <td className="px-4 py-3 text-right">
-        <Link
-          href={`/members/${member.userId}`}
-          className="rounded-lg border border-slate-300 bg-white px-2.5 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-100"
-        >
-          상세
-        </Link>
+        <div className="flex items-center justify-end gap-1.5">
+          <Link
+            href={`/members/${member.userId}`}
+            className="rounded-lg border border-slate-300 bg-white px-2.5 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-100"
+          >
+            상세
+          </Link>
+          {/* 이미 탈퇴한 회원에겐 삭제 버튼 미표시(중복 조치 방지). */}
+          {!member.withdrawnAt && (
+            <DeleteMemberButton userId={member.userId} memberName={member.name} />
+          )}
+        </div>
       </td>
     </tr>
   );
