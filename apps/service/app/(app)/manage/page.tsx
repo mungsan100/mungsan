@@ -5,6 +5,7 @@ import { logoutAction } from '@/app/(auth)/pending/commands/logout.action';
 
 import { AssetReportSection } from './ui/asset-report-section';
 import { InquirySection } from './ui/inquiry-section';
+import { MyCardsSection } from './ui/my-cards-section';
 import { MyInfoSection } from './ui/my-info-section';
 import { ProposalSection } from './ui/proposal-section';
 import { SavedSection } from './ui/saved-section';
@@ -41,6 +42,11 @@ export default function ManagePage() {
 
         <Suspense fallback={<ListSkeleton />}>
           <MyInfoSection />
+        </Suspense>
+
+        {/* 명함첩 — 촬영/업로드 → AI 인식 → 저장(2026-07-21, B안: 내 정보 탭 안 독립 섹션). */}
+        <Suspense fallback={<ListSkeleton />}>
+          <MyCardsSection />
         </Suspense>
 
         <Suspense fallback={<ListSkeleton />}>
