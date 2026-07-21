@@ -5,6 +5,7 @@ import type { DB } from '@mungsan/db';
 
 import { formatKstDateTime } from '@/lib/datetime/format-kst';
 import { formatBrnDisplay } from '@/lib/format/business-registration-no';
+import { formatPhoneDisplay } from '@/lib/format/phone';
 
 import { getSignupDetailQuery } from './queries/signup-detail.query';
 import { DecisionPanel } from './ui/decision-panel';
@@ -106,7 +107,7 @@ async function DetailSection({ params }: { params: Promise<{ userId: string }> }
           <dl className="space-y-3">
             <InfoRow label="이름" value={`${detail.applicantName} (${roleLabel})`} />
             <InfoRow label="이메일" value={detail.email} />
-            <InfoRow label="연락처" value={detail.phone} />
+            <InfoRow label="연락처" value={formatPhoneDisplay(detail.phone)} />
             <InfoRow label="회원가입일" value={formatKstDateTime(detail.signedUpAt)} />
           </dl>
         </section>

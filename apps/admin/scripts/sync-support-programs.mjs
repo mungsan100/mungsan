@@ -112,7 +112,18 @@ async function fetchAllAnnouncements() {
   return collected;
 }
 
-const stats = { fetched: 0, created: 0, updated: 0, deactivated: 0, aiTagged: 0, aiFailed: 0 };
+// 이번 실행 시작 시각 — 맞춤 알림(3단계)이 "이번 실행에서 새로 등록된 공고"를 식별하는 기준.
+const runStartedAt = new Date();
+
+const stats = {
+  fetched: 0,
+  created: 0,
+  updated: 0,
+  deactivated: 0,
+  aiTagged: 0,
+  aiFailed: 0,
+  digestNotified: 0,
+};
 
 if (!KSTARTUP_API_KEY) {
   console.log('[sync] KSTARTUP_API_KEY 없음 — 수집 생략(기존 데이터 유지).');
@@ -251,6 +262,73 @@ if (!aiEnabled) {
       stats.aiTagged += 1;
     }
   }
+}
+
+// ── 3. 맞춤 공고 일일 요약 알림 (6단계, 2026-07-20) ─────────────────────────
+// 동기화 직후 1회: 이번 실행에서 새로 등록되고 업종 태깅까지 된 공고를 회원 업종과 매칭해
+// 회원당 하루(KST) 1건만 요약 알림을 남긴다. 빈 태그(전 업종 대상)는 스팸 방지를 위해 제외 —
+// 명시적으로 내 업종에 해당하는 공고가 있을 때만 알린다. 태깅 실패 건은 다음 실행에서
+// aiTaggedAt 재시도 대상이지만 createdAt 이 지난 실행이라 알림 대상엔 다시 들어오지 않는다(과알림 방지 우선).
+const DIGEST_TITLE = '내 업종 맞춤 새 지원사업이 등록됐어요';
+const newTagged = await prisma.supportProgram.findMany({
+  where: {
+    source: 'KSTARTUP',
+    isActive: true,
+    createdAt: { gte: runStartedAt },
+    NOT: { industryTagIds: { isEmpty: true } },
+  },
+  select: { industryTagIds: true },
+});
+if (newTagged.length === 0) {
+  console.log('[sync] 맞춤 알림: 이번 실행 신규 태깅 공고 없음 — 생략.');
+} else {
+  // 업종별 신규 공고 수 집계 → 해당 업종의 승인·활성 회원에게 건수 요약.
+  const countByIndustry = new Map();
+  for (const program of newTagged)
+    for (const tagId of program.industryTagIds)
+      countByIndustry.set(tagId, (countByIndustry.get(tagId) ?? 0) + 1);
+
+  const members = await prisma.user.findMany({
+    where: {
+      approvedAt: { not: null },
+      suspendedAt: null,
+      withdrawnAt: null,
+      deletedAt: null,
+      company: { industryId: { in: [...countByIndustry.keys()] } },
+    },
+    select: { id: true, company: { select: { industryId: true } } },
+  });
+
+  // 하루 1건 dedupe — KST 오늘 0시 이후 같은 제목의 알림이 이미 있으면 건너뛴다(재실행 안전).
+  const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
+  const kstDayStart = new Date(
+    Math.floor((Date.now() + KST_OFFSET_MS) / 86_400_000) * 86_400_000 - KST_OFFSET_MS,
+  );
+  const alreadyNotified = await prisma.notification.findMany({
+    where: {
+      type: 'SYSTEM',
+      title: DIGEST_TITLE,
+      createdAt: { gte: kstDayStart },
+      userId: { in: members.map((m) => m.id) },
+    },
+    select: { userId: true },
+  });
+  const alreadySet = new Set(alreadyNotified.map((n) => n.userId));
+
+  const digestData = members
+    .filter((m) => !alreadySet.has(m.id) && m.company)
+    .map((m) => ({
+      type: 'SYSTEM',
+      title: DIGEST_TITLE,
+      body: `회원님 업종에 맞는 새 지원사업 ${countByIndustry.get(m.company.industryId)}건이 올라왔어요. 마감 전에 확인해 보세요.`,
+      linkUrl: '/support',
+      userId: m.id,
+    }));
+  if (digestData.length > 0) await prisma.notification.createMany({ data: digestData });
+  stats.digestNotified = digestData.length;
+  console.log(
+    `[sync] 맞춤 알림: 신규 태깅 ${newTagged.length}건 → 대상 회원 ${members.length}명, 발송 ${digestData.length}건(중복 제외 ${alreadySet.size}명).`,
+  );
 }
 
 console.log('[sync] 완료:', JSON.stringify(stats));

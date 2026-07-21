@@ -9,6 +9,7 @@ const MENUS = [
   { href: '/reports', label: '신고 관리' },
   { href: '/contents', label: '콘텐츠 관리' },
   { href: '/inquiries', label: '문의 관리' },
+  { href: '/announcements', label: '공지 관리' }, // 4-1 구현 때 누락됐던 진입점(2026-07-20 수정)
   { href: '/metrics', label: '지표' },
 ];
 
