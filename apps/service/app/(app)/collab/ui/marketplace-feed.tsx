@@ -10,7 +10,8 @@ import {
 import { PartnerCard } from './partner-card';
 
 // 마켓플레이스 피드 — searchParams(promise)를 여기서 await(cacheComponents 정적 셸 보호)해
-// 검색·필터 파라미터를 파싱하고 필터한 파트너 목록을 렌더한다. 첫 카드는 추천 최우선(featured)로 강조.
+// 검색·필터 파라미터를 파싱하고 필터한 파트너 목록을 렌더한다. 모든 공고 카드는 동일한 UI로 노출한다
+// (특정 공고만 강조하던 "featured 첫 카드"는 우대 오해를 유발해 제거 — 2026-07-21).
 // 뷰어(현재 유저) 기준 적합도를 계산하려 userId를 query에 넘긴다.
 export const MarketplaceFeed = async ({
   searchParams,
@@ -48,11 +49,9 @@ export const MarketplaceFeed = async ({
       <p className="text-ink-400 py-16 text-center text-sm">조건에 맞는 협업 파트너가 없습니다.</p>
     );
 
-  const [featured, ...rest] = partners;
   return (
     <div className="space-y-4">
-      <PartnerCard partner={featured} featured />
-      {rest.map((p) => (
+      {partners.map((p) => (
         <PartnerCard key={p.postId} partner={p} />
       ))}
     </div>

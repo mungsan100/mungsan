@@ -6,8 +6,8 @@ import { LuSearch, LuSlidersHorizontal } from 'react-icons/lu';
 
 import { cn } from '@/lib/utils';
 
-// 검색바 — 제출 시 ?q=로 URL state 갱신(현재 ?industry=는 보존). 우측 그린 버튼이 검색 적용 트리거.
-// 상세 필터 패널(역량·지역)은 후속 — 지금은 산업축 탭 + 텍스트 검색으로 충분.
+// 검색바 — 제출 시 ?q=만 갱신하고 나머지 필터(업종·역량·지역·예산·기간·정렬 등)는 전부 보존한다.
+// 쿼리는 q를 제목·내용·기업명에 AND로 걸어 다른 필터와 교집합으로 좁힌다(2026-07-21 필터 보존 수정).
 export const CollabSearchBar = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -25,11 +25,11 @@ export const CollabSearchBar = () => {
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
-    const sp = new URLSearchParams();
-    const industry = searchParams.get('industry');
-    if (industry) sp.set('industry', industry);
+    // 현재 URL의 모든 필터를 그대로 이어받고 q만 교체한다(빈 검색어면 q 제거).
+    const sp = new URLSearchParams(searchParams.toString());
     const trimmed = q.trim();
     if (trimmed) sp.set('q', trimmed);
+    else sp.delete('q');
     startTransition(() => router.push(sp.size ? `/collab?${sp}` : '/collab'));
   }
 
@@ -40,7 +40,7 @@ export const CollabSearchBar = () => {
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="기업명, 업종, 기술 검색"
+          placeholder="제목·내용·기업명 검색"
           className="text-ink-900 placeholder:text-ink-400 h-full w-full bg-transparent text-[15px] outline-none"
         />
       </div>

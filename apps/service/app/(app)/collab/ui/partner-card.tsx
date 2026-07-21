@@ -1,29 +1,22 @@
 import { differenceInCalendarYears } from 'date-fns';
 import Link from 'next/link';
-import { LuBadgeCheck, LuChevronRight, LuTrendingUp, LuZap } from 'react-icons/lu';
+import { LuBadgeCheck, LuChevronRight, LuTrendingUp } from 'react-icons/lu';
 
 import { Avatar } from '@/components/ui/avatar';
-import { buttonVariants } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ProgressBar } from '@/components/ui/progress-bar';
 import { daysUntilDeadline, isDeadlinePassed } from '@/lib/collab/deadline';
-import { cn } from '@/lib/utils';
 
 import type { PartnerCard as PartnerCardData } from '../queries/collab-marketplace.query';
-import { RecommendLabel } from './recommend-label';
 
-// 파트너 기업 카드 — featured(강조: 두 문단 설명·필요 파트너사·적합도 게이지·제안 CTA) vs 컴팩트(축약: 상세보기).
+// 파트너 기업 카드 — 모든 공고가 동일한 UI로 노출된다(2026-07-21 featured 강조 제거).
+// 회사 식별 + 지표 한 줄 + 설명(2줄 축약) + 역량 태그 + 적합도 + 상세보기.
 interface PartnerCardProps {
   partner: PartnerCardData;
-  featured?: boolean;
 }
 
-export const PartnerCard = ({ partner, featured = false }: PartnerCardProps) => {
+export const PartnerCard = ({ partner }: PartnerCardProps) => {
   const detailHref = `/collab/${partner.postId}`;
-  const paragraphs = featured
-    ? [partner.companyDescription, partner.postDescription].filter((x): x is string => !!x)
-    : [partner.companyDescription ?? partner.postDescription].filter((x): x is string => !!x);
-  const duration = formatDuration(partner.startDate, partner.endDate);
+  const description = partner.companyDescription ?? partner.postDescription;
   // 실 회사 지표 — 지역·업력·인원 중 공개된 것만 " · "로 잇는다.
   const stats = [
     partner.region,
@@ -32,12 +25,7 @@ export const PartnerCard = ({ partner, featured = false }: PartnerCardProps) => 
   ].filter((x): x is string => !!x);
 
   return (
-    <Card className={cn('p-5', featured && 'border-brand border-2')}>
-      {featured && (
-        <div className="mb-3">
-          <RecommendLabel />
-        </div>
-      )}
+    <Card className="p-5">
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2.5">
           <Avatar fallback={[...partner.companyName][0] ?? '?'} />
@@ -46,7 +34,7 @@ export const PartnerCard = ({ partner, featured = false }: PartnerCardProps) => 
             {partner.verified && <LuBadgeCheck className="text-brand h-4 w-4 shrink-0" />}
           </div>
         </div>
-        {!featured && partner.matchRate != null && (
+        {partner.matchRate != null && (
           <div className="flex shrink-0 items-baseline gap-1.5">
             <span className="text-ink-400 text-[11px]">적합도</span>
             <span className="text-brand text-[15px] font-bold">{partner.matchRate}%</span>
@@ -80,91 +68,28 @@ export const PartnerCard = ({ partner, featured = false }: PartnerCardProps) => 
         {stats.length > 0 && <span>{stats.join(' · ')}</span>}
       </div>
 
-      <div className="mt-3 space-y-2">
-        {paragraphs.map((p, i) => (
-          <p
-            key={i}
-            className={cn('text-ink-600 text-[13px] leading-relaxed', !featured && 'line-clamp-2')}
-          >
-            {p}
-          </p>
-        ))}
-      </div>
-
-      {featured && (partner.partnerTypes.length > 0 || partner.requiredPartnerSkills.length > 0) && (
-        <div className="mt-3.5">
-          <p className="text-ink-700 text-[13px] font-semibold">필요한 파트너사</p>
-          <p className="text-ink-500 mt-1 text-[13px]">
-            {/* 공고가 선언한 파트너사 유형(자유 태그)을 우선 표시, 없으면 필요 역량으로 폴백 */}
-            {(partner.partnerTypes.length > 0
-              ? partner.partnerTypes
-              : partner.requiredPartnerSkills
-            ).join(' · ')}
-            {duration && <span className="text-ink-400"> / {duration}</span>}
-          </p>
-        </div>
+      {description && (
+        <p className="text-ink-600 mt-3 line-clamp-2 text-[13px] leading-relaxed">{description}</p>
       )}
 
-      {featured ? (
-        <>
-          {partner.capabilityTags.length > 0 && (
-            <div className="mt-3.5 flex flex-wrap gap-1.5">
-              {partner.capabilityTags.map((t) => (
-                <span
-                  key={t}
-                  className="bg-brand-soft text-brand-sub02 rounded-full px-2.5 py-1 text-[12px] font-medium"
-                >
-                  #{t}
-                </span>
-              ))}
-            </div>
-          )}
-
-          {partner.matchRate != null && (
-            <div className="mt-4 flex items-center gap-2.5">
-              <LuZap className="text-brand h-4 w-4 shrink-0 fill-current" />
-              <span className="text-brand shrink-0 text-[13px] font-semibold">적합도</span>
-              <ProgressBar value={partner.matchRate} tone="brand" className="flex-1" />
-              <span className="text-brand shrink-0 text-[15px] font-bold">{partner.matchRate}%</span>
-            </div>
-          )}
-
-          <div className="mt-4 flex gap-2">
-            <Link
-              href={detailHref}
-              className={cn(buttonVariants({ variant: 'primary', size: 'lg' }), 'flex-1')}
+      <div className="mt-3.5 flex items-center justify-between gap-2">
+        <div className="flex min-w-0 flex-wrap gap-1.5">
+          {partner.capabilityTags.map((t) => (
+            <span
+              key={t}
+              className="bg-brand-soft text-brand-sub02 rounded-full px-2.5 py-1 text-[12px] font-medium"
             >
-              협업 제안하기
-            </Link>
-            <Link
-              href={detailHref}
-              aria-label="상세보기"
-              className="bg-ink-100 text-ink-500 flex h-13 w-13 shrink-0 items-center justify-center rounded-xl"
-            >
-              <LuChevronRight className="h-5 w-5" />
-            </Link>
-          </div>
-        </>
-      ) : (
-        <div className="mt-3.5 flex items-center justify-between gap-2">
-          <div className="flex min-w-0 flex-wrap gap-1.5">
-            {partner.capabilityTags.map((t) => (
-              <span
-                key={t}
-                className="bg-brand-soft text-brand-sub02 rounded-full px-2.5 py-1 text-[12px] font-medium"
-              >
-                #{t}
-              </span>
-            ))}
-          </div>
-          <Link href={detailHref} aria-label="상세보기" className="flex shrink-0 items-center gap-2">
-            <span className="text-ink-500 text-[13px] font-semibold">상세보기</span>
-            <span className="bg-ink-100 text-ink-500 flex h-7 w-7 items-center justify-center rounded-lg">
-              <LuChevronRight className="h-4 w-4" />
+              #{t}
             </span>
-          </Link>
+          ))}
         </div>
-      )}
+        <Link href={detailHref} aria-label="상세보기" className="flex shrink-0 items-center gap-2">
+          <span className="text-ink-500 text-[13px] font-semibold">상세보기</span>
+          <span className="bg-ink-100 text-ink-500 flex h-7 w-7 items-center justify-center rounded-lg">
+            <LuChevronRight className="h-4 w-4" />
+          </span>
+        </Link>
+      </div>
     </Card>
   );
 };
@@ -191,10 +116,4 @@ function deadlineDday(deadline: Date | null): string | null {
   const days = daysUntilDeadline(deadline);
   if (days == null || days > 7) return null;
   return days === 0 ? '오늘 마감' : `마감 D-${days}`;
-}
-
-function formatDuration(start: Date | null, end: Date | null): string | null {
-  if (!start || !end) return null;
-  const months = Math.max(1, Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24 * 30)));
-  return `예상 기간 ${months}개월`;
 }

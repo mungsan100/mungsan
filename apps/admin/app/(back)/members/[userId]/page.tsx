@@ -5,10 +5,12 @@ import { notFound } from 'next/navigation';
 import { formatKstDateTime } from '@/lib/datetime/format-kst';
 import { formatBrnDisplay } from '@/lib/format/business-registration-no';
 import { formatPhoneDisplay } from '@/lib/format/phone';
+import { getMemberTrustScoreQuery } from '@/lib/trust/admin-trust-score.query';
 
 import { memberStatus } from '../ui/member-row';
 import { getMemberDetailQuery } from './queries/member-detail.query';
 import { SuspendPanel } from './ui/suspend-panel';
+import { TrustScorePanel } from './ui/trust-score-panel';
 
 // 임원 직책 → 표시 라벨(approvals 상세와 동일 매핑).
 const ROLE_LABELS: Record<string, string> = {
@@ -40,7 +42,11 @@ export default function MemberDetailPage({ params }: { params: Promise<{ userId:
 
 async function MemberDetailContent({ params }: { params: Promise<{ userId: string }> }) {
   const { userId } = await params;
-  const member = await getMemberDetailQuery(userId);
+  // 회원 상세와 신뢰 지수는 독립 조회 — 병렬로 출발시켜 워터폴을 없앤다(service 관리 화면과 동일 점수).
+  const [member, trust] = await Promise.all([
+    getMemberDetailQuery(userId),
+    getMemberTrustScoreQuery(userId),
+  ]);
   if (!member) notFound();
 
   const status = memberStatus(member);
@@ -104,6 +110,9 @@ async function MemberDetailContent({ params }: { params: Promise<{ userId: strin
           />
         </div>
       </section>
+
+      {/* 신뢰 지수 — service 관리 화면과 동일 지표·점수(같은 공식·같은 신호 집계). */}
+      <TrustScorePanel trust={trust} />
 
       <section className="rounded-xl border border-slate-200 bg-white p-5">
         <h2 className="text-sm font-bold text-slate-900">상태 이력</h2>

@@ -6,6 +6,7 @@ import { logoutAction } from '@/app/(auth)/pending/commands/logout.action';
 import { AssetReportSection } from './ui/asset-report-section';
 import { InquirySection } from './ui/inquiry-section';
 import { MyInfoSection } from './ui/my-info-section';
+import { MyPostsSection } from './ui/my-posts-section';
 import { ProposalSection } from './ui/proposal-section';
 import { SavedSection } from './ui/saved-section';
 import { SentProposalSection } from './ui/sent-proposal-section';
@@ -45,6 +46,11 @@ export default function ManagePage() {
 
         <Suspense fallback={<ListSkeleton />}>
           <AssetReportSection />
+        </Suspense>
+
+        {/* 내가 쓴 글 — 본인 라운지 글 + 협업 공고(상세에서 본인 삭제). 저장한 글과 짝. */}
+        <Suspense fallback={<ListSkeleton />}>
+          <MyPostsSection />
         </Suspense>
 
         <Suspense fallback={<ListSkeleton />}>
