@@ -1,0 +1,30 @@
+// ════════════════════════════════════════════════════════════════════════
+//  명함첩  ─  BusinessCard
+//  회원이 촬영/업로드한 명함. AI(비전)가 이미지에서 5필드를 추출하면 회원이
+//  확인·수정해 저장한다(2026-07-21). 원본 이미지는 blob PRIVATE(본인·운영자만,
+//  읽기 시 서명 URL) — imagePathname 에 blob 키만 보관한다.
+//  5필드는 전부 선택(nullable) — AI가 못 읽은 항목은 빈 값으로 남는다.
+// ════════════════════════════════════════════════════════════════════════
+
+/// 저장된 명함 한 건. 소유자는 이 명함을 스캔·보관한 회원.
+model BusinessCard {
+  id String @id @default(cuid())
+
+  // 소유자 — 이 명함을 저장한 회원
+  ownerId String
+  owner   User   @relation(fields: [ownerId], references: [id])
+
+  // AI 추출 후 회원이 확정한 값(전부 선택)
+  name     String? // 이름
+  company  String? // 회사
+  jobTitle String? // 직책
+  phone    String? // 연락처
+  email    String? // 이메일
+
+  imagePathname String // 원본 명함 이미지 blob 키(PRIVATE, 읽기 시 getSignedReadUrl)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ownerId])
+}
