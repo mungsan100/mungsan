@@ -25,22 +25,14 @@ export const SIGNUP_URL = '#';
  * 예)  src: '/screenshots/lounge.png',
  *
  * label은 placeholder 박스 안에 표시되는 안내 문구이고,
- * ratio는 박스의 가로세로 비율입니다(교체 후에도 그대로 유지됩니다).
+ * 모두 아이폰 목업(PhoneMockup) 안에 들어가므로 비율은 지정하지 않습니다 —
+ * 세로형 폰 화면(390:844)에 맞춰 자동으로 채워집니다.
  * ------------------------------------------------------------------------ */
 export type Screenshot = {
   src: string | null;
   alt: string;
+  /** 이미지가 없을 때 폰 화면 안에 표시할 안내 문구 */
   label: string;
-  /** 바깥 박스의 가로세로 비율 */
-  ratio: string;
-  /**
-   * 이미지를 어떤 모양으로 넣을지.
-   * - 'phone': 세로로 긴 앱 스크린샷을 가로 박스 가운데에 폰 모양으로 얹는다.
-   *   실제 앱(apps/service)이 480px 폭 모바일 셸이라 스크린샷이 세로로 길기 때문에,
-   *   가로 박스에 그대로 늘리면 찌그러진다. 기본값.
-   * - 'wide': 가로형 그래픽을 박스에 꽉 채운다.
-   */
-  mode?: 'phone' | 'wide';
 };
 
 export const SCREENSHOTS = {
@@ -48,37 +40,30 @@ export const SCREENSHOTS = {
   howItWorks: {
     src: null,
     alt: '뭉산 파트너 추천 화면',
-    label: '파트너 추천 / 협업 마켓플레이스 화면',
-    ratio: '16 / 10',
+    label: '파트너 추천 화면',
   },
-  /* 6. 임원 전용 라운지 — 섹션 내 크게 배치 */
+  /* 6. 임원 전용 라운지 */
   lounge: {
     src: null,
     alt: '뭉산 임원 전용 익명 라운지 화면',
-    label: '임원 전용 익명 라운지 앱 화면',
-    ratio: '16 / 10',
+    label: '익명 라운지 피드 화면',
   },
-  /* 7. 협업 마켓플레이스 — 섹션 내 크게 배치 */
+  /* 7. 협업 마켓플레이스 */
   marketplace: {
     src: null,
     alt: '뭉산 협업 마켓플레이스 화면',
-    label: '협업 마켓플레이스 앱 화면',
-    ratio: '16 / 10',
+    label: '협업 마켓플레이스 화면',
   },
-  /* 8. My 셰르파 — Beta Preview 라벨 표시 */
+  /* 8. My 셰르파 */
   sherpa: {
     src: null,
     alt: '뭉산 공동 수행 관리 대시보드 화면',
-    label: '공유 대시보드 / 공동 수행 관리 화면',
-    ratio: '16 / 10',
+    label: '공동 수행 관리 화면',
   },
   /* 9. 데이터 기반 분석 — 짙은 녹색 배경 위에 올라갑니다 */
   dataGraphic: {
     src: null,
-    alt: '데이터 기반 파트너 추천 구조 그래픽',
-    label: '데이터 기반 파트너 추천 구조 그래픽',
-    ratio: '16 / 9',
-    // 앱 화면이 아니라 가로형 그래픽을 넣을 자리라 'wide'로 둔다.
-    mode: 'wide',
+    alt: '데이터 기반 파트너 추천 화면',
+    label: '매칭 분석 결과 화면',
   },
 } satisfies Record<string, Screenshot>;

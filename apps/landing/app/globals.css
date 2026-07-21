@@ -8,6 +8,10 @@
     --color-brand-deep: #0b4a2f;
     --color-brand-soft: #ecfdf3;
 
+    /* CTA 전용 짙은 녹색 — 히어로 애니메이션(중심 구·궤도)과 같은 색 계열 */
+    --color-cta: #00704a;
+    --color-cta-hover: #005c3e;
+
     /* Ink — neutral slate */
     --color-ink-50: #f8fafc;
     --color-ink-100: #f1f5f9;
@@ -26,107 +30,199 @@
 }
 
 /* ==========================================================================
- * 히어로 배경 애니메이션 — "개별 기업이 신뢰로 연결된다"
+ * 히어로 애니메이션 — "대표를 위한 비즈니스 룸"
  * --------------------------------------------------------------------------
- * 노드 4개가 흩어진 상태에서 서서히 가운데로 모이고, 모였을 때만 연결선이
- * 떠오른다. 선은 노드가 완전히 모이는 시점(50%)에만 진해지므로, 선의 양 끝과
- * 노드 위치가 항상 맞아떨어진다 — 선 좌표를 매 프레임 다시 계산할 필요가 없어
- * JS 없이 CSS만으로 구현된다.
+ * 가운데 큰 구(비즈니스 룸) 주위를 작은 위성(파트너사)들이 궤도를 그리며
+ * 돈다. 원자·전자 모형처럼 궤도마다 기울기와 속도가 다르다.
  *
- * 속도 조절: 아래 --hero-cycle 한 줄만 바꾸면 전체 주기가 바뀐다.
+ * 구현: CSS 3D 회전만 사용(2013년부터 지원되는 기술) — JS·3D 라이브러리 0.
+ *   틸트 래퍼(고정 기울기) > 링(rotateZ 무한 회전) > 암(역회전으로 자전 상쇄)
+ *   > 위성 점(역틸트로 항상 정면을 향함). 위성은 공전만 하고 찌그러지지 않는다.
+ *
+ * 속도 조절: --hero-orbit-* 값만 바꾸면 된다.
  * ======================================================================== */
 :root {
-    --hero-cycle: 9s;
+    /* 펼쳐짐 → 한 바퀴 → 합체 까지의 한 사이클.
+     * 위성·궤도선·중심 구가 모두 이 값을 공유해 타이밍이 어긋나지 않는다. */
+    --hero-cycle: 16s;
+    --hero-badge-beam: 4.5s;
 }
 
-@keyframes hero-node-a {
-    0%,
+/* ──────────────────────────────────────────────────────────────────────
+ * 한 사이클의 안무 (모든 애니메이션이 --hero-cycle 하나를 공유해 동기화)
+ *
+ *   공전:  0% ─ 100%  한 사이클에 정확히 한 바퀴. 멈추지 않고 계속 돈다.
+ *   펼침:  0% ─ 20%   합체 상태에서 다섯 위성이 동시에 퍼져 나온다
+ *         20% ─ 72%   펼쳐진 채 공전
+ *         72% ─ 94%   동시에 중심으로 빨려 들어간다
+ *         94% ─ 100%  합체 — 중심 구가 커진 채 잠깐 유지
+ *
+ * ⚠️ 공전과 펼침을 겹치게 두는 것이 핵심이다. 예전처럼 "펼치는 동안 공전을
+ * 멈춤 → 다 펼쳐지면 돌기 시작" 으로 나누면 속도가 0에서 튀어 동작이 끊겨
+ * 보인다. 지금은 퍼지면서 동시에 돌기 때문에 나선을 그리며 자연스럽게 나온다.
+ *
+ * 다섯 위성이 같은 시간에 각자 다른 길이의 경로를 한 바퀴 돌므로,
+ * 궤도가 길수록 자동으로 빨라진다(둘레 ÷ 같은 시간). 별도 속도 지정 없음.
+ * ────────────────────────────────────────────────────────────────────── */
+
+/* 위성 이동 — offset-path(타원)를 따라 한 사이클에 정확히 한 바퀴.
+ * 궤도가 원이 아니라 좁고 긴 타원이라 rotate로는 표현할 수 없다.
+ * 타원 경로 자체를 offset-path로 주고 그 위를 따라가게 한다.
+ * 0%와 100%는 닫힌 경로의 같은 지점이라 루프가 매끄럽게 이어진다. */
+@keyframes hero-travel {
+    from {
+        offset-distance: 0%;
+    }
+    to {
+        offset-distance: 100%;
+    }
+}
+
+/* 계(系) 전체가 중심으로 수렴했다가 다시 퍼진다 —
+ * "작은 것들이 모여 큰 것이 된다".
+ *
+ * 타이밍 주의: 수렴 구간이 길면 궤도가 사라져 있는 시간이 길어져 "늦게
+ * 나타난다"고 느껴진다(이전 버전은 16초 중 4.8초가 공백이었다). 펼쳐진
+ * 상태를 사이클의 절반 이상 유지하고, 합체는 짧게 스치듯 지나가게 한다. */
+/* 계(系)가 펼쳐졌다 합쳐진다 — 위성의 등장·퇴장.
+ * 전환 구간을 길게(각 20%대) 잡아 가속·감속이 눈에 띄지 않게 한다. */
+@keyframes hero-gather {
+    0% {
+        transform: scale(0.14);
+    }
+    20%,
+    72% {
+        transform: scale(1);
+    }
+    94%,
     100% {
-        transform: translate(-72px, -48px);
-    }
-    50% {
-        transform: translate(0, 0);
+        transform: scale(0.14);
     }
 }
 
-@keyframes hero-node-b {
-    0%,
-    100% {
-        transform: translate(78px, -54px);
-    }
-    50% {
-        transform: translate(0, 0);
-    }
-}
-
-@keyframes hero-node-c {
-    0%,
-    100% {
-        transform: translate(-64px, 58px);
-    }
-    50% {
-        transform: translate(0, 0);
-    }
-}
-
-@keyframes hero-node-d {
-    0%,
-    100% {
-        transform: translate(70px, 52px);
-    }
-    50% {
-        transform: translate(0, 0);
-    }
-}
-
-/* 모였을 때만 선이 보이도록 */
-@keyframes hero-link {
-    0%,
-    28% {
+/* 궤도선은 위성이 나와 있는 동안에만 보인다 */
+@keyframes hero-ring-fade {
+    0% {
         opacity: 0;
     }
-    50% {
-        opacity: 0.55;
+    24%,
+    68% {
+        opacity: 1;
     }
-    72%,
+    90%,
     100% {
         opacity: 0;
     }
 }
 
-.hero-node {
-    animation: var(--hero-cycle) ease-in-out infinite;
+/* 중심 구 — 위성이 모두 들어간 구간에서 커진다(흡수·합체),
+ * 위성이 나올 때 다시 작아진다. hero-gather와 같은 지점에서 전환. */
+@keyframes hero-core-merge {
+    0% {
+        transform: scale(1.55);
+    }
+    20%,
+    72% {
+        transform: scale(1);
+    }
+    94%,
+    100% {
+        transform: scale(1.55);
+    }
 }
 
-.hero-node-a {
-    animation-name: hero-node-a;
-}
-.hero-node-b {
-    animation-name: hero-node-b;
-}
-.hero-node-c {
-    animation-name: hero-node-c;
-}
-.hero-node-d {
-    animation-name: hero-node-d;
+.hero-system {
+    position: absolute;
+    inset: 0;
+    animation: hero-gather var(--hero-cycle) cubic-bezier(0.45, 0, 0.55, 1) infinite;
 }
 
-.hero-link {
-    opacity: 0;
-    animation: hero-link var(--hero-cycle) ease-in-out infinite;
+/* 궤도 하나 — 원자 모형처럼 서로 다른 각도로 교차한다 */
+.hero-orbit {
+    position: absolute;
+    inset: 0;
 }
 
-/* 모션 최소화를 켠 사용자에게는 정지된 '연결된 상태'만 보여준다. */
+/* 타원 궤도선 (크기는 컴포넌트에서 지정) */
+.hero-ring {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border: 1.5px solid rgb(0 112 74 / 0.34);
+    border-radius: 50%;
+    animation: hero-ring-fade var(--hero-cycle) cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
+/* 위성 */
+.hero-sat {
+    position: absolute;
+    top: 0;
+    left: 0;
+    border-radius: 9999px;
+    offset-distance: 0%;
+    offset-rotate: 0deg;
+    /* 배경(녹색 그라데이션)은 위성마다 달라서 컴포넌트에서 인라인으로 준다 */
+    box-shadow:
+        0 4px 14px -2px rgb(0 88 58 / 0.5),
+        0 0 22px 0 rgb(0 112 74 / 0.32);
+    /* 다섯 위성 모두 같은 주기·같은 위상. 경로 길이만 다르므로 궤도가 길수록
+     * 자동으로 빨라진다. linear라 한 바퀴 도는 동안 속도가 일정하다.
+     *
+     * ⚠️ 축약형(animation: name var(--x) linear infinite)을 쓰면 빌드 과정에서
+     * duration이 사라져 위성이 멈춘다(timing이 linear일 때 var 위치를 해석하지
+     * 못함 — 실측 확인). 개별 속성으로 쓸 것. */
+    animation-name: hero-travel;
+    animation-duration: var(--hero-cycle);
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+    /* 출발 위치를 궤도마다 다르게(--sat-phase: 0~1). 음수 지연이라 시작하자마자
+     * 그 지점부터 돈다. 주기는 그대로라 "한 바퀴 / 함께 등장·퇴장"은 유지되고,
+     * 다섯이 한 덩어리로 움직이는 것처럼 보이던 위상 잠김만 풀린다. */
+    animation-delay: calc(var(--hero-cycle) * -1 * var(--sat-phase, 0));
+}
+
+/* 중심 구 */
+.hero-core {
+    animation: hero-core-merge var(--hero-cycle) cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
+/* 뱃지 — 테두리를 따라 도는 빛(conic-gradient 회전) */
+.hero-badge-beam {
+    background: conic-gradient(
+        from 0deg,
+        transparent 0deg,
+        transparent 250deg,
+        rgb(0 112 74 / 0.95) 310deg,
+        transparent 360deg
+    );
+    animation: hero-spin var(--hero-badge-beam) linear infinite;
+}
+
+/* 모션 최소화 — 움직임을 멈추고 정지된 구도만 보여준다 */
 @media (prefers-reduced-motion: reduce) {
-    .hero-node,
-    .hero-link {
+    .hero-system,
+    .hero-ring,
+    .hero-sat,
+    .hero-core,
+    .hero-badge-beam {
         animation: none;
     }
-    .hero-node {
-        transform: translate(0, 0);
+    /* 위성이 모두 꼭대기에 겹치지 않도록 궤도 위에 흩어 놓는다 */
+    .hero-sat-1 {
+        offset-distance: 10%;
     }
-    .hero-link {
-        opacity: 0.4;
+    .hero-sat-2 {
+        offset-distance: 38%;
+    }
+    .hero-sat-3 {
+        offset-distance: 62%;
+    }
+    .hero-sat-4 {
+        offset-distance: 78%;
+    }
+    .hero-sat-5 {
+        offset-distance: 92%;
     }
 }
 

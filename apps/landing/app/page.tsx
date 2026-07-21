@@ -1,5 +1,5 @@
 import HeroBackdrop from '@/components/HeroBackdrop';
-import ScreenshotFrame from '@/components/ScreenshotFrame';
+import PhoneMockup from '@/components/PhoneMockup';
 import {
   IconBookmark,
   IconBulb,
@@ -29,10 +29,21 @@ import {
   IconUsers,
   IconX,
 } from '@/components/icons';
-import { SCREENSHOTS, SIGNUP_URL } from '@/lib/landing-config';
+import { SCREENSHOTS, SIGNUP_URL, type Screenshot } from '@/lib/landing-config';
 
 /* ==========================================================================
  * 공통 레이아웃 조각
+ * --------------------------------------------------------------------------
+ * 타이포 위계 (전 섹션 공통)
+ *   h1 히어로     46 / 68 / 80px · 800 · 자간 -0.038em
+ *   h2 섹션 제목  32 / 40px      · 700 · 자간 -0.03em
+ *   본문·설명     18 / 20px      · 행간 1.75 · ink-500
+ *   카드 제목     18px           · 700 · ink-900
+ *   뱃지          15px           · 600
+ *
+ * 세로 리듬
+ *   섹션 상하 여백  py-28 / sm:py-40
+ *   제목 → 콘텐츠   mt-20
  * ========================================================================== */
 
 function Section({
@@ -45,7 +56,7 @@ function Section({
   id?: string;
 }) {
   return (
-    <section id={id} className={`px-6 py-24 sm:py-32 ${className}`}>
+    <section id={id} className={`px-6 py-28 sm:py-40 ${className}`}>
       <div className="mx-auto w-full max-w-5xl">{children}</div>
     </section>
   );
@@ -54,7 +65,7 @@ function Section({
 function Eyebrow({ children, tone = 'light' }: { children: React.ReactNode; tone?: 'light' | 'dark' }) {
   return (
     <span
-      className={`inline-block rounded-full px-4 py-1.5 text-sm font-semibold ${
+      className={`inline-block rounded-full px-5 py-2 text-[15px] font-semibold ${
         tone === 'dark' ? 'bg-white/15 text-white' : 'bg-brand-soft text-brand-sub01'
       }`}
     >
@@ -72,7 +83,7 @@ function Heading({
 }) {
   return (
     <h2
-      className={`text-3xl leading-[1.35] font-bold tracking-tight sm:text-4xl ${
+      className={`text-[32px] leading-[1.3] font-bold tracking-[-0.03em] sm:text-[40px] ${
         tone === 'dark' ? 'text-white' : 'text-ink-900'
       }`}
     >
@@ -90,12 +101,85 @@ function Sub({
 }) {
   return (
     <p
-      className={`mt-5 text-lg leading-relaxed ${
+      className={`mt-6 text-lg leading-[1.75] sm:text-xl ${
         tone === 'dark' ? 'text-white/70' : 'text-ink-500'
       }`}
     >
       {children}
     </p>
+  );
+}
+
+/**
+ * 기능 소개 섹션의 좌우 배치 한 줄 — 한쪽에 아이폰 목업, 반대쪽에 문구.
+ * phoneSide를 섹션마다 번갈아 주면 지그재그 리듬이 생긴다.
+ * 모바일에서는 자동으로 세로로 쌓이고, 폰이 항상 아래로 간다(문구 먼저 읽히게).
+ */
+function FeatureRow({
+  eyebrow,
+  title,
+  desc,
+  shot,
+  phoneSide,
+  badge,
+  tone = 'light',
+  children,
+}: {
+  eyebrow?: string;
+  title: React.ReactNode;
+  desc: string;
+  shot: Screenshot;
+  phoneSide: 'left' | 'right';
+  badge?: string;
+  tone?: 'light' | 'dark';
+  children?: React.ReactNode;
+}) {
+  const isDark = tone === 'dark';
+  return (
+    <div className="grid items-center gap-14 lg:grid-cols-2 lg:gap-20">
+      <div className={phoneSide === 'left' ? 'order-2 lg:order-1' : 'order-2 lg:order-2'}>
+        <PhoneMockup shot={shot} badge={badge} tone={tone} />
+      </div>
+      <div className={phoneSide === 'left' ? 'order-1 lg:order-2' : 'order-1 lg:order-1'}>
+        {eyebrow && <Eyebrow tone={tone}>{eyebrow}</Eyebrow>}
+        <h2
+          className={`mt-6 text-[32px] leading-[1.3] font-bold tracking-[-0.03em] sm:text-[40px] ${
+            isDark ? 'text-white' : 'text-ink-900'
+          }`}
+        >
+          {title}
+        </h2>
+        <p
+          className={`mt-6 text-lg leading-[1.75] ${isDark ? 'text-white/70' : 'text-ink-500'}`}
+        >
+          {desc}
+        </p>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+/** 좌우 배치 문구 아래에 붙는 짧은 기능 목록 */
+function PointList({
+  items,
+}: {
+  items: readonly { Icon: (p: { className?: string }) => React.ReactElement; title: string; desc?: string }[];
+}) {
+  return (
+    <ul className="mt-10 space-y-5">
+      {items.map(({ Icon, title, desc }) => (
+        <li key={title} className="flex items-start gap-4">
+          <span className="mt-0.5 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-soft text-cta">
+            <Icon className="h-5 w-5" />
+          </span>
+          <div>
+            <p className="font-bold text-ink-900">{title}</p>
+            {desc && <p className="mt-1 leading-relaxed text-ink-500">{desc}</p>}
+          </div>
+        </li>
+      ))}
+    </ul>
   );
 }
 
@@ -227,24 +311,47 @@ const FAQS = [
 export default function Page() {
   return (
     <main>
-      {/* ── 1. 히어로 ────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-brand-soft via-white to-white px-6 pt-32 pb-28 sm:pt-40 sm:pb-36">
-        <HeroBackdrop />
-        {/* 배경 위에 텍스트가 오도록 스택 순서를 올린다 */}
-        <div className="relative mx-auto flex max-w-3xl flex-col items-center text-center">
-          <Eyebrow>초기 스타트업을 위한 협업 파트너 플랫폼</Eyebrow>
-          <h1 className="mt-8 text-4xl leading-[1.3] font-bold tracking-tight text-ink-900 sm:text-5xl sm:leading-[1.28]">
-            더 큰 협업을 위한 기회
-            <br />
-            뭉산에서 함께할 파트너사를 찾으세요.
-          </h1>
-          {/* ⚠️ 링크 임시(#) — 실제 주소는 lib/landing-config.ts 의 SIGNUP_URL 한 줄만 바꾸면 됩니다 */}
-          <a
-            href={SIGNUP_URL}
-            className="mt-12 inline-flex items-center justify-center rounded-2xl bg-brand-sub01 px-9 py-4 text-lg font-semibold text-white shadow-[0_10px_30px_-8px_rgb(21_128_61/0.5)] transition hover:bg-brand-sub02"
-          >
-            시작하기
-          </a>
+      {/* ── 1. 히어로 (Resend 스타일 좌우 분리: 텍스트 좌 / 애니메이션 우) ── */}
+      <section className="relative overflow-hidden bg-gradient-to-b from-brand-soft via-white to-white px-6 pt-28 pb-24 sm:pt-36 sm:pb-32">
+        <div className="mx-auto grid w-full max-w-6xl items-center gap-14 lg:grid-cols-[1.1fr_1fr] lg:gap-8">
+          {/* 좌: 텍스트 — 모바일에선 단독으로(애니메이션은 lg 미만에서 숨김) */}
+          <div className="flex flex-col items-start text-left">
+            {/* 알약(pill) 뱃지 — 테두리를 따라 빛이 한 바퀴 돈다.
+                바깥 래퍼가 회전하는 conic-gradient(빛), 안쪽 흰 알약이 그것을
+                가려 1.5px 테두리만 남긴다. */}
+            <span className="relative inline-flex overflow-hidden rounded-full p-[1.5px] shadow-[0_2px_12px_-4px_rgb(21_128_61/0.3)]">
+              {/* 회전하는 빛 */}
+              <span className="hero-badge-beam absolute top-1/2 left-1/2 aspect-square w-[210%] -translate-x-1/2 -translate-y-1/2" />
+              {/* 정지 테두리(빛이 없는 구간에도 윤곽이 보이도록) */}
+              <span className="absolute inset-0 rounded-full border border-brand/20" />
+              <span className="relative inline-flex items-center rounded-full bg-white px-6 py-2 text-base font-semibold text-brand-sub01 sm:text-lg">
+                스타트업을 위한 협업 파트너 플랫폼
+              </span>
+            </span>
+
+            {/* 메인 헤드라인 — 어느 폭에서도 정확히 2줄 */}
+            <h1 className="mt-10 text-[46px] leading-[1.14] font-extrabold tracking-[-0.038em] text-ink-900 sm:text-[68px] lg:text-[80px]">
+              <span className="block whitespace-nowrap">대표를 위한</span>
+              <span className="block whitespace-nowrap">비즈니스 룸</span>
+            </h1>
+
+            <p className="mt-8 text-xl leading-[1.65] font-medium text-ink-500 sm:text-2xl">
+              더 큰 협업을 위한 기회,
+              <br />
+              뭉산에서 함께할 파트너사를 찾으세요.
+            </p>
+
+            {/* ⚠️ 링크 임시(#) — 실제 주소는 lib/landing-config.ts 의 SIGNUP_URL 한 줄만 바꾸면 됩니다 */}
+            <a
+              href={SIGNUP_URL}
+              className="mt-12 inline-flex items-center justify-center rounded-2xl bg-cta px-12 py-5 text-2xl font-semibold text-white shadow-[0_12px_34px_-8px_rgb(0_112_74/0.5)] transition hover:bg-cta-hover"
+            >
+              시작하기
+            </a>
+          </div>
+
+          {/* 우: 노드 연결 애니메이션 */}
+          <HeroBackdrop />
         </div>
       </section>
 
@@ -258,10 +365,10 @@ export default function Page() {
             우리 회사 이름만으로는 부족했던 순간
           </Heading>
         </div>
-        <blockquote className="mt-10 border-l-4 border-brand pl-6 text-xl leading-relaxed font-medium text-ink-700 sm:text-2xl">
+        <blockquote className="mt-12 border-l-[3px] border-brand pl-7 text-xl leading-[1.65] font-medium text-ink-700 sm:text-2xl">
           &ldquo;제안서 마지막 장에서 항상 막혔습니다. 실적, 인력, 레퍼런스.&rdquo;
         </blockquote>
-        <div className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-20 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {PROBLEMS.map(({ Icon, title, desc }) => (
             <div
               key={title}
@@ -271,7 +378,7 @@ export default function Page() {
                 <Icon />
               </span>
               <h3 className="mt-6 text-lg font-bold text-ink-900">{title}</h3>
-              <p className="mt-3 leading-relaxed text-ink-500">{desc}</p>
+              <p className="mt-3 leading-[1.7] text-ink-500">{desc}</p>
             </div>
           ))}
         </div>
@@ -282,7 +389,7 @@ export default function Page() {
         <div className="mx-auto max-w-2xl text-center">
           <Heading>혼자서는 어려운 프로젝트, 여럿이면 가능합니다</Heading>
         </div>
-        <div className="mt-16 flex flex-col items-center gap-6 lg:flex-row lg:justify-center">
+        <div className="mt-20 flex flex-col items-center gap-6 lg:flex-row lg:justify-center">
           <div className="flex flex-wrap items-center justify-center gap-4">
             <div className="rounded-2xl border-2 border-brand bg-white px-7 py-5 text-center font-bold text-brand-sub01 shadow-sm">
               우리 회사
@@ -311,7 +418,7 @@ export default function Page() {
           <Heading>갑과 을이 아니라, 옆에 서는 파트너</Heading>
           <Sub>외주는 일을 맡기는 관계입니다. 뭉산은 함께 완성하는 관계입니다.</Sub>
         </div>
-        <div className="mt-16 grid gap-6 md:grid-cols-2">
+        <div className="mt-20 grid gap-6 md:grid-cols-2">
           {/* 외주 매칭 */}
           <div className="rounded-3xl border border-ink-200 bg-ink-50 p-8 sm:p-10">
             <h3 className="text-xl font-bold text-ink-500">외주 매칭</h3>
@@ -343,124 +450,90 @@ export default function Page() {
         </div>
       </Section>
 
-      {/* ── 5. 작동 원리 ─────────────────────────────────────────────── */}
+      {/* ── 5. 작동 원리 — 폰 오른쪽 / 텍스트 왼쪽 ─────────────────────── */}
       <Section className="bg-ink-50">
-        <div className="mx-auto max-w-2xl text-center">
-          {/* 쉼표 기준 2줄 고정 */}
-          <Heading>
-            뭉산은 부족한 부분을 찾아,
-            <br />
-            채워줄 파트너를 제안합니다
-          </Heading>
-        </div>
-        <ol className="mx-auto mt-16 flex max-w-lg flex-col items-stretch gap-3">
-          {HOW_STEPS.map((step, i) => (
-            <li key={step} className="flex flex-col items-center gap-3">
-              <div
-                // 번호 원 + 텍스트를 한 덩어리로 묶어 카드 안에서 가로·세로 모두 가운데 정렬
-                className={`flex w-full items-center justify-center gap-4 rounded-2xl px-7 py-5 text-center ${
-                  i === HOW_STEPS.length - 1
-                    ? 'bg-brand-sub01 text-white shadow-[0_10px_30px_-10px_rgb(21_128_61/0.6)]'
-                    : 'border border-ink-200 bg-white text-ink-800'
-                }`}
-              >
-                <span
-                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold ${
-                    i === HOW_STEPS.length - 1
-                      ? 'bg-white/20 text-white'
-                      : 'bg-brand-soft text-brand-sub01'
-                  }`}
-                >
+        <FeatureRow
+          phoneSide="right"
+          shot={SCREENSHOTS.howItWorks}
+          eyebrow="파트너 추천"
+          title={
+            <>
+              비어 있는 자리를
+              <br />
+              먼저 찾아냅니다
+            </>
+          }
+          desc="수행 이력과 프로젝트 요건을 맞춰 보면 무엇이 부족한지 드러납니다. 뭉산은 그 자리를 채워줄 기업을 먼저 제안합니다."
+        >
+          <ol className="mt-10 space-y-4">
+            {HOW_STEPS.map((step, i) => (
+              <li key={step} className="flex items-center gap-4">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-sm font-bold text-cta shadow-sm">
                   {i + 1}
                 </span>
-                <span className="font-semibold">{step}</span>
-              </div>
-              {i < HOW_STEPS.length - 1 && (
-                <span className="text-xl leading-none text-ink-300" aria-hidden>
-                  ↓
-                </span>
-              )}
-            </li>
-          ))}
-        </ol>
-        {/* 이미지 자리 — 파트너 추천 또는 협업 마켓플레이스 화면 */}
-        <div className="mt-16">
-          <ScreenshotFrame shot={SCREENSHOTS.howItWorks} />
-        </div>
+                <span className="font-medium text-ink-700">{step}</span>
+              </li>
+            ))}
+          </ol>
+        </FeatureRow>
       </Section>
 
-      {/* ── 6. 임원 전용 라운지 ───────────────────────────────────────── */}
+      {/* ── 6. 임원 전용 라운지 — 폰 왼쪽 / 텍스트 오른쪽 ───────────────── */}
       <Section>
-        <div className="mx-auto max-w-2xl text-center">
-          <Heading>대표의 고민은, 회사 안 누구에게도 말할 수 없습니다</Heading>
-          <Sub>
-            직원에게도, 투자자에게도 꺼내지 못한 이야기. 같은 무게를 아는 대표들과 익명으로
-            나누세요.
-          </Sub>
-        </div>
-        <div className="mt-16 grid gap-8 sm:grid-cols-3">
-          {LOUNGE_POINTS.map(({ Icon, title, desc }) => (
-            // 가운데 정렬된 제목 아래에 놓이므로 카드 내용도 가운데로 맞춘다(8번 섹션과 동일 규칙).
-            <div key={title} className="flex flex-col items-center text-center">
-              <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-soft text-brand-sub01">
-                <Icon />
-              </span>
-              <h3 className="mt-6 text-lg font-bold text-ink-900">{title}</h3>
-              <p className="mt-3 leading-relaxed text-ink-500">{desc}</p>
-            </div>
-          ))}
-        </div>
-        {/* 이미지 자리 — 임원 전용 익명 라운지 앱 화면 (크게 배치) */}
-        <div className="mt-16">
-          <ScreenshotFrame shot={SCREENSHOTS.lounge} />
-        </div>
+        <FeatureRow
+          phoneSide="left"
+          shot={SCREENSHOTS.lounge}
+          eyebrow="임원 전용 라운지"
+          title={
+            <>
+              혼자 안고 있던 이야기를
+              <br />
+              꺼내는 곳
+            </>
+          }
+          desc="직원에게도 투자자에게도 못 하는 말이 있습니다. 같은 무게를 아는 대표들과, 회사 이름을 밝히지 않고 나누세요."
+        >
+          <PointList items={LOUNGE_POINTS} />
+        </FeatureRow>
       </Section>
 
-      {/* ── 7. 협업 마켓플레이스 ──────────────────────────────────────── */}
+      {/* ── 7. 협업 마켓플레이스 — 폰 오른쪽 / 텍스트 왼쪽 ──────────────── */}
       <Section className="bg-ink-50">
-        <div className="mx-auto max-w-2xl text-center">
-          <Heading>필요한 파트너를 찾고, 먼저 손 내미는 곳</Heading>
-        </div>
-        <div className="mt-16 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-          {MARKET_POINTS.map(({ Icon, title, desc }) => (
-            // 위와 동일 — 아이콘·제목·설명을 세로 가운데 축에 맞춘다.
-            <div key={title} className="flex flex-col items-center text-center">
-              <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-brand-sub01 shadow-sm">
-                <Icon />
-              </span>
-              <h3 className="mt-6 text-lg font-bold text-ink-900">{title}</h3>
-              <p className="mt-3 leading-relaxed text-ink-500">{desc}</p>
-            </div>
-          ))}
-        </div>
-        {/* 이미지 자리 — 협업 마켓플레이스 앱 화면 (크게 배치) */}
-        <div className="mt-16">
-          <ScreenshotFrame shot={SCREENSHOTS.marketplace} />
-        </div>
+        <FeatureRow
+          phoneSide="right"
+          shot={SCREENSHOTS.marketplace}
+          eyebrow="협업 마켓플레이스"
+          title={
+            <>
+              소개를 기다리지
+              <br />
+              않아도 됩니다
+            </>
+          }
+          desc="업종과 역량으로 파트너사를 직접 찾고, 적합도를 확인한 뒤 바로 제안하세요. 아는 사람 안에서만 돌던 네트워크가 넓어집니다."
+        >
+          <PointList items={MARKET_POINTS} />
+        </FeatureRow>
       </Section>
 
-      {/* ── 8. My 셰르파 ─────────────────────────────────────────────── */}
+      {/* ── 8. My 셰르파 — 폰 왼쪽 / 텍스트 오른쪽 ─────────────────────── */}
       <Section>
-        <div className="mx-auto max-w-2xl text-center">
-          <Eyebrow>Beta Preview — 출시 예정 기능</Eyebrow>
-          <div className="mt-8">
-            <Heading>만남 이후의 협업까지, 뭉산이 함께 오릅니다</Heading>
-          </div>
-        </div>
-        <div className="mt-16 grid grid-cols-2 gap-8 lg:grid-cols-4">
-          {SHERPA_POINTS.map(({ Icon, title }) => (
-            <div key={title} className="flex flex-col items-center text-center">
-              <span className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-soft text-brand-sub01">
-                <Icon />
-              </span>
-              <h3 className="mt-5 text-lg font-bold text-ink-900">{title}</h3>
-            </div>
-          ))}
-        </div>
-        {/* 이미지 자리 — 공유 대시보드 / 공동 수행 관리 화면 */}
-        <div className="mt-16">
-          <ScreenshotFrame shot={SCREENSHOTS.sherpa} badge="Beta Preview" />
-        </div>
+        <FeatureRow
+          phoneSide="left"
+          shot={SCREENSHOTS.sherpa}
+          badge="Beta Preview"
+          eyebrow="Beta Preview — 출시 예정 기능"
+          title={
+            <>
+              만난 다음이
+              <br />
+              진짜 협업입니다
+            </>
+          }
+          desc="역할과 일정, 진행률과 정산까지 한곳에서 봅니다. 시작만 하고 흐지부지되는 협업을 막습니다."
+        >
+          <PointList items={SHERPA_POINTS} />
+        </FeatureRow>
       </Section>
 
       {/* ── 9. 데이터 기반 분석 (짙은 녹색 배경) ───────────────────────── */}
@@ -475,7 +548,7 @@ export default function Page() {
             가능성이 높은 파트너사 조합을 제안합니다.
           </Sub>
         </div>
-        <div className="mt-16 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-20 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {DATA_CARDS.map(({ Icon, title }) => (
             <div
               key={title}
@@ -490,9 +563,9 @@ export default function Page() {
             </div>
           ))}
         </div>
-        {/* 이미지 자리 — 데이터 기반 파트너 추천 구조 그래픽 */}
-        <div className="mt-16">
-          <ScreenshotFrame shot={SCREENSHOTS.dataGraphic} tone="dark" />
+        {/* 이미지 자리 — 매칭 분석 결과 화면 (카드 배치는 그대로, 폰 목업만 적용) */}
+        <div className="mt-20">
+          <PhoneMockup shot={SCREENSHOTS.dataGraphic} tone="dark" />
         </div>
       </Section>
 
@@ -505,10 +578,10 @@ export default function Page() {
             네트워크를 만듭니다.
           </Sub>
         </div>
-        <ol className="mt-16 flex flex-wrap items-center justify-center gap-x-3 gap-y-4">
+        <ol className="mt-20 flex flex-wrap items-center justify-center gap-x-3 gap-y-4">
           {TRUST_STEPS.map((step, i) => (
             <li key={step} className="flex items-center gap-3">
-              <div className="rounded-full border border-ink-200 bg-white px-5 py-3 text-sm font-semibold text-ink-700">
+              <div className="rounded-full border border-ink-200 bg-white px-6 py-3.5 text-[15px] font-semibold text-ink-700 shadow-[0_1px_3px_0_rgb(15_23_42/0.04)]">
                 <span className="mr-2 text-brand-sub01">{i + 1}</span>
                 {step}
               </div>
@@ -527,13 +600,14 @@ export default function Page() {
         <div className="mx-auto max-w-2xl text-center">
           <Heading>현장에서 먼저 확인한 협업 수요</Heading>
         </div>
-        <dl className="mt-16 grid grid-cols-2 gap-10 lg:grid-cols-4">
+        <dl className="mt-20 grid grid-cols-2 gap-10 lg:grid-cols-4">
           {METRICS.map(({ value, label }) => (
             // 시각적으로는 숫자가 위에 오지만, 의미상 dt(항목)→dd(값) 순서를 지키고
             // flex-col-reverse로 화면 순서만 뒤집는다.
             <div key={label} className="flex flex-col-reverse text-center">
-              <dt className="mt-4 leading-relaxed text-ink-500">{label}</dt>
-              <dd className="text-4xl font-bold tracking-tight text-brand-sub01 sm:text-5xl">
+              <dt className="mt-5 leading-[1.6] text-ink-500">{label}</dt>
+              {/* 숫자는 이 페이지에서 히어로 다음으로 큰 활자 — 확실히 눈에 박히게 */}
+              <dd className="text-[44px] leading-none font-extrabold tracking-[-0.04em] text-brand-sub01 sm:text-6xl">
                 {value}
               </dd>
             </div>
@@ -546,7 +620,7 @@ export default function Page() {
         <div className="mx-auto max-w-2xl text-center">
           <Heading>초기 신청 기업에게 먼저 열립니다</Heading>
         </div>
-        <div className="mt-16 grid gap-6 sm:grid-cols-2">
+        <div className="mt-20 grid gap-6 sm:grid-cols-2">
           {BETA_BENEFITS.map(({ Icon, title }) => (
             <div
               key={title}
@@ -559,7 +633,7 @@ export default function Page() {
             </div>
           ))}
         </div>
-        <p className="mt-10 rounded-2xl bg-ink-50 px-7 py-6 text-sm leading-relaxed text-ink-500">
+        <p className="mt-12 rounded-2xl bg-ink-50 px-8 py-7 text-[15px] leading-[1.75] text-ink-500">
           뭉산 크레딧은 정식 출시 후 파트너 추천, 기업 분석, 협업 제안글 노출 등에 사용할 수 있는
           앱 내 이용 단위입니다.
         </p>
@@ -570,37 +644,38 @@ export default function Page() {
         <div className="mx-auto max-w-2xl text-center">
           <Heading>자주 묻는 질문</Heading>
         </div>
-        <div className="mx-auto mt-16 max-w-3xl space-y-4">
+        <div className="mx-auto mt-20 max-w-3xl space-y-4">
           {FAQS.map(({ q, a }) => (
             <details
               key={q}
-              className="group rounded-2xl border border-ink-200 bg-white px-7 py-6 [&_summary::-webkit-details-marker]:hidden"
+              className="group rounded-2xl border border-ink-200 bg-white px-8 py-7 [&_summary::-webkit-details-marker]:hidden"
             >
-              <summary className="flex cursor-pointer items-center justify-between gap-4 font-semibold text-ink-900">
+              <summary className="flex cursor-pointer items-center justify-between gap-4 text-lg font-semibold text-ink-900">
                 {q}
                 <span
-                  className="shrink-0 text-xl leading-none text-ink-400 transition group-open:rotate-45"
+                  className="shrink-0 text-2xl leading-none font-light text-ink-400 transition group-open:rotate-45"
                   aria-hidden
                 >
                   +
                 </span>
               </summary>
-              <p className="mt-4 leading-relaxed text-ink-500">{a}</p>
+              <p className="mt-5 leading-[1.75] text-ink-500">{a}</p>
             </details>
           ))}
         </div>
       </Section>
 
       {/* ── 14. 최종 CTA ─────────────────────────────────────────────── */}
-      <section className="bg-brand-sub01 px-6 py-28 sm:py-36">
+      <section className="bg-brand-sub01 px-6 py-32 sm:py-44">
         <div className="mx-auto flex max-w-3xl flex-col items-center text-center">
-          <h2 className="text-3xl leading-[1.35] font-bold tracking-tight text-white sm:text-4xl">
-            혼자 넘기 어려웠던 문턱, 이제 함께 넘으세요
+          <h2 className="text-[32px] leading-[1.3] font-bold tracking-[-0.03em] text-white sm:text-[40px]">
+            혼자 넘기 어려웠던 문턱,
+            <br className="sm:hidden" /> 이제 함께 넘으세요
           </h2>
           {/* ⚠️ 링크 임시(#) — 실제 주소는 lib/landing-config.ts 의 SIGNUP_URL 한 줄만 바꾸면 됩니다 */}
           <a
             href={SIGNUP_URL}
-            className="mt-12 inline-flex items-center justify-center rounded-2xl bg-white px-9 py-4 text-lg font-semibold text-brand-sub01 shadow-lg transition hover:bg-brand-soft"
+            className="mt-14 inline-flex items-center justify-center rounded-2xl bg-white px-11 py-5 text-xl font-semibold text-brand-sub01 shadow-lg transition hover:bg-brand-soft"
           >
             지금 시작하기
           </a>
@@ -608,9 +683,9 @@ export default function Page() {
       </section>
 
       {/* ── 15. 푸터 ────────────────────────────────────────────────── */}
-      <footer className="bg-white px-6 py-16">
-        <div className="mx-auto max-w-5xl space-y-3 text-sm leading-relaxed text-ink-500">
-          <p className="font-semibold text-ink-800">
+      <footer className="bg-white px-6 py-20">
+        <div className="mx-auto max-w-5xl space-y-3 text-[15px] leading-[1.7] text-ink-500">
+          <p className="text-base font-semibold text-ink-800">
             뭉산 · 초기 스타트업의 생존과 확장을 돕는 B2B 협업 인프라
           </p>
           <p>
