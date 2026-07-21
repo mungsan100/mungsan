@@ -21,6 +21,13 @@ export default function ManagePage() {
       </header>
 
       <div className="space-y-6 pb-24">
+        {/* 신뢰 지수 — 전 버전처럼 맨 위(2026-07-22 결정). 지표별 올리는 방법 힌트 포함. */}
+        <section className="px-5">
+          <Suspense fallback={<CardSkeleton />}>
+            <TrustScoreCard />
+          </Suspense>
+        </section>
+
         {/* 프로필 카드 — 개인정보·라운지 닉네임(표시)·회사 정보. */}
         <Suspense fallback={<ListSkeleton />}>
           <MyInfoSection />
@@ -35,13 +42,6 @@ export default function ManagePage() {
         <Suspense fallback={<ListSkeleton />}>
           <MyCardsSection />
         </Suspense>
-
-        {/* 신뢰 지수. */}
-        <section className="px-5">
-          <Suspense fallback={<CardSkeleton />}>
-            <TrustScoreCard />
-          </Suspense>
-        </section>
 
         {/* 자산 리포트. */}
         <Suspense fallback={<ListSkeleton />}>
