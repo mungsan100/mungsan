@@ -1,20 +1,19 @@
 import type { ReactNode } from 'react';
 import { LuSparkles } from 'react-icons/lu';
 
-// 홈 밝은 헤더 셸 — 정적. 인사(이름)와 알림 벨은 동적이라 슬롯으로 받아 각자 스트리밍한다.
+// 홈 밝은 헤더 셸 — 정적. 인사(이름)는 동적이라 슬롯으로 받아 스트리밍한다.
+// 알림벨은 (app) 레이아웃의 공통 상단 유틸 바로 이동(IA 2차) — 우측 상단은 그 바가 덮는다.
 interface HomeHeaderProps {
   greeting: ReactNode;
-  bell: ReactNode;
 }
 
-export const HomeHeader = ({ greeting, bell }: HomeHeaderProps) => (
+export const HomeHeader = ({ greeting }: HomeHeaderProps) => (
   <header className="bg-canvas px-5 pt-12 pb-6">
     <div className="flex items-start justify-between">
       <span className="bg-ink-100 text-ink-600 flex w-fit items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-semibold">
         <LuSparkles className="text-brand h-3.5 w-3.5" />
         뭉산 브리핑
       </span>
-      {bell}
     </div>
     <div className="mt-4">
       {greeting}

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { IconType } from 'react-icons';
-import { LuLayoutGrid, LuUsersRound, LuRocket, LuLayers, LuShieldCheck } from 'react-icons/lu';
+import { LuLayoutGrid, LuUsersRound, LuRocket, LuLayers, LuUserRound } from 'react-icons/lu';
 
 import { cn } from '@/lib/utils';
 
@@ -23,7 +23,7 @@ const TABS: Tab[] = [
   { href: '/lounge', label: '라운지', Icon: LuUsersRound, match: (p) => p.startsWith('/lounge') },
   { href: '/collab', label: '협업', Icon: LuRocket, match: (p) => p.startsWith('/collab') },
   { href: '/sherpa', label: 'My 셰르파', Icon: LuLayers, match: (p) => p.startsWith('/sherpa') },
-  { href: '/manage', label: '관리', Icon: LuShieldCheck, match: (p) => p.startsWith('/manage') },
+  { href: '/manage', label: '내 정보', Icon: LuUserRound, match: (p) => p.startsWith('/manage') },
 ];
 
 const NAV_CLASS =
