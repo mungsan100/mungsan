@@ -8,7 +8,6 @@ import { FundingNoticeSection } from './ui/funding-notice-section';
 import { HomeGreeting } from './ui/home-greeting';
 import { HomeHeader } from './ui/home-header';
 import { HomeStatCards } from './ui/home-stat-cards';
-import { NotificationBellCount } from './ui/notification-bell-count';
 import { ProjectProgressSection } from './ui/project-progress-section';
 import { UpcomingTasks } from './ui/upcoming-tasks';
 
@@ -16,15 +15,11 @@ import { UpcomingTasks } from './ui/upcoming-tasks';
 export default function HomePage() {
   return (
     <>
+      {/* 알림벨은 (app) 레이아웃의 공통 상단 유틸 바(🔔·☰)로 이동(IA 2차) — 헤더에서 제거. */}
       <HomeHeader
         greeting={
           <Suspense fallback={<GreetingSkeleton />}>
             <HomeGreeting />
-          </Suspense>
-        }
-        bell={
-          <Suspense fallback={<BellSkeleton />}>
-            <NotificationBellCount />
           </Suspense>
         }
       />
@@ -81,9 +76,6 @@ const GreetingSkeleton = () => (
   <span className="bg-ink-100 inline-block h-5 w-40 animate-pulse rounded" />
 );
 
-const BellSkeleton = () => (
-  <span className="bg-ink-100 inline-block h-10 w-10 animate-pulse rounded-full" />
-);
 
 const StatCardsSkeleton = () => (
   <div className="grid grid-cols-3 gap-2.5">
