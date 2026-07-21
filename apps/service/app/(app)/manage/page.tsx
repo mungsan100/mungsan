@@ -1,31 +1,39 @@
 import { Suspense } from 'react';
-import { LuShieldCheck } from 'react-icons/lu';
+import { LuUserRound } from 'react-icons/lu';
 
 import { logoutAction } from '@/app/(auth)/pending/commands/logout.action';
 
 import { AssetReportSection } from './ui/asset-report-section';
 import { InquirySection } from './ui/inquiry-section';
 import { MyInfoSection } from './ui/my-info-section';
-import { MyPostsSection } from './ui/my-posts-section';
-import { ProposalSection } from './ui/proposal-section';
-import { SavedSection } from './ui/saved-section';
-import { SentProposalSection } from './ui/sent-proposal-section';
+import { MypageMenuGrid } from './ui/mypage-menu-grid';
 import { TrustScoreCard } from './ui/trust-score-card';
 import { WithdrawSection } from './ui/withdraw-section';
 
-// 관리 — 밝은 헤더 + 신뢰 지수 + 받은 제안 + 자산 리포트. 각 비동기 섹션은 국소 Suspense로 스트리밍.
+// 내 정보(구 "관리", 2026-07-21 IA 1차) — 프로필 카드 상단 + 바로가기 4개(받은/보낸 제안·내가 쓴 글·
+// 저장한 글, 각 별도 페이지) + 신뢰 지수. 자산 리포트·문의·로그아웃·탈퇴는 2차(더보기·설정) 전까지 하단 유지.
 export default function ManagePage() {
   return (
     <>
       <header className="bg-canvas px-5 pt-12 pb-5">
         <div className="flex items-center gap-2">
-          <LuShieldCheck className="text-ink-900 h-7 w-7" />
-          <h1 className="text-ink-900 text-2xl font-bold">관리</h1>
+          <LuUserRound className="text-ink-900 h-7 w-7" />
+          <h1 className="text-ink-900 text-2xl font-bold">내 정보</h1>
         </div>
       </header>
 
-      {/* 섹션 순서: 자주 쓰는 제안 관리(받은/보낸)를 신뢰 지수 바로 아래로, 저장한 글은 뒤로. */}
       <div className="space-y-6 pb-24">
+        {/* 프로필 카드 — 개인정보·라운지 닉네임·회사 정보·비밀번호 변경(정보 수정 진입점). */}
+        <Suspense fallback={<ListSkeleton />}>
+          <MyInfoSection />
+        </Suspense>
+
+        {/* 바로가기 4개 — 각각 별도 페이지로 이동. */}
+        <section className="px-5">
+          <MypageMenuGrid />
+        </section>
+
+        {/* 신뢰 지수 — 하단 유지. */}
         <section className="px-5">
           <Suspense fallback={<CardSkeleton />}>
             <TrustScoreCard />
@@ -33,28 +41,7 @@ export default function ManagePage() {
         </section>
 
         <Suspense fallback={<ListSkeleton />}>
-          <ProposalSection />
-        </Suspense>
-
-        <Suspense fallback={<ListSkeleton />}>
-          <SentProposalSection />
-        </Suspense>
-
-        <Suspense fallback={<ListSkeleton />}>
-          <MyInfoSection />
-        </Suspense>
-
-        <Suspense fallback={<ListSkeleton />}>
           <AssetReportSection />
-        </Suspense>
-
-        {/* 내가 쓴 글 — 본인 라운지 글 + 협업 공고(상세에서 본인 삭제). 저장한 글과 짝. */}
-        <Suspense fallback={<ListSkeleton />}>
-          <MyPostsSection />
-        </Suspense>
-
-        <Suspense fallback={<ListSkeleton />}>
-          <SavedSection />
         </Suspense>
 
         {/* 문의하기 — 운영팀 연락 창구(정적이라 Suspense 불필요). */}
