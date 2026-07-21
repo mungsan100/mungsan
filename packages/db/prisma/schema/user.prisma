@@ -59,6 +59,7 @@ model User {
   sessions               Session[]
   reports                Report[]
   inquiries              Inquiry[]
+  businessCards          BusinessCard[]
 
   @@index([approvedAt])
 }
