@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
+import { formatPhoneDisplay } from '@/lib/format/phone';
 
 import { updateProfileAction } from '../commands/update-profile.action';
 import type { MyInfoView } from '../queries/my-info.query';
@@ -89,7 +90,8 @@ export const MyInfoForm = ({ info }: { info: MyInfoView }) => {
         </div>
         <dl className="space-y-1.5">
           <Row label="이름" value={info.name} />
-          <Row label="연락처" value={info.phone} />
+          {/* 저장값이 하이픈 유무 어느 쪽이든 000-0000-0000로 통일 표시(기존 회원 포함). */}
+          <Row label="연락처" value={formatPhoneDisplay(info.phone)} />
           <Row label="이메일" value={`${info.email} (로그인 계정 — 변경 불가)`} />
           <Row label="직책" value={roleLabel} />
         </dl>

@@ -12,6 +12,7 @@
   "dependencies": {
     "@mungsan/db": "*",
     "@mungsan/file": "*",
+    "@mungsan/trust": "*",
     "@sentry/nextjs": "^10.66.0",
     "clsx": "^2.1.1",
     "next": "16.2.6",
