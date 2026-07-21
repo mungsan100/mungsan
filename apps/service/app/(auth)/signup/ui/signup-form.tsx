@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { TurnstileWidget } from '@/components/turnstile-widget';
+import { formatPhoneInput } from '@/lib/format/phone';
 import { signupAction } from '@/app/(auth)/signup/commands/signup.action';
 
 // 사이트 키가 있을 때만 위젯·토큰 요구(로컬 dev 는 키 없이 기존 흐름 유지).
@@ -49,9 +50,18 @@ const EXECUTIVE_ROLE_LABELS: Record<DB.ExecutiveRole, string> = {
 const schema = z
   .object({
     name: z.string().trim().min(1, '이름을 입력해 주세요.'),
-    phone: z.string().trim().min(1, '연락처를 입력해 주세요.'),
+    // 입력 칸이 자동 포맷(000-0000-0000)하므로 여기선 자릿수만 확인한다(10~11자리).
+    phone: z
+      .string()
+      .trim()
+      .min(1, '연락처를 입력해 주세요.')
+      .refine((v) => {
+        const digits = v.replace(/\D/g, '');
+        return digits.length === 10 || digits.length === 11;
+      }, '연락처를 000-0000-0000 형식으로 입력해 주세요.'),
     email: z.string().trim().email('올바른 이메일 형식이 아닙니다.'),
     password: z.string().min(8, '비밀번호는 8자 이상이어야 합니다.'),
+    passwordConfirm: z.string().min(1, '비밀번호를 한 번 더 입력해 주세요.'),
     executiveRole: z.enum(EXECUTIVE_ROLE_VALUES, { error: '직책을 선택해 주세요.' }),
     jobTitle: z.string().trim().optional(),
     agreedTerms: z.boolean().refine((v) => v, { message: '이용약관에 동의해 주세요.' }),
@@ -61,6 +71,11 @@ const schema = z
   .refine((v) => v.executiveRole !== 'OTHER' || Boolean(v.jobTitle?.trim()), {
     message: '직책을 입력해 주세요.',
     path: ['jobTitle'],
+  })
+  // 비밀번호 확인(4단계) — 두 칸이 일치해야 제출 가능.
+  .refine((v) => v.password === v.passwordConfirm, {
+    message: '비밀번호가 일치하지 않습니다.',
+    path: ['passwordConfirm'],
   });
 type FormInput = z.input<typeof schema>;
 type FormOutput = z.output<typeof schema>;
@@ -82,6 +97,7 @@ export const SignupForm = () => {
       phone: '',
       email: '',
       password: '',
+      passwordConfirm: '',
       executiveRole: undefined,
       jobTitle: '',
       agreedTerms: false,
@@ -141,7 +157,18 @@ export const SignupForm = () => {
 
       <div className="space-y-2">
         <Label htmlFor="phone">연락처</Label>
-        <Input id="phone" {...register('phone')} placeholder="010-0000-0000" />
+        {/* 숫자만 입력해도 000-0000-0000 으로 하이픈 자동 삽입(사업자번호 칸과 같은 방식). */}
+        <Input
+          id="phone"
+          type="tel"
+          inputMode="numeric"
+          {...register('phone', {
+            onChange: (e) => {
+              e.target.value = formatPhoneInput(e.target.value);
+            },
+          })}
+          placeholder="010-0000-0000"
+        />
         {errors.phone && <p className="text-danger text-xs">{errors.phone.message}</p>}
       </div>
 
@@ -155,6 +182,19 @@ export const SignupForm = () => {
         <Label htmlFor="password">비밀번호</Label>
         <Input id="password" type="password" {...register('password')} placeholder="8자 이상" />
         {errors.password && <p className="text-danger text-xs">{errors.password.message}</p>}
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="passwordConfirm">비밀번호 확인</Label>
+        <Input
+          id="passwordConfirm"
+          type="password"
+          {...register('passwordConfirm')}
+          placeholder="비밀번호를 한 번 더 입력"
+        />
+        {errors.passwordConfirm && (
+          <p className="text-danger text-xs">{errors.passwordConfirm.message}</p>
+        )}
       </div>
 
       <div className="space-y-2">

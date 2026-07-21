@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 
 import { formatKstDateTime } from '@/lib/datetime/format-kst';
 import { formatBrnDisplay } from '@/lib/format/business-registration-no';
+import { formatPhoneDisplay } from '@/lib/format/phone';
 
 import { memberStatus } from '../ui/member-row';
 import { getMemberDetailQuery } from './queries/member-detail.query';
@@ -58,7 +59,7 @@ async function MemberDetailContent({ params }: { params: Promise<{ userId: strin
           <h2 className="text-sm font-bold text-slate-900">회원 정보</h2>
           <dl className="mt-3 space-y-2 text-sm">
             <InfoRow label="이메일" value={member.email} />
-            <InfoRow label="연락처" value={member.phone} />
+            <InfoRow label="연락처" value={formatPhoneDisplay(member.phone)} />
             <InfoRow
               label="직책"
               value={

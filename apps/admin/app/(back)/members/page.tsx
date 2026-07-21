@@ -91,12 +91,12 @@ async function MembersSection({
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-xs text-slate-400">
-                <th className="px-4 py-3 font-semibold">이름</th>
-                <th className="px-4 py-3 font-semibold">이메일</th>
-                <th className="px-4 py-3 font-semibold">회사</th>
-                <th className="px-4 py-3 font-semibold">업종</th>
-                <th className="px-4 py-3 font-semibold">가입일</th>
-                <th className="px-4 py-3 font-semibold">상태</th>
+                <th className="whitespace-nowrap px-4 py-3 font-semibold">이름</th>
+                <th className="whitespace-nowrap px-4 py-3 font-semibold">이메일</th>
+                <th className="whitespace-nowrap px-4 py-3 font-semibold">회사</th>
+                <th className="whitespace-nowrap px-4 py-3 font-semibold">업종</th>
+                <th className="whitespace-nowrap px-4 py-3 font-semibold">가입일</th>
+                <th className="whitespace-nowrap px-4 py-3 font-semibold">상태</th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>

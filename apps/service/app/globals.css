@@ -48,8 +48,10 @@
 body {
     background: var(--color-canvas);
     color: #0f172a;
+    /* self-host Pretendard Variable(8단계) 우선 — 로드 전·실패 시 기존 시스템 스택 폴백. */
     font-family:
-        -apple-system, BlinkMacSystemFont, 'Pretendard', 'Noto Sans KR', sans-serif;
+        var(--font-pretendard), -apple-system, BlinkMacSystemFont, 'Pretendard', 'Noto Sans KR',
+        sans-serif;
     -webkit-font-smoothing: antialiased;
 }
 

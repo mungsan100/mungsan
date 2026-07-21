@@ -22,17 +22,17 @@ export const MemberRow = ({ member }: { member: MemberListItem }) => {
 
   return (
     <tr className="border-t border-slate-100">
-      <td className="px-4 py-3 font-semibold text-slate-900">{member.name}</td>
-      <td className="px-4 py-3 text-slate-600">{member.email}</td>
-      <td className="px-4 py-3 text-slate-600">{member.companyName ?? '—'}</td>
-      <td className="px-4 py-3 text-slate-600">{member.industryName ?? '—'}</td>
-      <td className="px-4 py-3 text-slate-500">{formatKstDateTime(member.createdAt)}</td>
-      <td className="px-4 py-3">
+      <td className="whitespace-nowrap px-4 py-3 font-semibold text-slate-900">{member.name}</td>
+      <td className="whitespace-nowrap px-4 py-3 text-slate-600">{member.email}</td>
+      <td className="whitespace-nowrap px-4 py-3 text-slate-600">{member.companyName ?? '—'}</td>
+      <td className="whitespace-nowrap px-4 py-3 text-slate-600">{member.industryName ?? '—'}</td>
+      <td className="whitespace-nowrap px-4 py-3 text-slate-500">{formatKstDateTime(member.createdAt)}</td>
+      <td className="whitespace-nowrap px-4 py-3">
         <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${status.className}`}>
           {status.label}
         </span>
       </td>
-      <td className="px-4 py-3 text-right">
+      <td className="whitespace-nowrap px-4 py-3 text-right">
         <div className="flex items-center justify-end gap-1.5">
           <Link
             href={`/members/${member.userId}`}
