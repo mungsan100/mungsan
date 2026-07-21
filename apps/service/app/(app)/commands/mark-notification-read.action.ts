@@ -21,6 +21,8 @@ export async function markNotificationReadAction(cmd: {
     data: { readAt: new Date() },
   });
 
-  revalidatePath('/'); // 홈 의사결정 알림 목록·벨 미확인 카운트 갱신
+  // layout 재검증 — 홈 의사결정 알림·알림 페이지 목록뿐 아니라 (app) 레이아웃의 공통 벨
+  // 미확인 카운트까지 갱신한다(벨은 모든 탭 공통이라 페이지 단위 재검증으론 안 바뀐다).
+  revalidatePath('/', 'layout');
   return { ok: true, data: undefined, message: '알림을 읽음 처리했습니다.' };
 }

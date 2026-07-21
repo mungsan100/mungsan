@@ -60,7 +60,7 @@ export default function HomePage() {
 
         {/* 벨 클릭의 앵커 목적지(3단계) — scroll-mt 로 상단 여백 확보. */}
         <section id="decision-alerts" className="scroll-mt-4 px-5">
-          <SectionHeader title="의사결정 알림" />
+          <SectionHeader title="의사결정 알림" action={{ label: '전체 보기', href: '/notifications' }} />
           <div className="mt-3">
             <Suspense fallback={<CardsSkeleton />}>
               <DecisionAlertSection />

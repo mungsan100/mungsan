@@ -13,7 +13,7 @@ export async function UtilityBell() {
 
   return (
     <Link
-      href="/#decision-alerts"
+      href="/notifications"
       aria-label="알림"
       className="text-ink-700 relative inline-flex h-10 w-10 items-center justify-center"
     >
