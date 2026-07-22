@@ -14,7 +14,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
-import { TurnstileWidget } from '@/components/turnstile-widget';
+import { TurnstileWidget, type TurnstileStatus } from '@/components/turnstile-widget';
 import { formatPhoneInput } from '@/lib/format/phone';
 import { signupAction } from '@/app/(auth)/signup/commands/signup.action';
 
@@ -83,6 +83,7 @@ type FormOutput = z.output<typeof schema>;
 export const SignupForm = () => {
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [turnstileStatus, setTurnstileStatus] = useState<TurnstileStatus>('loading');
   const {
     register,
     handleSubmit,
@@ -110,8 +111,12 @@ export const SignupForm = () => {
 
   const onSubmit = handleSubmit(async (values) => {
     // 봇 방지 — 위젯이 켜져 있으면 토큰 없이는 제출하지 않는다(대부분 자동 발급돼 사용자는 무감).
+    // 위젯이 실패 상태면 "기다려 달라"는 안내가 거짓말이 된다(영구 대기 사고, 2026-07-22) —
+    // 실패했음을 정확히 알리고 위젯의 재시도 버튼으로 유도한다.
     if (TURNSTILE_ENABLED && !turnstileToken) {
-      toast.error('보안 확인이 완료될 때까지 잠시 기다려 주세요.');
+      if (turnstileStatus === 'error')
+        toast.error('보안 확인 모듈을 불러오지 못했어요. 아래 "다시 시도"를 눌러 주세요.');
+      else toast.error('보안 확인이 완료될 때까지 잠시 기다려 주세요.');
       return;
     }
     const result = await signupAction({
@@ -278,7 +283,7 @@ export const SignupForm = () => {
       </div>
 
       {/* 봇 방지 위젯 — 대부분 자동 통과(Managed). 사이트 키 없으면(로컬) 렌더되지 않는다. */}
-      <TurnstileWidget onToken={setTurnstileToken} />
+      <TurnstileWidget onToken={setTurnstileToken} onStatus={setTurnstileStatus} />
 
       <Button type="submit" variant="primary" size="lg" className="w-full" disabled={busy}>
         {busy && <LuLoaderCircle className="h-5 w-5 animate-spin" />}
