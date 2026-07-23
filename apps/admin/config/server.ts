@@ -17,7 +17,3 @@ export const AI_BASE_URL = process.env.AI_BASE_URL ?? null;
 export const AI_API_KEY = process.env.AI_API_KEY ?? null;
 // eslint-disable-next-line no-restricted-syntax -- config 경계 파일: env 원본 읽기 허용
 export const AI_MODEL = process.env.AI_MODEL ?? null;
-
-// K-Startup(공공데이터포털) 인증키 — 없으면 수집 생략(기존 데이터 유지).
-// eslint-disable-next-line no-restricted-syntax -- config 경계 파일: env 원본 읽기 허용
-export const KSTARTUP_API_KEY = process.env.KSTARTUP_API_KEY ?? null;

@@ -1,6 +1,5 @@
 // ════════════════════════════════════════════════════════════════════════
-//  사용자(기업 대표/임원)  ─  User · UserConsent · UserSocialAccount
-//                            · VerificationToken
+//  사용자(기업 대표/임원)  ─  User · UserConsent · VerificationToken
 //  apps/service 의 로그인 주체. 회원가입 → (이메일 인증) → 기업정보 등록 →
 //  관리자 승인(approvedAt 기록) 이후 라운지·협업이 열린다.
 //

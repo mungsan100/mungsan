@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { prisma, DB } from '@mungsan/db';
+import { prisma } from '@mungsan/db';
 
 import { getCurrentUser } from '@/lib/auth/get-current-user';
 import { classifyLoungeCategory } from '@/lib/lounge/classify-category';

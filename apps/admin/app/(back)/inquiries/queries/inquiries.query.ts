@@ -47,7 +47,3 @@ export async function getInquiriesQuery(mode: 'pending' | 'resolved'): Promise<I
     companyName: inquiry.author.company?.name ?? null,
   }));
 }
-
-export async function getPendingInquiryCountQuery(): Promise<number> {
-  return prisma.inquiry.count({ where: { resolvedAt: null } });
-}
