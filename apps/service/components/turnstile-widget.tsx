@@ -14,7 +14,12 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 //   ③ 로드 타임아웃(15초): 스크립트는 붙었지만 render/토큰까지 못 가는 나머지 전부
 // 실패 시 사용자에겐 재시도 UI를 보여주고, 에러 코드는 Sentry 로 원격 보고해
 // 다음 발생 시 대시보드에서 원인 코드를 바로 읽을 수 있게 한다(onStatus 로 폼에도 알림).
-const SCRIPT_SRC = 'https://challenges.cloudflare.com/turnstile/api.js?render=explicit';
+//
+// 2026-07-22 원인 확정: 로더 URL 에 `v0/` 세그먼트가 빠져 있었다. `turnstile/api.js` 는
+// Cloudflare 에 존재하지 않는 경로(404)라 <script> 가 항상 onerror → SCRIPT_LOAD_FAILED.
+// 즉 위젯은 도입 이래 어떤 브라우저에서도 로드된 적이 없었다. 공식 로더는 v0 경로다:
+// https://developers.cloudflare.com/turnstile/get-started/ (검증: 구경로 404, v0 200 + 로드 실측)
+const SCRIPT_SRC = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
 const SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? null;
 const LOAD_TIMEOUT_MS = 15_000;
 
