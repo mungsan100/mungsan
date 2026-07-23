@@ -54,7 +54,7 @@ export async function AssetReportSection() {
                     {formatFileSize(report.fileSizeBytes)}
                   </p>
                 </div>
-                <ReportDownloadButton fileName={report.fileName} />
+                <ReportDownloadButton />
               </Card>
             );
           })
