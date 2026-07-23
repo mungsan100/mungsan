@@ -1,11 +1,12 @@
 // 지원사업 공고 동기화 (수동 실행, 2026-07-19) — K-Startup 수집 → upsert → AI 요약·업종 태깅.
 // 설계 전제: AI·수집 키가 없어도 "정상 동작"한다 —
 //   KSTARTUP_API_KEY 없음 → 수집 생략(기존 데이터 유지), AI env 미비 → AI 생략(원문 노출).
-// 멱등: (source, sourceId) upsert. 삭제 없음 — 마감 지난 수집 건은 isActive=false 로만 내린다.
-// 시드/수동 등록 행(source null)은 일절 건드리지 않는다.
+// 멱등: (source, sourceId) upsert. 삭제 없음 — 마감 지난 공고는 isActive=false 로만 내린다.
+// 시드/수동 등록 행(source null)은 upsert·AI 대상이 아니다. 단 마감 비활성화는 전 소스 공통
+// (2026-07-23 확대 — 시드 공고가 마감 후에도 활성으로 남던 잔존 해소).
 // ⚠ 키 값은 어떤 로그에도 출력하지 않는다(카운트·상태만 출력).
 //
-// 사용: node --env-file=.env scripts/sync-support-programs.mjs
+// 사용: node --env-file=.env scripts/sync-support-programs.mjs [--no-ai] [--ai-max=N]
 import { PrismaClient } from '../../../packages/db/generated/client/index.js';
 import { PrismaPg } from '@prisma/adapter-pg';
 
@@ -28,7 +29,11 @@ const KSTARTUP_ENDPOINT =
 const PER_PAGE = 100;
 const MAX_PAGES = 10; // 안전 상한(모집중 공고 1,000건이면 충분)
 const SUMMARY_MAX = 100; // 원문 폴백 요약 절단 길이
-const AI_BATCH_MAX = 60; // 1회 실행당 AI 처리 상한(비용 가드)
+// 1회 실행당 AI 처리 상한(비용 가드). 기본 60, 백필 지시 시에만 --ai-max=N 으로 상향(경성 캡 500).
+const aiMaxArg = process.argv.find((arg) => arg.startsWith('--ai-max='));
+const aiMaxParsed = Number.parseInt(aiMaxArg?.split('=')[1] ?? '', 10);
+const AI_BATCH_MAX =
+  Number.isInteger(aiMaxParsed) && aiMaxParsed > 0 ? Math.min(aiMaxParsed, 500) : 60;
 
 // ── 1. 수집 ───────────────────────────────────────────────────────────────
 // 응답 필드는 공식 가이드 기준 + 방어적 후보 매핑(운영 중 필드명 변형 대비).
@@ -169,9 +174,10 @@ if (!KSTARTUP_API_KEY) {
   }
 }
 
-// 마감 지난 수집 건 비활성화(삭제 아님 — 시드/수동 행은 대상 밖).
+// 마감 지난 공고 비활성화(삭제 아님) — 전 소스 공통(2026-07-23 확대, 시드 잔존 해소).
+// 마감일 없는(null) 공고는 상시 모집으로 보고 내리지 않는다.
 const deactivated = await prisma.supportProgram.updateMany({
-  where: { source: 'KSTARTUP', isActive: true, applicationEndDate: { lt: new Date() } },
+  where: { isActive: true, applicationEndDate: { lt: new Date() } },
   data: { isActive: false },
 });
 stats.deactivated = deactivated.count;
