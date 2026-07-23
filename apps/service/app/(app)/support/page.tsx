@@ -1,12 +1,13 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
-import { LuChevronLeft } from 'react-icons/lu';
+import { LuChevronDown, LuChevronLeft } from 'react-icons/lu';
 
 import { getCurrentUser } from '@/lib/auth/get-current-user';
 
 import {
   getSupportIndustryNamesQuery,
   getSupportProgramsQuery,
+  SUPPORT_PAGE_SIZE,
 } from './queries/support-programs.query';
 import { SupportIndustryFilter } from './ui/support-industry-filter';
 import { SupportProgramRow } from './ui/support-program-row';
@@ -16,7 +17,7 @@ import { SupportProgramRow } from './ui/support-program-row';
 export default function SupportPage({
   searchParams,
 }: {
-  searchParams: Promise<{ industry?: string }>;
+  searchParams: Promise<{ industry?: string; show?: string }>;
 }) {
   return (
     <>
@@ -40,18 +41,33 @@ export default function SupportPage({
   );
 }
 
+// ?show= 은 "더 보기"를 누른 만큼 늘어나는 노출 상한 — 최소 1페이지, 폭주 입력만 캡.
+const MAX_SHOW = 2000;
+function parseShow(raw: string | undefined): number {
+  const parsed = Number.parseInt(raw ?? '', 10);
+  if (Number.isNaN(parsed)) return SUPPORT_PAGE_SIZE;
+  return Math.min(Math.max(parsed, SUPPORT_PAGE_SIZE), MAX_SHOW);
+}
+
 async function SupportListSection({
   searchParams,
 }: {
-  searchParams: Promise<{ industry?: string }>;
+  searchParams: Promise<{ industry?: string; show?: string }>;
 }) {
-  const { industry } = await searchParams;
+  const { industry, show } = await searchParams;
   const selected = industry ?? null;
+  const shown = parseShow(show);
   const user = await getCurrentUser();
-  const [programs, industryNames] = await Promise.all([
-    getSupportProgramsQuery(user.id, selected ?? undefined),
+  const [{ programs, totalCount }, industryNames] = await Promise.all([
+    getSupportProgramsQuery(user.id, selected ?? undefined, shown),
     getSupportIndustryNamesQuery(),
   ]);
+
+  const remaining = totalCount - programs.length;
+  const moreParams = new URLSearchParams({
+    ...(selected ? { industry: selected } : {}),
+    show: String(shown + SUPPORT_PAGE_SIZE),
+  });
 
   return (
     <>
@@ -62,11 +78,26 @@ async function SupportListSection({
           {selected ? `"${selected}" 업종 대상 공고가 없습니다.` : '등록된 공고가 없습니다.'}
         </p>
       ) : (
-        <div className="space-y-3">
-          {programs.map((program) => (
-            <SupportProgramRow key={program.id} program={program} />
-          ))}
-        </div>
+        <>
+          <p className="text-ink-400 text-xs">
+            전체 {totalCount}건 중 {programs.length}건 표시
+          </p>
+          <div className="space-y-3">
+            {programs.map((program) => (
+              <SupportProgramRow key={program.id} program={program} />
+            ))}
+          </div>
+          {remaining > 0 && (
+            <Link
+              href={`/support?${moreParams.toString()}`}
+              scroll={false}
+              className="border-ink-200 text-ink-700 flex h-11 w-full items-center justify-center gap-1 rounded-xl border bg-white text-sm font-semibold"
+            >
+              더 보기 (남은 {remaining}건)
+              <LuChevronDown className="h-4 w-4" />
+            </Link>
+          )}
+        </>
       )}
     </>
   );
