@@ -1,6 +1,6 @@
 import { defineConfig } from 'vitest/config';
 
-// provider 어댑터 순수 단위 테스트. fetch는 각 테스트에서 stub하므로 DB·네트워크 의존이 없다.
+// emailLayout 등 순수 모듈 단위 테스트. Resend 실호출 없음(레이아웃 문자열만 검증).
 export default defineConfig({
   test: {
     include: ['src/**/*.test.ts'],

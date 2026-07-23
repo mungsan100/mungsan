@@ -1,19 +1,8 @@
 import { Resend } from 'resend';
 
-// 메일 소유를 인증한 수신자임을 타입으로 증명하는 브랜드 타입. unique symbol 브랜드라
-// 외부에서 string을 as 캐스팅으로 위조할 수 없고, 오직 아래 verifiedEmail()로만 만든다.
-declare const verifiedBrand: unique symbol;
-export type VerifiedEmail = string & { readonly [verifiedBrand]: true };
-
-// VerifiedEmail을 만드는 유일한 통로(parse, don't validate). emailVerifiedAt(DB 인증 시각)이
-// 있어야만 발급하고, 미인증이면 null을 돌려 호출부가 "보낼 수 없음"을 타입으로 처리하게 한다.
-export function verifiedEmail(email: string, emailVerifiedAt: Date | null): VerifiedEmail | null {
-  return emailVerifiedAt ? (email as VerifiedEmail) : null;
-}
-
-// 인증 수신자 전용. to가 VerifiedEmail이라 미인증 주소는 컴파일 단계에서 막힌다.
-export type SendEmailInput = { to: VerifiedEmail; subject: string; html: string };
 // 미인증/미상 주소로의 의도적 발송(인증 메일·비번 재설정·CS 답변)용 — to는 raw string.
+// (인증 수신자 전용 VerifiedEmail 브랜드 경로는 이메일 인증 기능 도입 전까지 소비처가 없어
+//  제거함 — 2026-07-24 리팩토링. 필요해지면 git 이력에서 복원.)
 export type SendUnverifiedEmailInput = { to: string; subject: string; html: string };
 export type SendEmailResult = { ok: true } | { ok: false; error: string };
 
@@ -29,10 +18,6 @@ export function createMailer(config: { apiKey: string; from: string }) {
     return { ok: true };
   }
   return {
-    // 인증된 수신자에게만 발송. 미인증 주소는 타입에서 막힌다.
-    sendEmail(input: SendEmailInput): Promise<SendEmailResult> {
-      return send(input.to, input.subject, input.html);
-    },
     // 미인증 주소로의 의도적 발송. 이름이 곧 우회 경고 — 인증 메일·비번 재설정·CS 답변처럼
     // 수신자가 아직 인증되지 않은(또는 비회원인) 시스템 메일만 이 통로를 쓴다.
     sendToUnverified(input: SendUnverifiedEmailInput): Promise<SendEmailResult> {
